@@ -1,0 +1,18 @@
+export function openModal({ title, body, footer = '', wide = false, onReady }) {
+    const root = document.querySelector('#modal-root');
+    document.body.classList.add('modal-open');
+    root.innerHTML = `<div class="modal-backdrop"><section class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${title}"><header class="modal-head"><h2>${title}</h2><button class="modal-close" aria-label="Đóng"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></header><div class="modal-body">${body}</div>${footer ? `<footer class="modal-foot">${footer}</footer>` : ''}</section></div>`;
+    const modal = root.querySelector('.modal');
+    if (modal.querySelector('.modal-pos-layout')) modal.classList.add('pos-order-modal');
+    const close = () => { root.innerHTML = ''; document.body.classList.remove('modal-open'); document.removeEventListener('keydown', escape); };
+    const escape = event => { if (event.key === 'Escape') close(); };
+    root.querySelector('.modal-close').addEventListener('click', close);
+    root.querySelector('.modal-backdrop').addEventListener('click', event => { if (event.target === event.currentTarget) close(); });
+    document.addEventListener('keydown', escape);
+    onReady?.(modal, close);
+    return close;
+}
+
+export function confirmModal(title, message, confirmText = 'Xác nhận') {
+    return new Promise(resolve => openModal({ title, body: `<p class="muted" style="line-height:1.7">${message}</p>`, footer: `<span></span><div><button class="button secondary" data-cancel>Để sau</button><button class="button primary" data-confirm>${confirmText}</button></div>`, onReady(modal, close) { modal.querySelector('[data-cancel]').onclick = () => { close(); resolve(false); }; modal.querySelector('[data-confirm]').onclick = () => { close(); resolve(true); }; } }));
+}
