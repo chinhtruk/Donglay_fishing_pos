@@ -2140,8 +2140,23 @@ body.login-page{min-height:100dvh;background:#7c695c;overflow-x:hidden}
     .owner-orders-page .data-table tr.order-table-empty td:before{content:none}
 }
 
-/* Admin menu: compact management rows for iPad portrait. */
-@media(max-width: 1024px){
+/* Admin menu: keep the real table on iPad; cards are reserved for phones. */
+@media(min-width:621px) and (max-width:1024px){
+    .owner-menu-page .data-table{min-width:680px;table-layout:fixed}
+    .owner-menu-page .data-table th,.owner-menu-page .data-table td{padding:12px 10px}
+    .owner-menu-page .data-table th:nth-child(1){width:72px}
+    .owner-menu-page .data-table th:nth-child(2){width:26%}
+    .owner-menu-page .data-table th:nth-child(3){width:15%}
+    .owner-menu-page .data-table th:nth-child(4){width:17%}
+    .owner-menu-page .data-table th:nth-child(5){width:15%}
+    .owner-menu-page .data-table th:nth-child(6){width:112px}
+    .owner-menu-page .menu-table-image{width:52px;height:44px}
+    .owner-menu-page .data-table td:nth-child(2) strong,
+    .owner-menu-page .data-table td:nth-child(2) small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .owner-menu-page .data-table .table-actions{justify-content:flex-end;flex-wrap:nowrap}
+    .owner-menu-page .data-table .table-actions .button{min-height:34px;padding:0 9px;font-size:9px}
+}
+@media(max-width:620px){
     .owner-menu-page .page-head{align-items:end;margin-bottom:18px}
     .owner-menu-page .page-head .head-actions .button{min-height:42px;padding:10px 14px;font-size:11px}
     .owner-menu-page .data-table-wrap{overflow:visible;border:0;background:transparent}
