@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Cart } from '../modules/cart.js';
-import { formatMoneyInput, number, parseMoneyInput } from '../modules/format.js';
+import { formatMoneyInput, formatStoredMoneyInput, number, parseMoneyInput } from '../modules/format.js';
 import { duration, remaining } from '../modules/timers.js';
 
 test('cart tracks quantities and totals independently of the UI', () => {
@@ -18,6 +18,8 @@ test('cash input formats Vietnamese thousands while preserving numeric value', (
     assert.equal(formatMoneyInput('1000'), '1.000');
     assert.equal(formatMoneyInput('1.000.000'), '1.000.000');
     assert.equal(formatMoneyInput('1a00 000đ'), '100.000');
+    assert.equal(formatStoredMoneyInput('15000.00'), '15.000');
+    assert.equal(formatStoredMoneyInput(15000), '15.000');
     assert.equal(parseMoneyInput('1.000.000'), 1000000);
     assert.equal(parseMoneyInput(''), 0);
 });

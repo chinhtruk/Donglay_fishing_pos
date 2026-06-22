@@ -224,8 +224,13 @@ class AdminController extends Controller
         ]);
     }
 
-    public function menu(): JsonResponse
+    public function menu(Request $request): JsonResponse
     {
+        $items = MenuItem::query()
+            ->orderBy('category')
+            ->orderBy('name')
+            ->paginate(15);
+
         return response()->json([
             'categories' => MenuCategory::query()
                 ->where('is_active', true)
@@ -233,7 +238,13 @@ class AdminController extends Controller
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->get(),
-            'items' => MenuItem::orderBy('category')->orderBy('name')->get(),
+            'items' => $items->items(),
+            'meta' => [
+                'current_page' => $items->currentPage(),
+                'last_page' => $items->lastPage(),
+                'per_page' => $items->perPage(),
+                'total' => $items->total(),
+            ],
         ]);
     }
 

@@ -44,7 +44,7 @@
     </aside>
     <button id="sidebar-scrim" class="sidebar-scrim" type="button" aria-label="Đóng menu"></button>
     <button id="notification-scrim" class="notification-scrim" type="button" aria-label="Đóng thông báo"></button>
-    <div id="notification-panel" class="popover"><div class="popover-head"><strong>Thông báo</strong><div class="popover-actions"><button id="read-all">Đọc tất cả</button><span class="action-divider">|</span><button id="delete-all">Xóa tất cả</button></div></div><div id="notification-list" class="notification-list"></div></div>
+    <div id="notification-panel" class="popover"><div class="popover-head"><strong>Thông báo</strong><div class="popover-actions"><button id="read-all">Đọc tất cả</button><span class="action-divider">|</span><button id="delete-all">Xóa tất cả</button><span class="action-divider">|</span><button id="close-notifications" style="color:var(--rose);font-weight:bold;padding:0 4px;background:none;border:none;cursor:pointer" aria-label="Đóng">✕</button></div></div><div id="notification-list" class="notification-list"></div></div>
     <div class="workspace">
         <header class="topbar">
             <button id="menu-toggle" class="icon-button mobile-only" aria-label="Mở menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>

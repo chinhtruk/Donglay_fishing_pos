@@ -1,6 +1,6 @@
 import { api } from './modules/api.js';
 import { Cart } from './modules/cart.js';
-import { dateTime, escapeHtml, formatMoneyInput, money, number, parseMoneyInput, statusClass, statusLabel } from './modules/format.js';
+import { dateTime, escapeHtml, formatMoneyInput, formatStoredMoneyInput, money, number, parseMoneyInput, statusClass, statusLabel } from './modules/format.js';
 import { confirmModal, openModal } from './modules/modal.js';
 import { duration, remaining, ServerClock } from './modules/timers.js';
 
@@ -8,6 +8,9 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 let activeTimer = null;
 let pollingTimer = null;
+let adminOrdersPage = 1;
+let employeeOrdersPage = 1;
+let adminMenuPage = 1;
 
 function closeNotifications() {
     $('#notification-panel')?.classList.remove('open');
@@ -300,6 +303,7 @@ function setupShell() {
             closeNotifications();
         }
     });
+    $('#close-notifications').onclick = closeNotifications;
     $('#read-all').onclick = async () => { await api('/api/v1/notifications/read-all', { method:'POST' }); await loadNotifications(); };
     $('#delete-all').onclick = async () => {
         if (!await confirmModal('Xóa tất cả thông báo?', 'Bạn có chắc chắn muốn xóa vĩnh viễn toàn bộ danh sách thông báo không? Hành động này không thể hoàn tác.', 'Xóa tất cả')) return;
@@ -693,6 +697,10 @@ async function renderCoffee() {
                                 await renderCoffee();
                             } catch (error) {
                                 toast(error.message, 'error');
+                                if (error.status === 409) {
+                                    closeModal();
+                                    await renderCoffee();
+                                }
                             }
                         };
                     }
@@ -706,6 +714,10 @@ async function renderCoffee() {
                                 openCheckout(orderRes, 'coffee');
                             } catch (error) {
                                 toast(error.message, 'error');
+                                if (error.status === 409) {
+                                    closeModal();
+                                    await renderCoffee();
+                                }
                             }
                         };
                     }
@@ -723,6 +735,10 @@ async function renderCoffee() {
                                 await renderCoffee();
                             } catch (error) {
                                 toast(error.message, 'error');
+                                if (error.status === 409) {
+                                    closeModal();
+                                    await renderCoffee();
+                                }
                             }
                         };
                     }
@@ -861,6 +877,10 @@ async function renderCoffee() {
                         toast(error.message, 'error');
                         subModal.querySelector('#btn-bulk-merge-confirm').disabled = false;
                         subModal.querySelector('#btn-bulk-merge-confirm').textContent = 'Xác nhận';
+                        if (error.status === 409) {
+                            subClose();
+                            await renderCoffee();
+                        }
                     }
                 };
             }
@@ -1147,6 +1167,10 @@ function openCheckout(order, type) {
                 renderPage(type);
             } catch(error) {
                 toast(error.message, 'error');
+                if (error.status === 409) {
+                    close();
+                    renderPage(type);
+                }
             }
         };
     }});
@@ -1562,6 +1586,10 @@ async function openFishing(spot, menu) {
                             await renderFishing();
                         } catch (error) {
                             toast(error.message, 'error');
+                            if (error.status === 409) {
+                                closeModal();
+                                await renderFishing();
+                            }
                         }
                     };
                 }
@@ -1594,6 +1622,10 @@ async function openFishing(spot, menu) {
                             await renderFishing();
                         } catch (error) {
                             toast(error.message, 'error');
+                            if (error.status === 409) {
+                                closeModal();
+                                await renderFishing();
+                            }
                         }
                     };
                 }
@@ -1607,6 +1639,10 @@ async function openFishing(spot, menu) {
                             openCheckout(orderRes, 'fishing');
                         } catch (error) {
                             toast(error.message, 'error');
+                            if (error.status === 409) {
+                                closeModal();
+                                await renderFishing();
+                            }
                         }
                     };
                 }
@@ -1624,6 +1660,10 @@ async function openFishing(spot, menu) {
                             await renderFishing();
                         } catch (error) {
                             toast(error.message, 'error');
+                            if (error.status === 409) {
+                                closeModal();
+                                await renderFishing();
+                            }
                         }
                     };
                 }
@@ -1656,6 +1696,11 @@ async function openFishing(spot, menu) {
                                             await renderFishing();
                                         } catch (error) {
                                             toast(error.message, 'error');
+                                            if (error.status === 409) {
+                                                subClose();
+                                                closeModal();
+                                                await renderFishing();
+                                            }
                                         }
                                     };
                                 }
@@ -1728,13 +1773,72 @@ async function openFishing(spot, menu) {
     });
 }
 
-async function renderOrders() {
-    const result = await api('/api/v1/orders');
+function paginationMarkup(meta, label = 'dữ liệu') {
+    const current = Number(meta?.current_page || 1);
+    const last = Number(meta?.last_page || 1);
+    const total = Number(meta?.total || 0);
+    const perPage = Number(meta?.per_page || total || 1);
+    if (total <= 0) return '';
+
+    let startPage, endPage;
+    if (last <= 3) {
+        startPage = 1;
+        endPage = last;
+    } else {
+        if (current === 1) {
+            startPage = 1;
+            endPage = 3;
+        } else if (current === last) {
+            startPage = last - 2;
+            endPage = last;
+        } else {
+            startPage = current - 1;
+            endPage = current + 1;
+        }
+    }
+
+    let pageButtons = '';
+    for (let i = startPage; i <= endPage; i++) {
+        pageButtons += `<button type="button" class="pagination-page ${i === current ? 'active' : ''}" data-pagination-page="${i}" ${i === current ? 'aria-current="page"' : ''}>${i}</button>`;
+    }
+
+    const from = total ? (current - 1) * perPage + 1 : 0;
+    const to = Math.min(current * perPage, total);
+
+    return `<nav class="admin-pagination" aria-label="Phân trang ${escapeHtml(label)}">
+        <span class="pagination-summary">${number(from)}–${number(to)} / ${number(total)}</span>
+        <div class="pagination-controls">
+            <button type="button" class="pagination-nav" data-pagination-page="1" ${current <= 1 ? 'disabled' : ''} aria-label="Trang đầu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m17 18-6-6 6-6M11 18l-6-6 6-6"></path></svg></button>
+            <button type="button" class="pagination-nav" data-pagination-page="${current - 1}" ${current <= 1 ? 'disabled' : ''} aria-label="Trang trước"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+            ${pageButtons}
+            <button type="button" class="pagination-nav" data-pagination-page="${current + 1}" ${current >= last ? 'disabled' : ''} aria-label="Trang sau"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></button>
+            <button type="button" class="pagination-nav" data-pagination-page="${last}" ${current >= last ? 'disabled' : ''} aria-label="Trang cuối"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 18 6-6-6-6M13 18l6-6-6-6"></path></svg></button>
+        </div>
+    </nav>`;
+}
+
+function bindPagination(root, callback) {
+    $$('[data-pagination-page]', root).forEach(button => button.onclick = () => {
+        if (!button.disabled) callback(Number(button.dataset.paginationPage));
+    });
+}
+
+async function renderOrders(page = null) {
     const admin = document.body.dataset.role === 'admin';
+    const requestedPage = Number(page || (admin ? adminOrdersPage : employeeOrdersPage));
+    const result = await api(`/api/v1/orders?page=${requestedPage}`);
+    if (requestedPage > Number(result.meta?.last_page || 1)) return renderOrders(Number(result.meta?.last_page || 1));
+    if (admin) adminOrdersPage = Number(result.meta?.current_page || requestedPage);
+    else employeeOrdersPage = Number(result.meta?.current_page || requestedPage);
+    $('#page-content').classList.add('paginated-page', 'orders-page');
     if (admin) $('#page-content').classList.add('owner-orders-page');
     $('#page-content').innerHTML = (admin ? pageHead('ĐƠN HÀNG', 'Quản lý Đơn hàng', '') : '') + `
-        <div id="order-results">${orderTable(result.data, admin)}</div>`;
+        <div id="order-results" class="paginated-results">
+            <div class="paginated-scroll">${orderTable(result.data, admin)}</div>
+            ${paginationMarkup(result.meta, 'đơn hàng')}
+        </div>`;
     bindOrderActions();
+    bindPagination($('#order-results'), nextPage => renderOrders(nextPage));
 }
 
 function orderTable(orders, admin) {
@@ -2054,19 +2158,26 @@ function chartSvg(rows) {
         </svg><div class="owner-chart-tooltip" role="status" aria-live="polite"></div></div>`;
 }
 
-async function renderMenuAdmin() {
-    const data = await api('/api/v1/admin/menu');
-    $('#page-content').classList.add('owner-menu-page');
+async function renderMenuAdmin(page = adminMenuPage) {
+    const data = await api(`/api/v1/admin/menu?page=${page}`);
+    if (Number(page) > Number(data.meta?.last_page || 1)) return renderMenuAdmin(Number(data.meta?.last_page || 1));
+    adminMenuPage = Number(data.meta?.current_page || page);
+    $('#page-content').classList.add('owner-menu-page', 'paginated-page');
     const addButton = '<button class="button primary" id="add-menu"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Thêm món</button>';
     const imagePlaceholder = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"></rect><circle cx="15.5" cy="9" r="2"></circle><path d="m5 17 5-5 3 3 2-2 4 4"></path></svg>';
     const menuContent = data.items.length
         ? `<div class="data-table-wrap"><table class="data-table"><thead><tr><th>HÌNH</th><th>TÊN MÓN</th><th>NHÓM</th><th>GIÁ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>${data.items.map(item=>`<tr><td data-label="Hình"><span class="menu-table-image">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}" loading="lazy">` : imagePlaceholder}</span></td><td data-label="Tên món"><strong>${escapeHtml(item.name)}</strong><small class="muted">${escapeHtml(item.description || '')}</small></td><td data-label="Nhóm">${escapeHtml(item.category)}</td><td data-label="Giá"><strong>${escapeHtml(formatDisplayPrice(item.display_price) || money(item.price))}</strong></td><td data-label="Trạng thái"><span class="pill ${item.deleted_at ? 'gray' : item.is_available ? '' : 'warn'}">${item.deleted_at ? 'Đã lưu trữ' : item.is_available ? 'Đang bán' : 'Tạm ẩn'}</span></td><td data-label="Thao tác"><div class="table-actions">${!item.deleted_at ? `<button class="button small secondary" data-edit-menu="${item.id}">Sửa</button><button class="button small danger" data-delete-menu="${item.id}">Xóa</button>` : ''}</div></td></tr>`).join('')}</tbody></table></div>`
         : `<section class="menu-admin-empty"><span>${imagePlaceholder}</span><div><h3>Menu chưa có món</h3><p>Thêm món đầu tiên để nhân viên có thể bắt đầu nhận order tại POS.</p></div><button class="button secondary" id="empty-add-menu"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Thêm món đầu tiên</button></section>`;
-    $('#page-content').innerHTML = pageHead('THIẾT LẬP', 'Quản lý Menu', '', addButton) + menuContent;
+    $('#page-content').innerHTML = pageHead('THIẾT LẬP', 'Quản lý Menu', '', addButton) + `
+        <div id="menu-results" class="paginated-results">
+            <div class="paginated-scroll">${menuContent}</div>
+            ${paginationMarkup(data.meta, 'menu')}
+        </div>`;
     $('#add-menu').onclick = () => menuBatchForm(data.categories || []);
     $('#empty-add-menu')?.addEventListener('click', () => menuBatchForm(data.categories || []));
     $$('[data-edit-menu]').forEach(button=>button.onclick=()=>menuForm(data.items.find(item=>item.id===Number(button.dataset.editMenu)), data.categories || []));
     $$('[data-delete-menu]').forEach(button=>button.onclick=async()=>{ if(!await confirmModal('Lưu trữ món','Món sẽ không còn xuất hiện trong POS. Dữ liệu đơn cũ vẫn được giữ nguyên.','Lưu trữ'))return; try{const result=await api(`/api/v1/admin/menu/${button.dataset.deleteMenu}`,{method:'DELETE'});toast(result.message);renderMenuAdmin();}catch(error){toast(error.message,'error');}});
+    bindPagination($('#menu-results'), nextPage => renderMenuAdmin(nextPage));
 }
 
 function menuBatchForm(categories = []) {
@@ -2366,7 +2477,7 @@ function menuForm(item = null, categories = []) {
                 <div class="menu-form-section-title"><strong>Thông tin món</strong><small>Tên, nhóm món và giá bán tại POS</small></div>
                 <div class="menu-form-grid"><label>Tên món<input name="name" value="${escapeHtml(item?.name || '')}" placeholder="Ví dụ: Cà phê sữa" required></label><label>Nhóm món${categories.length ? `<select name="category_id" required>${categories.map(category => `<option value="${category.id}" ${Number(item?.category_id) === Number(category.id) || item?.category === category.name ? 'selected' : ''}>${escapeHtml(category.name)}</option>`).join('')}</select>` : `<input name="category" value="${escapeHtml(item?.category || 'Cà phê')}" required>`}</label></div>
                 <label class="menu-availability-card" for="menu-is-flexible-price" style="margin-top: 4px; margin-bottom: 4px;"><span><strong>Giá biến động / Khoảng giá</strong><small>Cho phép nhân viên nhập giá tùy chỉnh tại POS, hiển thị khoảng giá trên menu.</small></span><input id="menu-is-flexible-price" type="checkbox" ${item && Number(item.price) === 0 ? 'checked' : ''}><i></i></label>
-                <label id="menu-price-label">Giá bán<div class="menu-price-field"><input id="menu-price-input" name="price" type="text" inputmode="numeric" value="${item?.price !== undefined && item?.price !== null && Number(item.price) !== 0 ? formatMoneyInput(item.price) : ''}" placeholder="0" required><span>đ</span></div></label>
+                <label id="menu-price-label">Giá bán<div class="menu-price-field"><input id="menu-price-input" name="price" type="text" inputmode="numeric" value="${item?.price !== undefined && item?.price !== null && Number(item.price) !== 0 ? formatStoredMoneyInput(item.price) : ''}" placeholder="0" required><span>đ</span></div></label>
                 <label id="menu-display-price-label" class="hidden">
                     Khoảng giá hiển thị POS
                     <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
@@ -2520,7 +2631,8 @@ function menuForm(item = null, categories = []) {
 
 async function renderUsers() {
     const data=await api('/api/v1/admin/users');
-    $('#page-content').innerHTML=pageHead('NHÂN SỰ','Quản lý User','','<button class="button primary" id="add-user"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Thêm tài khoản</button>')+`<div class="data-table-wrap"><table class="data-table"><thead><tr><th>THÀNH VIÊN</th><th>ĐĂNG NHẬP</th><th>VAI TRÒ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>${data.users.map(user=>`<tr><td><strong>${escapeHtml(user.name)}</strong></td><td>${escapeHtml(user.role==='admin'?user.username:user.email)}</td><td>${user.role==='admin'?'Admin':'Nhân viên'}</td><td><span class="pill ${user.is_active?'':'gray'}">${user.is_active?'Hoạt động':'Đã khóa'}</span></td><td><button class="button small secondary" data-edit-user="${user.id}">Chỉnh sửa</button></td></tr>`).join('')}</tbody></table></div>`;
+    $('#page-content').classList.add('owner-users-page');
+    $('#page-content').innerHTML=pageHead('NHÂN SỰ','Quản lý User','','<button class="button primary" id="add-user"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Thêm tài khoản</button>')+`<div class="data-table-wrap"><table class="data-table"><thead><tr><th>THÀNH VIÊN</th><th>ĐĂNG NHẬP</th><th>VAI TRÒ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>${data.users.map(user=>`<tr><td data-label="Thành viên"><strong>${escapeHtml(user.name)}</strong></td><td data-label="Đăng nhập">${escapeHtml(user.role==='admin'?user.username:user.email)}</td><td data-label="Vai trò">${user.role==='admin'?'Admin':'Nhân viên'}</td><td data-label="Trạng thái"><span class="pill ${user.is_active?'':'gray'}">${user.is_active?'Hoạt động':'Đã khóa'}</span></td><td data-label="Thao tác"><button class="button small secondary" data-edit-user="${user.id}">Chỉnh sửa</button></td></tr>`).join('')}</tbody></table></div>`;
     $('#add-user').onclick=()=>userForm();$$('[data-edit-user]').forEach(button=>button.onclick=()=>userForm(data.users.find(user=>user.id===Number(button.dataset.editUser))));
 }
 

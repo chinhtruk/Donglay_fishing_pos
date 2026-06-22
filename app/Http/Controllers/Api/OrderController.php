@@ -22,8 +22,8 @@ class OrderController extends Controller
         if ($request->user()->role !== 'admin') {
             $query->where('created_at', '>=', now()->subDays(30));
         }
-        $orders = $query->paginate(30);
+        $orders = $query->paginate(15);
 
-        return response()->json(['data' => collect($orders->items())->map(fn ($order) => OrderPresenter::make($order)), 'meta' => ['current_page' => $orders->currentPage(), 'last_page' => $orders->lastPage(), 'total' => $orders->total()]]);
+        return response()->json(['data' => collect($orders->items())->map(fn ($order) => OrderPresenter::make($order)), 'meta' => ['current_page' => $orders->currentPage(), 'last_page' => $orders->lastPage(), 'per_page' => $orders->perPage(), 'total' => $orders->total()]]);
     }
 }
