@@ -12,7 +12,16 @@
 <div class="app-shell">
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand-row">
-            <a class="brand" href="{{ auth()->user()->isAdmin() ? '/admin/dashboard' : '/pos/coffee' }}"><span class="brand-mark">ĐL</span><span class="brand-copy"><strong>Đồng lầy</strong><small>Fishing</small></span></a>
+            <a class="brand" href="{{ auth()->user()->isAdmin() ? '/admin/dashboard' : '/pos/coffee' }}">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+                        <path d="M18 3v6a6 6 0 0 1-12 0c0-1.5.5-3 1.5-4.5L10 2"></path>
+                        <path d="M4 13c2.5-3 5.5-4.5 9-4.5 3.5 0 6.5 1.5 9 4.5-2.5 3-5.5 4.5-9 4.5-3.5 0-6.5-1.5-9-4.5Z"></path>
+                        <circle cx="17.5" cy="13" r="1" fill="currentColor"></circle>
+                    </svg>
+                </span>
+                <span class="brand-copy"><strong>Đồng lầy</strong><small>Fishing</small></span>
+            </a>
         </div>
         <nav>
             @if(auth()->user()->isAdmin())
