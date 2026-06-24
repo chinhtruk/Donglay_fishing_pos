@@ -2,7 +2,7 @@
 
 Ứng dụng POS và quản trị vận hành cho mô hình kinh doanh kết hợp **quán cà phê** và **hồ câu cá**. Hệ thống được xây dựng bằng Laravel 13, MySQL, Blade, Vite và Vanilla JavaScript; giao diện tiếng Việt ưu tiên thao tác cảm ứng trên iPad Gen 9, đồng thời thích ứng với máy tính và điện thoại.
 
-> Trạng thái: ứng dụng đã có đầy đủ luồng POS cốt lõi, xác thực theo vai trò, quản lý đơn và thanh toán, phiên câu cá, thông báo, dashboard quản trị, quản lý menu/sơ đồ/người dùng, cùng bộ kiểm thử PHP và JavaScript.
+> Trạng thái: ứng dụng đã có đầy đủ luồng POS cốt lõi, xác thực theo vai trò, quản lý đơn, phiên câu cá, phương thức thanh toán tiền mặt/QR, thông báo, dashboard quản trị, quản lý menu/sơ đồ/người dùng, cùng bộ kiểm thử PHP và JavaScript.
 
 ## Mục lục
 
@@ -57,10 +57,12 @@
 
 ### Đơn hàng và thanh toán
 
-- Danh sách đơn cà phê/câu cá, lọc theo mô hình và trạng thái.
+- Danh sách đơn cà phê/câu cá, lọc theo mô hình và trạng thái bằng chip/card.
+- Danh sách đơn POS ưu tiên đơn vừa có hoạt động mới nhất, ví dụ bàn cũ gọi thêm món sẽ được đẩy lên trên.
 - Mã đơn ngắn, dễ đọc: `CF-XXXXXX` hoặc `FS-XXXXXX`.
 - Lưu snapshot tên món và đơn giá tại thời điểm gọi món.
-- Thanh toán tiền mặt, lưu tiền khách đưa và tiền thừa.
+- Thanh toán tiền mặt hoặc QR/chuyển khoản theo các phương thức đang bật.
+- Với tiền mặt, lưu tiền khách đưa và tiền thừa; với QR/chuyển khoản, lưu phương thức nhân viên đã xác nhận.
 - Payment line bất biến giúp truy vết chính xác từng phần đã trả.
 - Không xóa vật lý dữ liệu tài chính.
 - Admin có thể hủy đơn hoặc đảo giao dịch kèm lý do và audit log.
@@ -73,6 +75,8 @@
 - Topbar dùng chung gồm đồng hồ, ngày, chuông thông báo và menu tài khoản.
 - Icon được dựng bằng SVG nội tuyến.
 - Modal gọi món tách vùng cuộn menu và phiếu bán hàng; vùng tổng tiền/thanh toán được giữ cố định.
+- Phiếu bán hàng dùng layout compact thống nhất cho món chưa trả, món đã trả và phí phiên câu.
+- Bảng đơn hàng dùng header sticky, vùng cuộn độc lập và phân trang tròn đồng bộ giữa POS/admin.
 - Tiền hiển thị theo định dạng Việt Nam, không hiển thị số thập phân; ô tiền khách đưa tự chèn dấu phân cách hàng nghìn.
 - Thông báo lỗi có nội dung mềm mại, dễ hiểu và hướng dẫn được bước tiếp theo.
 
@@ -163,13 +167,18 @@ Admin chỉ tập trung vào quản lý, không hiển thị các mục vận h�
 ### Quản lý đơn hàng
 
 - Xem đơn hiện tại và lịch sử.
-- Lọc theo mô hình và trạng thái.
+- Lọc theo mô hình và trạng thái bằng segmented/chip giống ngôn ngữ POS.
+- Click trực tiếp vào hàng để mở chi tiết đơn; không cần bấm nút riêng.
+- Header bảng sticky, bảng cuộn độc lập và phân trang tròn.
 - Xem chi tiết dòng món, tổng tiền, phần đã trả, phần còn lại và giao dịch.
 - Hủy đơn kèm lý do.
 - Đảo giao dịch thanh toán bằng adjustment có audit trail.
 
 ### Quản lý menu
 
+- Lọc nhóm món bằng chip giống modal order và tìm kiếm theo tên món.
+- Bảng menu cuộn độc lập, giữ bo góc và dùng phân trang tròn.
+- Click trực tiếp vào hàng để mở modal chỉnh sửa món.
 - Tạo một hoặc nhiều món trong cùng một lần.
 - Chọn nhóm món hiện có hoặc tạo nhóm mới ngay trong form.
 - Gợi ý các nhóm đang hoạt động và đã có món.
@@ -183,6 +192,7 @@ Admin chỉ tập trung vào quản lý, không hiển thị các mục vận h�
 ### Quản lý sơ đồ
 
 - Giao diện bàn/chòi đồng bộ với POS.
+- Hiển thị bàn/chòi đang được dùng dựa trên dữ liệu đơn POS hiện tại.
 - Chọn bàn hoặc chòi để sửa nhãn và trạng thái sử dụng.
 - Quản lý vị trí chuẩn hóa X/Y, giúp sơ đồ thích ứng theo kích thước màn hình.
 - Thêm/xóa slot khi nghiệp vụ cho phép.
@@ -194,6 +204,15 @@ Admin chỉ tập trung vào quản lý, không hiển thị các mục vận h�
 - Bật/tắt tài khoản.
 - Quản lý trạng thái xác minh email nhân viên.
 - Đặt lại mật khẩu quản trị viên.
+
+### Quản lý thanh toán
+
+- Quản lý các phương thức thanh toán hiển thị trên POS.
+- Mặc định có tiền mặt; có thể thêm nhiều phương thức QR/chuyển khoản.
+- Bật/tắt từng phương thức; POS chỉ hiển thị phương thức đang bật và đủ cấu hình.
+- Với QR/chuyển khoản, lưu ảnh QR, ngân hàng/ví điện tử, tên chủ tài khoản, số tài khoản, nội dung chuyển khoản và ghi chú hướng dẫn.
+- Ảnh QR hỗ trợ JPG, PNG hoặc WebP tối đa 30 MB.
+- Các thay đổi phương thức thanh toán được ghi audit log.
 
 ## Kiến trúc kỹ thuật
 
@@ -293,6 +312,7 @@ erDiagram
 | `payments` | Giao dịch tiền mặt bất biến |
 | `payment_lines` | Phân bổ giao dịch đến từng dòng món |
 | `payment_adjustments` | Điều chỉnh/đảo thanh toán có lý do |
+| `payment_qr_settings` | Phương thức thanh toán tiền mặt/QR, thông tin nhận tiền và ảnh QR |
 | `audit_logs` | Nhật ký thao tác quản trị nhạy cảm |
 | `notifications` | Thông báo database cho người dùng |
 
@@ -599,6 +619,9 @@ Tất cả JSON API dùng prefix `/api/v1`, session authentication và CSRF cùn
 | `PUT/DELETE` | `/admin/menu/{item}` | Sửa/lưu trữ món |
 | `GET/PUT/POST` | `/admin/map` | Đọc/cập nhật/thêm slot sơ đồ |
 | `DELETE` | `/admin/map/{type}/{id}` | Xóa slot |
+| `GET/POST` | `/admin/payment-settings` | Đọc/cập nhật cấu hình QR mặc định |
+| `POST` | `/admin/payment-methods` | Thêm phương thức thanh toán |
+| `POST/PUT` | `/admin/payment-methods/{paymentMethod}` | Cập nhật phương thức thanh toán |
 | `GET/POST` | `/admin/users` | Danh sách/tạo user |
 | `PUT` | `/admin/users/{user}` | Cập nhật user |
 | `POST` | `/admin/orders/{order}/void` | Hủy đơn có lý do |
@@ -649,6 +672,7 @@ Hệ thống tạo thông báo cho các sự kiện chính: đơn mới, gọi t
 - Kích thước tối đa: 30 MB mỗi ảnh.
 - Chấp nhận ảnh ngang, dọc hoặc vuông; UI crop bằng `object-fit` để card đồng nhất.
 - File được lưu trên disk public và đường dẫn nằm trong `menu_items.image_path`.
+- Ảnh QR phương thức thanh toán dùng cùng disk public, lưu trong `payment-qr/` và đường dẫn nằm trong `payment_qr_settings.qr_image_path`.
 
 Tạo symbolic link:
 
@@ -702,6 +726,8 @@ Bộ test bao phủ:
 - Tạo đơn cà phê, đơn tại quầy, gán bàn và chống tranh chấp bàn.
 - Optimistic version và stale update.
 - Tách thanh toán, thanh toán cuối, tự động/phóng bàn thủ công.
+- Thanh toán QR/chuyển khoản và quản lý nhiều phương thức thanh toán từ admin.
+- Danh sách đơn ưu tiên hoạt động mới nhất.
 - Phiên câu, gọi thêm món, gia hạn, hết giờ và notification idempotent.
 - Gộp đơn cà phê/câu cá và trường hợp paid + unpaid.
 - Ghi chú dòng món.
@@ -924,14 +950,14 @@ Các file nhạy cảm/runtime đã được `.gitignore` loại trừ, gồm `.
 
 Ứng dụng hiện giả định:
 
-- Thanh toán tiền mặt.
-- Không VAT/thuế, giảm giá, tồn kho, loyalty hoặc payment gateway.
+- Thanh toán tiền mặt và QR/chuyển khoản được nhân viên xác nhận thủ công.
+- Không VAT/thuế, giảm giá, tồn kho, loyalty hoặc payment gateway tự động.
 - Không in bếp/in hóa đơn phần cứng.
 - Không tính phí quá giờ tự động ngoài các block gia hạn 4 giờ.
 - Không tự tái chiếm bàn/chòi khi admin đảo một thanh toán đã hoàn tất.
 - Email OTP dùng SMTP; production cần thông tin SMTP thật và worker ổn định.
 
-Các mở rộng phù hợp trong tương lai: phân ca/két tiền, QR chuyển khoản, in bếp, tồn kho nguyên liệu, báo cáo chi phí/lợi nhuận, phân quyền chi tiết, export Excel/PDF và audit dashboard.
+Các mở rộng phù hợp trong tương lai: phân ca/két tiền, đối soát ngân hàng tự động, in bếp, tồn kho nguyên liệu, báo cáo chi phí/lợi nhuận, phân quyền chi tiết, export Excel/PDF và audit dashboard.
 
 ## Bảo mật và nguyên tắc vận hành
 
