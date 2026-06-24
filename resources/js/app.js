@@ -1,8 +1,11 @@
 import { api } from './modules/api.js';
 import { Cart } from './modules/cart.js';
 import { dateTime, escapeHtml, formatMoneyInput, formatStoredMoneyInput, money, number, parseMoneyInput, statusClass, statusLabel } from './modules/format.js';
+import { setupKeyboardViewportGuard } from './modules/keyboard.js';
 import { confirmModal, openModal } from './modules/modal.js';
 import { duration, remaining, ServerClock } from './modules/timers.js';
+
+setupKeyboardViewportGuard();
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];

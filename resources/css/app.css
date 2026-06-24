@@ -1065,20 +1065,27 @@ body.login-page {
 .modal-backdrop {
     position: fixed;
     inset: 0;
+    --modal-keyboard-offset: 0px;
     background: rgba(44, 30, 21, .38);
     backdrop-filter: blur(4px);
     z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 24px 24px calc(24px + var(--modal-keyboard-offset));
     animation: fadeIn .2s ease
+}
+
+.modal-backdrop.modal-keyboard-active {
+    align-items: flex-start;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch
 }
 
 .modal {
     background: white;
     width: min(720px, 100%);
-    max-height: 90vh;
+    max-height: min(90vh, calc(100dvh - 48px - var(--modal-keyboard-offset)));
     border-radius: 22px;
     box-shadow: 0 28px 80px rgba(44, 30, 21, .25);
     display: flex;
@@ -1730,7 +1737,7 @@ body.login-page {
     transform: scale(.95)
 }
 
-@media(max-width:1100px) {
+@media(min-width:768px) and (max-width:1100px) {
     .metric-grid {
         grid-template-columns: repeat(3, 1fr)
     }
@@ -1751,114 +1758,9 @@ body.login-page {
     }
 }
 
-@media(max-width:767px) {
-    .app-shell {
-        display: block
-    }
 
-    .sidebar {
-        transform: translateX(-100%);
-        transition: .25s
-    }
 
-    .sidebar.open {
-        transform: none
-    }
 
-    .workspace {
-        width: 100%
-    }
-
-    .mobile-only {
-        display: grid
-    }
-
-    .topbar {
-        padding: 0 16px
-    }
-
-    .clock span,
-    .profile>span:not(.avatar) {
-        display: none
-    }
-
-    .page-content {
-        padding: 22px 15px
-    }
-
-    .page-head {
-        align-items: flex-start;
-        flex-direction: column
-    }
-
-    .metric-grid {
-        grid-template-columns: repeat(2, 1fr)
-    }
-
-    .lp-shell {
-        padding: 16px
-    }
-
-    .lp-card {
-        border-radius: 22px;
-        padding: 28px 20px 22px
-    }
-
-    .lp-intro h1 {
-        font-size: 24px
-    }
-
-    .map-canvas {
-        min-height: 560px
-    }
-
-    .slot {
-        width: 68px;
-        height: 60px
-    }
-
-    .legend {
-        flex-wrap: wrap
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr
-    }
-}
-
-@media(max-width:520px) {
-    .metric-grid {
-        grid-template-columns: 1fr
-    }
-
-    .menu-grid {
-        grid-template-columns: 1fr
-    }
-
-    .popover {
-        position: fixed;
-        left: 12px;
-        right: 12px;
-        top: 72px;
-        width: auto
-    }
-
-    .modal-backdrop {
-        padding: 8px
-    }
-
-    .modal {
-        max-height: 96vh
-    }
-
-    .profile {
-        padding: 0
-    }
-
-    .top-actions {
-        gap: 6px
-    }
-}
 
 .sidebar-scrim {
     display: none
@@ -1907,251 +1809,11 @@ body.modal-open {
     }
 }
 
-@media(max-width:767px) {
-    body.sidebar-open {
-        overflow: hidden
-    }
 
-    .app-shell {
-        min-height: 100dvh
-    }
 
-    .sidebar {
-        width: min(320px, 86vw);
-        transform: translateX(-105%);
-        padding-top: max(28px, env(safe-area-inset-top));
-        padding-bottom: max(20px, env(safe-area-inset-bottom));
-        overflow-y: auto;
-        box-shadow: 18px 0 48px rgba(44, 30, 21, .2)
-    }
 
-    .sidebar.open {
-        transform: none
-    }
 
-    .sidebar-scrim {
-        display: block;
-        position: fixed;
-        inset: 0;
-        border: 0;
-        background: rgba(44, 30, 21, .38);
-        backdrop-filter: blur(2px);
-        z-index: 29;
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition: .25s
-    }
-
-    .sidebar-open .sidebar-scrim {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto
-    }
-
-    .sidebar nav a {
-        min-height: 48px
-    }
-
-    .topbar {
-        padding-left: max(16px, env(safe-area-inset-left));
-        padding-right: max(16px, env(safe-area-inset-right))
-    }
-
-    .page-content {
-        padding-right: max(15px, env(safe-area-inset-right));
-        padding-bottom: max(28px, env(safe-area-inset-bottom));
-        padding-left: max(15px, env(safe-area-inset-left))
-    }
-
-    .login-card {
-        min-height: 100dvh
-    }
-
-    .modal {
-        max-height: calc(100dvh - 32px)
-    }
-
-    .modal-body {
-        -webkit-overflow-scrolling: touch
-    }
-
-    .modal-foot {
-        position: sticky;
-        bottom: 0;
-        z-index: 2;
-        background: white
-    }
-
-    .button {
-        min-height: 44px
-    }
-
-    .icon-button {
-        width: 44px;
-        height: 44px
-    }
-
-    .menu-card {
-        min-height: 72px
-    }
-
-    .quantity button {
-        width: 40px;
-        height: 40px
-    }
-
-    .filter-row {
-        flex-wrap: wrap
-    }
-
-    .filter-row input,
-    .filter-row select {
-        min-height: 44px
-    }
-
-    .fishing-header-tip {
-        display: none
-    }
-
-    .fishing-map-header {
-        justify-content: center
-    }
-}
-
-@media(max-width:520px) {
-    .profile {
-        display: none
-    }
-
-    .clock strong {
-        font-size: 18px
-    }
-
-    .topbar {
-        height: 70px
-    }
-
-    .page-content {
-        padding-top: 18px
-    }
-
-    .page-head {
-        margin-bottom: 18px
-    }
-
-    .page-head h1 {
-        font-size: 26px
-    }
-
-    .modal-backdrop {
-        padding: 6px;
-        align-items: flex-end
-    }
-
-    .modal {
-        width: 100%;
-        max-height: calc(100dvh - 12px);
-        border-radius: 20px 20px 10px 10px
-    }
-
-    .modal-head {
-        padding: 17px 18px
-    }
-
-    .modal-body {
-        padding: 18px
-    }
-
-    .modal-foot {
-        padding: 14px 18px;
-        flex-wrap: wrap
-    }
-
-    .modal-foot>div {
-        margin-left: auto;
-        flex-wrap: wrap;
-        justify-content: flex-end
-    }
-
-    .map-shell {
-        border-radius: 18px
-    }
-
-    #page-content>.map-shell {
-        padding: 10px
-    }
-
-    #page-content>.map-shell .map-canvas {
-        height: auto;
-        min-height: 0;
-        padding: 10px;
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
-        background-color: #f8efe6
-    }
-
-    #page-content>.map-shell .map-canvas.lake:before {
-        inset: 8% 5%
-    }
-
-    #page-content>.map-shell .slot,
-    #page-content>.map-shell .slot:hover {
-        position: relative !important;
-        left: auto !important;
-        top: auto !important;
-        width: 100%;
-        height: 68px;
-        min-width: 0;
-        transform: none
-    }
-
-    #page-content>.map-shell .slot strong {
-        font-size: 12px
-    }
-
-    #page-content>.map-shell .slot small {
-        font-size: 8px
-    }
-
-    .legend {
-        gap: 10px
-    }
-
-    .toast-root {
-        left: 12px;
-        right: 12px;
-        top: max(12px, env(safe-area-inset-top));
-        justify-items: stretch
-    }
-
-    .toast {
-        width: auto;
-        max-width: none
-    }
-
-    .login-card {
-        width: calc(100% - 32px)
-    }
-
-    .data-table-wrap {
-        border-radius: 14px
-    }
-
-    .head-actions,
-    .filter-row {
-        width: 100%
-    }
-
-    .filter-row input,
-    .filter-row select {
-        width: 100%;
-        min-width: 0
-    }
-}
-
-@media(hover:none) and (pointer:coarse) {
+@media(min-width:768px) and (hover:none) and (pointer:coarse) {
 
     .button,
     .icon-button,
@@ -3129,7 +2791,7 @@ body.modal-open {
     }
 }
 
-@media(max-width:900px) {
+@media(min-width:768px) and (max-width:900px) {
     .coffee-pos-layout {
         grid-template-columns: 1fr
     }
@@ -3159,65 +2821,7 @@ body.modal-open {
     }
 }
 
-@media(max-width:620px) {
-    .pos-coffee-page .page-content {
-        padding: 15px
-    }
 
-    .pos-stats {
-        grid-template-columns: 1fr 1fr
-    }
-
-    .pos-section {
-        padding: 12px;
-        border-radius: 15px
-    }
-
-    .pos-section-head {
-        align-items: flex-start;
-        flex-direction: column
-    }
-
-    .pos-section-head .legend {
-        width: auto
-    }
-
-    .pos-table-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr))
-    }
-
-    .counter-order-strip {
-        grid-template-columns: 1fr
-    }
-
-    .pos-search {
-        width: 100%
-    }
-
-    .pos-product-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr))
-    }
-
-    .product-art {
-        height: 76px
-    }
-
-    .product-main strong {
-        font-size: 12px
-    }
-
-    .order-dock>#pos-order-panel {
-        min-height: 460px
-    }
-
-    .order-actions {
-        grid-template-columns: 1fr
-    }
-
-    .order-actions .button {
-        min-height: 46px
-    }
-}
 
 .order-head-actions {
     display: flex;
@@ -3247,7 +2851,7 @@ body.modal-open {
     font-size: 20px
 }
 
-@media(max-width:900px) {
+@media(min-width:768px) and (max-width:900px) {
     .pos-online {
         display: none
     }
@@ -3463,7 +3067,7 @@ body.modal-open {
 }
 
 /* Paginated workspaces: keep navigation stable while the data region scrolls. */
-@media (min-width: 621px) {
+@media(min-width:768px) {
     .page-content.paginated-page {
         display: flex;
         flex-direction: column;
@@ -3513,25 +3117,7 @@ body.modal-open {
 }
 
 /* Phones keep natural document scrolling; nested vertical scrolling is cramped. */
-@media (max-width: 620px) and (orientation: portrait) {
-    .page-content.paginated-page {
-        display: block;
-        height: auto;
-        min-height: calc(100dvh - 70px);
-        overflow: visible;
-    }
 
-    .paginated-results,
-    .paginated-scroll {
-        display: block;
-        min-height: 0;
-        overflow: visible;
-    }
-
-    .paginated-results>.admin-pagination {
-        position: static;
-    }
-}
 
 /* Admin management dashboard — financial and exception-focused. */
 .dashboard-filter-bar {
@@ -4266,7 +3852,7 @@ i.dot.fishing {
     color: #9c433c;
 }
 
-@media(max-width:1180px) {
+@media(min-width:768px) and (max-width:1180px) {
     .scoreboard-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 20px
@@ -4285,7 +3871,7 @@ i.dot.fishing {
     }
 }
 
-@media(max-width:960px) {
+@media(min-width:768px) and (max-width:960px) {
     .dashboard-filter-bar {
         flex-direction: column;
         align-items: stretch;
@@ -4326,27 +3912,6 @@ i.dot.fishing {
         height: 36px;
         padding: 0 16px;
         font-size: 12px
-    }
-}
-
-@media(max-width:768px) {
-    .management-chart-panel {
-        padding: 15px
-    }
-
-    .management-bar-chart {
-        height: 230px
-    }
-}
-
-@media(max-width:640px) {
-    .scoreboard-grid {
-        grid-template-columns: 1fr;
-        gap: 16px
-    }
-
-    .scoreboard-item::after {
-        display: none !important
     }
 }
 
@@ -4677,41 +4242,7 @@ i.dot.fishing {
     outline-offset: 2px
 }
 
-@media(max-width:767px) {
-    .admin-map-toolbar {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        width: 100%
-    }
 
-    .admin-map-tab {
-        min-width: 0;
-        padding: 0 14px
-    }
-
-    .admin-fishing-note {
-        align-items: flex-start;
-        flex-direction: column
-    }
-
-    .admin-resource-summary {
-        grid-template-columns: 46px minmax(0, 1fr)
-    }
-
-    .admin-resource-summary>span {
-        width: 46px;
-        height: 46px
-    }
-
-    .admin-resource-summary em {
-        grid-column: 1/-1;
-        width: max-content
-    }
-
-    .admin-resource-toggle-row {
-        padding: 14px
-    }
-}
 
 @keyframes swim-medium {
     0% {
@@ -4986,7 +4517,7 @@ i.dot.fishing {
     }
 }
 
-@media(max-width:850px) {
+@media(min-width:768px) and (max-width:850px) {
     .fishing-map-shell {
         padding: 14px !important;
         border-radius: 16px !important
@@ -5087,7 +4618,7 @@ i.dot.fishing {
     }
 }
 
-@media(max-width: 1024px) {
+@media(min-width:768px) and (max-width: 1024px) {
     .modal-pos-layout {
         grid-template-columns: 1.15fr 0.85fr !important;
     }
@@ -5097,25 +4628,7 @@ i.dot.fishing {
     }
 }
 
-@media(max-width: 767px) {
-    .modal-pos-layout {
-        grid-template-columns: 1fr !important;
-        height: auto !important;
-        max-height: 85vh;
-    }
 
-    .modal-pos-layout main {
-        border-right: none !important;
-        border-bottom: 1px solid var(--line);
-        border-radius: 22px 22px 0 0 !important;
-        height: 50vh !important;
-    }
-
-    .modal-pos-layout aside {
-        border-radius: 0 0 22px 22px !important;
-        height: auto !important;
-    }
-}
 
 .fishing-slot.selected-for-merge {
     border-color: var(--moss) !important;
@@ -5272,16 +4785,7 @@ i.dot.fishing {
     line-height: 1.6
 }
 
-@media(max-width:620px) {
-    .menu-image-preview {
-        height: 150px
-    }
 
-    .menu-table-image {
-        width: 44px;
-        height: 38px
-    }
-}
 
 /* POS order modal: menu and bill scroll independently; payment stays visible. */
 .pos-order-modal {
@@ -5526,74 +5030,7 @@ i.dot.fishing {
     }
 }
 
-@media(max-width:767px) {
-    .pos-order-modal {
-        height: calc(100dvh - 12px);
-        max-height: calc(100dvh - 12px)
-    }
 
-    .pos-order-modal>.modal-body {
-        padding: 0
-    }
-
-    .pos-order-modal .modal-pos-layout {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        grid-template-rows: minmax(0, 54fr) minmax(0, 46fr);
-        margin: 0 !important;
-        max-height: none !important
-    }
-
-    .pos-order-modal .pos-menu-section {
-        border-radius: 0 !important;
-        padding: 14px !important
-    }
-
-    .pos-order-modal .modal-order-dock-aside {
-        border-radius: 0 !important;
-        border-top: 1px solid var(--line) !important
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head {
-        margin-bottom: 10px !important
-    }
-
-    .pos-order-modal .pos-menu-section>.category-tabs {
-        margin-bottom: 10px !important
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-product-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        padding-right: 4px;
-        padding-bottom: 14px
-    }
-
-    .pos-order-modal .order-dock-head {
-        padding: 10px 14px !important
-    }
-
-    .pos-order-modal .order-resource-select {
-        margin-top: 8px !important;
-        padding: 8px !important
-    }
-
-    .pos-order-modal .order-lines {
-        padding-top: 2px !important;
-        padding-bottom: 2px !important
-    }
-
-    .pos-order-modal .order-dock-footer {
-        padding-top: 9px !important
-    }
-
-    .pos-order-modal .order-actions:has(#extend-session) {
-        grid-template-columns: repeat(2, 1fr) !important
-    }
-
-    .pos-order-modal .order-actions:has(#extend-session) #modal-checkout-order {
-        grid-column: span 2 !important
-    }
-}
 
 /* Flush sidebar — calm, compact and motion-aware */
 .app-shell,
@@ -5804,55 +5241,7 @@ i.dot.fishing {
     display: none
 }
 
-@media(max-width:767px) {
 
-    .app-shell,
-    .pos-coffee-page .app-shell,
-    .sidebar-collapsed .app-shell,
-    .sidebar-collapsed .pos-coffee-page .app-shell {
-        display: block
-    }
-
-    .sidebar,
-    .pos-coffee-page .sidebar,
-    .sidebar-collapsed .sidebar,
-    .sidebar-collapsed .pos-coffee-page .sidebar {
-        inset: 0 auto 0 0;
-        width: min(304px, 86vw);
-        height: 100dvh;
-        padding: 18px 14px 16px;
-        border-radius: 0
-    }
-
-    .sidebar-brand-row,
-    .sidebar-collapsed .sidebar-brand-row {
-        min-height: 60px;
-        display: flex;
-        justify-content: flex-start;
-        flex-direction: row;
-        margin-bottom: 14px;
-        padding-bottom: 13px
-    }
-
-    .sidebar .brand,
-    .pos-coffee-page .sidebar .brand,
-    .sidebar-collapsed .sidebar .brand {
-        width: auto;
-        justify-content: flex-start;
-        padding: 5px 10px;
-        flex: 1
-    }
-
-    .sidebar-collapsed .sidebar nav a,
-    .sidebar-collapsed .pos-coffee-page .sidebar nav a {
-        justify-content: flex-start;
-        padding: 5px 9px
-    }
-
-    .sidebar-collapsed .sidebar-foot {
-        display: flex
-    }
-}
 
 @media(prefers-reduced-motion:reduce) {
 
@@ -6090,164 +5479,9 @@ i.dot.fishing {
     background: rgba(255, 255, 255, .035)
 }
 
-@media(max-width:767px) {
 
-    .app-shell,
-    .pos-coffee-page .app-shell,
-    .sidebar-collapsed .app-shell,
-    .sidebar-collapsed .pos-coffee-page .app-shell {
-        display: block
-    }
 
-    .sidebar,
-    .pos-coffee-page .sidebar,
-    .sidebar-collapsed .sidebar,
-    .sidebar-collapsed .pos-coffee-page .sidebar {
-        inset: 8px auto 8px 8px;
-        width: min(304px, calc(100vw - 16px));
-        height: auto;
-        padding: 14px 12px;
-        border-radius: 22px
-    }
 
-    .sidebar-brand-row,
-    .sidebar-collapsed .sidebar-brand-row {
-        min-height: 58px;
-        display: flex;
-        justify-content: flex-start;
-        flex-direction: row;
-        margin-bottom: 14px;
-        padding-bottom: 12px
-    }
-
-    .sidebar .brand,
-    .pos-coffee-page .sidebar .brand,
-    .sidebar-collapsed .sidebar .brand {
-        width: auto;
-        justify-content: flex-start;
-        padding: 5px 10px;
-        flex: 1
-    }
-
-    .sidebar-collapsed .sidebar nav a,
-    .sidebar-collapsed .pos-coffee-page .sidebar nav a {
-        justify-content: flex-start;
-        padding: 5px 10px
-    }
-
-    .sidebar-collapsed .sidebar-foot {
-        justify-content: flex-start;
-        padding: 12px
-    }
-
-    /* Single-Column List Layout for Order Modal Product Grid */
-    .pos-order-modal .pos-menu-section>.pos-product-grid {
-        grid-template-columns: 1fr !important;
-        gap: 8px !important;
-        align-content: start !important;
-        grid-auto-rows: max-content !important;
-    }
-
-    .pos-order-modal .pos-product-card {
-        min-height: 68px !important;
-        border-radius: 12px !important;
-    }
-
-    .pos-order-modal .product-main {
-        display: grid !important;
-        grid-template-columns: 52px 1fr 30px !important;
-        grid-template-rows: 1fr auto !important;
-        align-items: center !important;
-        gap: 1px 12px !important;
-        padding: 8px 10px !important;
-        min-height: 68px !important;
-    }
-
-    .pos-order-modal .product-art {
-        grid-column: 1 !important;
-        grid-row: 1 / span 2 !important;
-        width: 52px !important;
-        height: 52px !important;
-        margin: 0 !important;
-        border-radius: 8px !important;
-    }
-
-    .pos-order-modal .product-main small {
-        display: none !important;
-    }
-
-    .pos-order-modal .product-main strong {
-        grid-column: 2 !important;
-        grid-row: 1 !important;
-        font-size: 13px !important;
-        margin: 0 0 2px 0 !important;
-        white-space: normal !important;
-        overflow: visible !important;
-        text-overflow: clip !important;
-        line-height: 1.2 !important;
-        padding: 0 !important;
-    }
-
-    .pos-order-modal .product-main b {
-        grid-column: 2 !important;
-        grid-row: 2 !important;
-        font-size: 10px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    .pos-order-modal .product-main em {
-        grid-column: 3 !important;
-        grid-row: 1 / span 2 !important;
-        position: static !important;
-        width: 28px !important;
-        height: 28px !important;
-        margin: 0 0 0 auto !important;
-        display: grid !important;
-        place-items: center !important;
-    }
-}
-
-@media(max-width:520px) {
-    .pos-order-modal .modal-pos-layout {
-        grid-template-rows: minmax(0, 48fr) minmax(0, 52fr) !important
-    }
-
-    .pos-order-modal>.modal-head {
-        min-height: 58px;
-        padding: 10px 14px !important
-    }
-
-    .pos-order-modal>.modal-head h2 {
-        font-size: 18px !important
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head {
-        align-items: flex-start !important;
-        gap: 8px !important
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head .pos-search {
-        width: 100% !important;
-        flex-basis: 100% !important
-    }
-
-    .pos-order-modal .order-actions {
-        grid-template-columns: 1fr 1.25fr !important
-    }
-
-    .pos-order-modal .order-actions:has(#extend-session) {
-        grid-template-columns: repeat(2, 1fr) !important
-    }
-
-    .pos-order-modal .order-actions:has(#extend-session) #modal-checkout-order {
-        grid-column: span 2 !important
-    }
-
-    .pos-order-modal .order-actions .button {
-        min-height: 44px
-    }
-}
 
 /* Expandable navigation sidebar */
 .app-shell {
@@ -6505,55 +5739,7 @@ i.dot.fishing {
     }
 }
 
-@media(max-width:767px) {
-    .sidebar-collapsed .app-shell {
-        display: block
-    }
 
-    .sidebar-collapsed .sidebar,
-    .sidebar {
-        width: min(320px, 86vw);
-        padding-left: 18px;
-        padding-right: 18px
-    }
-
-    .sidebar-collapse-toggle {
-        display: none
-    }
-
-    .sidebar-collapsed .sidebar .brand {
-        justify-content: flex-start;
-        padding: 5px 10px
-    }
-
-    .sidebar-collapsed .brand-copy,
-    .sidebar-collapsed .nav-label,
-    .sidebar-collapsed .sidebar-foot>span:last-child {
-        width: auto;
-        opacity: 1;
-        transform: none;
-        pointer-events: auto
-    }
-
-    .sidebar-collapsed .sidebar nav p {
-        height: auto;
-        padding: 17px 12px 6px;
-        margin: 0;
-        border: 0;
-        font-size: 8px
-    }
-
-    .sidebar-collapsed .sidebar nav a {
-        justify-content: flex-start;
-        padding: 6px 9px
-    }
-
-    .sidebar-collapsed .sidebar-foot {
-        justify-content: flex-start;
-        padding-left: 8px;
-        padding-right: 8px
-    }
-}
 
 /* Final flush-sidebar overrides (intentionally last in the cascade). */
 .app-shell,
@@ -6759,55 +5945,7 @@ i.dot.fishing {
     display: none
 }
 
-@media(max-width:767px) {
 
-    .app-shell,
-    .pos-coffee-page .app-shell,
-    .sidebar-collapsed .app-shell,
-    .sidebar-collapsed .pos-coffee-page .app-shell {
-        display: block
-    }
-
-    .sidebar,
-    .pos-coffee-page .sidebar,
-    .sidebar-collapsed .sidebar,
-    .sidebar-collapsed .pos-coffee-page .sidebar {
-        inset: 0 auto 0 0;
-        width: min(304px, 86vw);
-        height: 100dvh;
-        padding: 18px 14px 16px;
-        border-radius: 0
-    }
-
-    .sidebar-brand-row,
-    .sidebar-collapsed .sidebar-brand-row {
-        min-height: 60px;
-        display: flex;
-        justify-content: flex-start;
-        flex-direction: row;
-        margin-bottom: 14px;
-        padding-bottom: 13px
-    }
-
-    .sidebar .brand,
-    .pos-coffee-page .sidebar .brand,
-    .sidebar-collapsed .sidebar .brand {
-        width: auto;
-        justify-content: flex-start;
-        padding: 5px 10px;
-        flex: 1
-    }
-
-    .sidebar-collapsed .sidebar nav a,
-    .sidebar-collapsed .pos-coffee-page .sidebar nav a {
-        justify-content: flex-start;
-        padding: 5px 9px
-    }
-
-    .sidebar-collapsed .sidebar-foot {
-        display: flex
-    }
-}
 
 /* Keep labels separate from the legacy icon sizing rules on iPad. */
 .sidebar nav a .nav-label,
@@ -6844,24 +5982,7 @@ i.dot.fishing {
     opacity: 0
 }
 
-@media(max-width:767px) {
 
-    .sidebar nav a .nav-label,
-    .pos-coffee-page .sidebar nav a .nav-label,
-    .sidebar-collapsed .sidebar nav a .nav-label,
-    .sidebar-collapsed .pos-coffee-page .sidebar nav a .nav-label {
-        display: block !important;
-        width: auto !important;
-        flex: 1 1 auto !important;
-        font-size: 12px !important;
-        opacity: 1
-    }
-
-    .sidebar nav a .nav-icon,
-    .pos-coffee-page .sidebar nav a .nav-icon {
-        font-size: 0 !important
-    }
-}
 
 /* Touch-first order filters */
 .order-filter-bar {
@@ -6976,7 +6097,7 @@ i.dot.fishing {
     padding: 9px 14px
 }
 
-@media(max-width:1000px) {
+@media(min-width:768px) and (max-width:1000px) {
     .order-filter-bar {
         align-items: stretch;
         flex-direction: column;
@@ -6993,26 +6114,7 @@ i.dot.fishing {
     }
 }
 
-@media(max-width:520px) {
-    .order-filter-bar {
-        margin: -2px -3px 14px;
-        padding: 12px;
-        border-radius: 14px
-    }
 
-    .order-filter-button {
-        min-height: 44px;
-        padding: 0 13px
-    }
-
-    .order-filter-label {
-        font-size: 8px
-    }
-
-    #order-results .data-table-wrap {
-        margin: 0 -3px
-    }
-}
 
 /* Rich order-detail receipt */
 .order-detail-modal {
@@ -7359,32 +6461,7 @@ i.dot.fishing {
     font-size: 9px
 }
 
-@media(max-width:760px) {
-    .order-detail-modal>.modal-head {
-        padding: 15px 17px
-    }
 
-    .order-detail-hero {
-        padding: 15px
-    }
-
-    .order-detail-meta {
-        grid-template-columns: 1fr
-    }
-
-    .order-detail-grid {
-        grid-template-columns: 1fr;
-        padding: 9px
-    }
-
-    .order-detail-item-list {
-        max-height: 260px
-    }
-
-    .order-detail-identity>strong {
-        font-size: 14px
-    }
-}
 
 /* Refined receipt composition: compact, quieter and content-sized. */
 .order-detail-modal {
@@ -7596,43 +6673,7 @@ i.dot.fishing {
     padding: 19px 12px
 }
 
-@media(max-width:760px) {
-    .order-detail-modal {
-        width: 100%;
-        max-height: calc(100dvh - 12px);
-        border-radius: 18px 18px 8px 8px
-    }
 
-    .order-detail-hero {
-        grid-template-columns: 42px minmax(0, 1fr) auto;
-        padding: 13px
-    }
-
-    .order-detail-meta {
-        grid-column: 1/-1;
-        margin-top: 5px
-    }
-
-    .order-detail-meta>span {
-        flex: 1;
-        padding-right: 9px
-    }
-
-    .order-detail-meta>span+span {
-        margin-left: 9px;
-        padding-left: 9px
-    }
-
-    .order-detail-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 8px
-    }
-
-    .order-detail-item-list {
-        max-height: 220px
-    }
-}
 
 /* Content-sized receipt layout: no empty column beside short orders. */
 .order-detail-modal {
@@ -7671,25 +6712,7 @@ i.dot.fishing {
     grid-row: 1
 }
 
-@media(max-width:620px) {
-    .order-detail-side {
-        grid-template-columns: 1fr
-    }
 
-    .order-detail-payments,
-    .order-detail-summary {
-        grid-column: 1;
-        grid-row: auto
-    }
-
-    .order-detail-summary {
-        grid-row: 1
-    }
-
-    .order-detail-payments {
-        grid-row: 2
-    }
-}
 
 /* Structural receipt flow; isolated from the former two-column grid. */
 .order-detail-flow {
@@ -7727,25 +6750,7 @@ i.dot.fishing {
     grid-row: 1
 }
 
-@media(max-width:620px) {
-    .order-detail-flow {
-        padding: 8px
-    }
 
-    .order-detail-footer-grid {
-        grid-template-columns: 1fr
-    }
-
-    .order-detail-footer-grid>.order-detail-summary {
-        grid-column: 1;
-        grid-row: 1
-    }
-
-    .order-detail-footer-grid>.order-detail-payments {
-        grid-column: 1;
-        grid-row: 2
-    }
-}
 
 /* POS receipt detail — informed by Square/Shopify/Toast transaction views. */
 .pos-receipt-modal {
@@ -8054,46 +7059,7 @@ i.dot.fishing {
     font-size: 8px
 }
 
-@media(max-width:620px) {
-    .pos-receipt-modal {
-        width: 100%;
-        max-height: calc(100dvh - 12px);
-        border-radius: 18px 18px 8px 8px
-    }
 
-    .pos-receipt-head {
-        padding: 14px
-    }
-
-    .pos-receipt-meta {
-        margin: 0 14px 12px
-    }
-
-    .pos-receipt-section>header,
-    .pos-receipt-payments>header,
-    .pos-payment-row {
-        padding-left: 14px;
-        padding-right: 14px
-    }
-
-    .pos-receipt-lines,
-    .pos-receipt-totals {
-        padding-left: 14px;
-        padding-right: 14px
-    }
-
-    .pos-receipt-meta {
-        grid-template-columns: 1fr 1fr
-    }
-
-    .pos-receipt-meta>span:nth-child(3) {
-        grid-column: 1/-1;
-        margin-top: 9px;
-        padding: 9px 0 0;
-        border-top: 1px solid var(--line);
-        border-right: 0
-    }
-}
 
 /* iPad-first receipt palette and readable type scale. */
 .pos-receipt-modal {
@@ -8371,122 +7337,9 @@ i.dot.fishing {
     }
 }
 
-@media(max-width:767px) {
-    .pos-receipt-modal {
-        width: 100%;
-        max-height: calc(100dvh - 10px);
-        border-radius: 20px 20px 6px 6px
-    }
 
-    .pos-receipt-modal>.modal-head {
-        min-height: 60px;
-        padding: 10px 12px 10px 17px
-    }
 
-    .pos-receipt-modal>.modal-head h2 {
-        font-size: 15px
-    }
 
-    .pos-receipt-head {
-        grid-template-columns: 44px minmax(0, 1fr) auto;
-        gap: 10px;
-        padding: 16px 15px 14px
-    }
-
-    .pos-receipt-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 13px
-    }
-
-    .pos-receipt-title small {
-        font-size: 9px
-    }
-
-    .pos-receipt-title strong {
-        font-size: 15px
-    }
-
-    .pos-receipt-meta {
-        margin: 0 15px 14px;
-        padding: 12px 0;
-        grid-template-columns: 1fr 1fr
-    }
-
-    .pos-receipt-meta>span {
-        padding: 0 10px
-    }
-
-    .pos-receipt-meta>span:first-child {
-        padding-left: 0
-    }
-
-    .pos-receipt-meta>span:nth-child(3) {
-        grid-column: 1/-1;
-        margin-top: 11px;
-        padding: 11px 0 0;
-        border-top: 1px solid #dce5dc;
-        border-right: 0
-    }
-
-    .pos-receipt-section>header,
-    .pos-receipt-payments>header,
-    .pos-payment-row {
-        padding-left: 15px;
-        padding-right: 15px
-    }
-
-    .pos-receipt-lines,
-    .pos-receipt-totals {
-        padding-left: 15px;
-        padding-right: 15px
-    }
-
-    .pos-receipt-lines {
-        max-height: 40dvh
-    }
-
-    .pos-receipt-line {
-        min-height: 64px
-    }
-
-    .pos-receipt-line div>strong {
-        font-size: 14px
-    }
-
-    .pos-receipt-line div>small {
-        font-size: 10px
-    }
-
-    .pos-receipt-totals .receipt-grand-total strong {
-        font-size: 22px
-    }
-}
-
-@media(max-width:390px) {
-    .pos-receipt-head>.pill {
-        grid-column: 2/-1;
-        justify-self: start
-    }
-
-    .pos-receipt-title strong {
-        font-size: 13px
-    }
-
-    .pos-receipt-meta strong {
-        font-size: 11px
-    }
-
-    .pos-receipt-line {
-        grid-template-columns: 30px minmax(0, 1fr) auto;
-        gap: 8px
-    }
-
-    .receipt-quantity {
-        width: 29px;
-        height: 29px
-    }
-}
 
 /* Collapsed sidebar already has a divider below the brand; hide section dividers. */
 .sidebar-collapsed .sidebar nav>p,
@@ -8498,17 +7351,7 @@ i.dot.fishing {
     border: 0 !important
 }
 
-@media(max-width:767px) {
 
-    .sidebar-collapsed .sidebar nav>p,
-    .sidebar-collapsed .pos-coffee-page .sidebar nav>p {
-        display: block !important;
-        height: auto !important;
-        margin: 0 !important;
-        padding: 17px 12px 6px !important;
-        border: 0 !important
-    }
-}
 
 /* One sidebar geometry across Coffee, Fishing and Orders. */
 :root {
@@ -8534,19 +7377,7 @@ html.sidebar-collapsed .sidebar {
     padding: 18px 11px 74px !important
 }
 
-@media(max-width:767px) {
 
-    html:not(.sidebar-collapsed) .app-shell,
-    html.sidebar-collapsed .app-shell {
-        display: block !important
-    }
-
-    html:not(.sidebar-collapsed) .sidebar,
-    html.sidebar-collapsed .sidebar {
-        width: min(304px, 86vw) !important;
-        padding: 18px 14px 16px !important
-    }
-}
 
 /* Single-layer active navigation: stronger focus without nested rounded boxes. */
 .sidebar nav a.active {
@@ -8678,7 +7509,7 @@ html.sidebar-collapsed .sidebar {
     }
 }
 
-@media(max-width:850px) {
+@media(min-width:768px) and (max-width:850px) {
     .order-filter-label {
         display: none
     }
@@ -8700,19 +7531,7 @@ html.sidebar-collapsed .sidebar {
     }
 }
 
-@media(max-width:520px) {
-    .order-filter-bar {
-        margin: 0 -3px 10px;
-        padding: 7px 8px;
-        border-radius: 12px
-    }
 
-    .order-filter-button {
-        min-height: 40px;
-        padding: 0 9px;
-        font-size: 10px
-    }
-}
 
 /* Larger touch targets around a narrower fishing lake. */
 .fishing-lake-plan {
@@ -8756,31 +7575,7 @@ html.sidebar-collapsed .sidebar {
     height: 9px
 }
 
-@media(max-width:620px) {
-    .fishing-lake-plan {
-        grid-template-columns: 112px minmax(64px, 1fr) 112px;
-        grid-template-rows: repeat(10, 58px);
-        gap: 6px;
-        min-height: 646px
-    }
 
-    .fishing-slot,
-    .fishing-slot.side-right {
-        min-height: 58px;
-        padding: 6px
-    }
-
-    .fishing-slot-number {
-        height: 34px;
-        min-width: 0;
-        padding: 0 4px;
-        font-size: 11px
-    }
-
-    .fishing-slot>span:nth-child(2) small {
-        font-size: 7px
-    }
-}
 
 /* Second touch-first pass: narrower water, roomier fishing huts. */
 .fishing-lake-plan {
@@ -8846,53 +7641,9 @@ html.sidebar-collapsed .sidebar {
     }
 }
 
-@media(max-width:620px) {
-    .fishing-lake-plan {
-        grid-template-columns: 134px minmax(42px, .72fr) 134px;
-        grid-template-rows: repeat(10, 66px);
-        column-gap: 8px;
-        row-gap: 10px;
-        min-height: 786px;
-        padding: 10px
-    }
 
-    .fishing-slot,
-    .fishing-slot.side-right {
-        min-height: 66px;
-        padding: 8px
-    }
 
-    .fishing-slot-number {
-        height: 40px;
-        padding: 0 5px;
-        font-size: 12px
-    }
 
-    .fishing-slot>span:nth-child(2) strong {
-        font-size: 13px
-    }
-
-    .fishing-slot>span:nth-child(2) small {
-        font-size: 10px
-    }
-}
-
-@media(max-width:360px) {
-    .fishing-lake-plan {
-        grid-template-columns: 108px minmax(42px, 1fr) 108px;
-        gap: 5px;
-        padding: 6px
-    }
-
-    .fishing-slot,
-    .fishing-slot.side-right {
-        padding: 6px
-    }
-
-    .fishing-slot-number {
-        font-size: 10px
-    }
-}
 
 /* Fishing controls: keep every label readable on iPad portrait. */
 .fishing-header-actions {
@@ -8953,35 +7704,7 @@ html.sidebar-collapsed .sidebar {
     }
 }
 
-@media(max-width:767px) {
-    .fishing-map-header {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 9px;
-        justify-content: stretch
-    }
 
-    .fishing-header-actions {
-        grid-row: 1;
-        justify-content: flex-start;
-        margin: 0
-    }
-
-    .fishing-map-header>.legend {
-        grid-row: 2;
-        width: 100%;
-        gap: 16px;
-        overflow-x: auto;
-        padding: 9px 2px 2px;
-        flex-wrap: nowrap;
-        border-top: 1px solid #e3e9e2;
-        scrollbar-width: none
-    }
-
-    .fishing-map-header>.legend::-webkit-scrollbar {
-        display: none
-    }
-}
 
 /* LemonInk-inspired login refresh — iPad-first, OTP employee flow. */
 body.login-page {
@@ -9258,108 +7981,9 @@ body.login-page {
     }
 }
 
-@media(max-width:620px) {
-    .login-page .lp-shell {
-        align-items: start;
-        padding: 18px 14px
-    }
 
-    .login-page .lp-card {
-        width: 100%;
-        min-height: calc(100dvh - 36px);
-        padding: 32px 20px 26px;
-        border-radius: 30px;
-        gap: 22px
-    }
 
-    .login-page .lp-brand-mark {
-        width: 48px;
-        height: 48px;
-        border-radius: 16px
-    }
 
-    .login-page .lp-tabs {
-        height: auto;
-        border-radius: 24px
-    }
-
-    .login-page .lp-tab {
-        min-height: 50px;
-        font-size: 13px;
-        gap: 7px
-    }
-
-    .login-page .lp-tab svg {
-        width: 18px;
-        height: 18px
-    }
-
-    .login-page .lp-intro h1 {
-        font-size: 36px
-    }
-
-    .login-page .lp-intro p {
-        font-size: 15px
-    }
-
-    .login-page .lp-field>label,
-    .login-page .lp-field-header label {
-        font-size: 14px
-    }
-
-    .login-page .lp-field input {
-        height: 60px;
-        padding: 0 20px;
-        font-size: 17px
-    }
-
-    .login-page .lp-outlined {
-        min-height: 66px;
-        padding: 10px 20px
-    }
-
-    .login-page .lp-outlined-label {
-        left: 20px;
-        font-size: 13px
-    }
-
-    .login-page .lp-outlined-val {
-        font-size: 16px
-    }
-
-    .login-page .lp-amber-link {
-        font-size: 15px
-    }
-
-    .login-page .lp-btn {
-        height: 62px;
-        font-size: 18px
-    }
-
-    .login-page .lp-resend {
-        font-size: 15px
-    }
-}
-
-@media(max-width:390px) {
-    .login-page .lp-card {
-        padding-left: 16px;
-        padding-right: 16px;
-        border-radius: 26px
-    }
-
-    .login-page .lp-intro h1 {
-        font-size: 32px
-    }
-
-    .login-page .lp-tab {
-        font-size: 12px
-    }
-
-    .login-page .lp-field input {
-        font-size: 16px
-    }
-}
 
 /* Login scale correction: LemonInk mood, POS-appropriate density. */
 .login-page .lp-card {
@@ -9509,37 +8133,7 @@ body.login-page {
     }
 }
 
-@media(max-width:620px) {
-    .login-page .lp-card {
-        min-height: auto;
-        padding: 28px 18px 22px;
-        border-radius: 24px;
-        gap: 18px
-    }
 
-    .login-page .lp-intro h1 {
-        font-size: 30px
-    }
-
-    .login-page .lp-intro p {
-        font-size: 13px
-    }
-
-    .login-page .lp-tab {
-        min-height: 44px;
-        font-size: 12px
-    }
-
-    .login-page .lp-field input {
-        height: 54px;
-        font-size: 15px
-    }
-
-    .login-page .lp-btn {
-        height: 56px;
-        font-size: 16px
-    }
-}
 
 /* Final compact login sizing after tablet preview feedback. */
 .login-page .lp-card {
@@ -9701,39 +8295,7 @@ body.login-page {
     }
 }
 
-@media(max-width:620px) {
-    .login-page .lp-shell {
-        padding: 14px 12px
-    }
 
-    .login-page .lp-card {
-        width: 100%;
-        padding: 24px 16px 20px;
-        border-radius: 22px;
-        gap: 14px
-    }
-
-    .login-page .lp-intro h1 {
-        font-size: 27px
-    }
-
-    .login-page .lp-tabs {
-        height: auto;
-        border-radius: 16px
-    }
-
-    .login-page .lp-tab {
-        min-height: 40px
-    }
-
-    .login-page .lp-field input {
-        height: 46px
-    }
-
-    .login-page .lp-btn {
-        height: 48px
-    }
-}
 
 /* Unbranded login + POS palette alignment. */
 .login-page .lp-card {
@@ -9949,23 +8511,7 @@ body.login-page {
     }
 }
 
-@media(max-width:520px) {
-    .profile-menu-wrap .profile {
-        display: flex;
-        min-height: 44px;
-        padding: 0 4px
-    }
 
-    .profile-menu-wrap .profile-copy,
-    .profile-menu-wrap .profile-chevron {
-        display: none
-    }
-
-    .profile-menu {
-        right: -8px;
-        width: min(250px, calc(100vw - 24px))
-    }
-}
 
 /* iPad-first typography and touch sizing.
    Keep operational text readable at arm's length without crowding phones. */
@@ -10245,97 +8791,7 @@ body.login-page {
     }
 }
 
-@media(max-width:767px) {
 
-    html,
-    body {
-        font-size: 14px
-    }
-
-    .pos-table-card strong {
-        font-size: 14px
-    }
-
-    .pos-table-card small {
-        font-size: 10px
-    }
-
-    .pos-table-card .table-state {
-        font-size: 9px
-    }
-
-    .category-tabs button {
-        min-height: 42px;
-        font-size: 12px
-    }
-
-    .product-main small {
-        font-size: 9px
-    }
-
-    .product-main strong {
-        font-size: 14px
-    }
-
-    .product-main b {
-        font-size: 11px
-    }
-
-    .data-table th {
-        font-size: 10px
-    }
-
-    .data-table td {
-        font-size: 13px
-    }
-
-    .pos-order-modal .order-dock-head .eyebrow {
-        font-size: 10px !important
-    }
-
-    .pos-order-modal .order-resource-select small {
-        font-size: 10px !important
-    }
-
-    .pos-order-modal .order-resource-select select {
-        font-size: 13px !important
-    }
-
-    .pos-order-modal .order-line strong {
-        font-size: 14px !important
-    }
-
-    .pos-order-modal .order-line small {
-        font-size: 11px !important
-    }
-
-    .pos-order-modal .order-line input[data-modal-note] {
-        height: 38px !important;
-        font-size: 12px !important
-    }
-
-    .pos-order-modal .order-line .quantity button {
-        width: 40px !important;
-        height: 40px !important
-    }
-
-    .pos-order-modal .order-line .quantity b {
-        font-size: 14px !important
-    }
-
-    .pos-order-modal .order-dock-footer .summary-row {
-        font-size: 12px !important
-    }
-
-    .pos-order-modal .order-dock-footer .summary-row.total {
-        font-size: 18px !important
-    }
-
-    .pos-order-modal .order-actions .button {
-        min-height: 46px !important;
-        font-size: 12px !important
-    }
-}
 
 /* Fishing module palette: inherit the POS brown/cream system;
    reserve green, red and gray for operational states only. */
@@ -10560,7 +9016,7 @@ body.login-page {
     box-shadow: 0 0 0 3px rgba(78, 54, 41, .16), 0 9px 22px rgba(74, 53, 36, .14) !important
 }
 
-@media(max-width:850px) {
+@media(min-width:768px) and (max-width:850px) {
     .fishing-slot-number {
         background: #f6ece2 !important;
         color: #4e3629 !important
@@ -10880,34 +9336,7 @@ body.login-page {
     font-size: 10px
 }
 
-@media(max-width:620px) {
-    .user-account-modal .modal-body {
-        padding: 16px
-    }
 
-    .user-account-modal .modal-foot {
-        padding: 13px 16px
-    }
-
-    .user-role-tabs,
-    .user-form-grid {
-        grid-template-columns: 1fr
-    }
-
-    .user-form-identity p,
-    .user-form-footnote {
-        display: none
-    }
-
-    .user-role-tab {
-        min-height: 62px
-    }
-
-    .user-account-modal .modal-foot>div,
-    .user-account-modal .modal-foot .button {
-        width: 100%
-    }
-}
 
 /* Compact two-column menu item form. */
 .menu-item-modal {
@@ -11170,66 +9599,9 @@ body.login-page {
     font-size: 10px
 }
 
-@media(max-width:760px) {
-    .menu-item-form {
-        grid-template-columns: 1fr
-    }
 
-    .menu-image-drop .menu-image-preview {
-        height: 180px
-    }
 
-    .menu-media-column {
-        display: grid;
-        grid-template-columns: 180px minmax(0, 1fr);
-        align-items: start
-    }
 
-    .menu-media-column .menu-form-section-title {
-        grid-column: 1/-1
-    }
-
-    .menu-image-help {
-        padding-top: 5px
-    }
-
-    .menu-image-remove {
-        grid-column: 2
-    }
-
-    .menu-form-footnote {
-        display: none
-    }
-}
-
-@media(max-width:520px) {
-    .menu-item-modal .modal-body {
-        padding: 16px
-    }
-
-    .menu-item-modal .modal-foot {
-        padding: 13px 16px
-    }
-
-    .menu-media-column,
-    .menu-form-grid {
-        display: grid;
-        grid-template-columns: 1fr
-    }
-
-    .menu-image-drop .menu-image-preview {
-        height: 165px
-    }
-
-    .menu-image-remove {
-        grid-column: auto
-    }
-
-    .menu-item-modal .modal-foot>div,
-    .menu-item-modal .modal-foot .button {
-        width: 100%
-    }
-}
 
 /* Batch menu entry */
 .menu-batch-modal {
@@ -11660,7 +10032,7 @@ body.login-page {
     font-size: 10px
 }
 
-@media(max-width:820px) {
+@media(min-width:768px) and (max-width:820px) {
     .menu-batch-modal .modal-body {
         padding: 16px
     }
@@ -11687,61 +10059,7 @@ body.login-page {
     }
 }
 
-@media(max-width:560px) {
-    .menu-batch-modal .modal-head {
-        padding: 15px 16px
-    }
 
-    .menu-batch-modal .modal-body {
-        padding: 12px
-    }
-
-    .menu-batch-modal .modal-foot {
-        padding: 12px 14px
-    }
-
-    .menu-batch-category,
-    .menu-batch-items {
-        padding: 13px;
-        border-radius: 15px
-    }
-
-    .menu-batch-section-head {
-        align-items: flex-start;
-        flex-direction: column
-    }
-
-    .menu-batch-add-row-wrap .button {
-        width: 100%
-    }
-
-    .menu-batch-row {
-        grid-template-columns: 88px minmax(0, 1fr);
-        gap: 10px;
-        padding: 10px
-    }
-
-    .menu-batch-image {
-        height: 72px
-    }
-
-    .menu-batch-fields {
-        grid-template-columns: 1fr
-    }
-
-    .menu-batch-description {
-        grid-column: auto
-    }
-
-    .menu-batch-count {
-        display: none
-    }
-
-    .menu-batch-modal .modal-foot>div,
-    .menu-batch-modal .modal-foot .button {
-        width: 100%
-    }
-}
 
 /* Premium Accent Top Borders */
 .coffee-panel {
@@ -12422,13 +10740,13 @@ body.login-page {
     white-space: nowrap
 }
 
-@media(max-width:1320px) {
+@media(min-width:768px) and (max-width:1320px) {
     .owner-kpis {
         grid-template-columns: repeat(2, 1fr)
     }
 }
 
-@media(max-width:1100px) {
+@media(min-width:768px) and (max-width:1100px) {
     .owner-dashboard-head {
         flex-direction: column !important;
         align-items: stretch !important;
@@ -12507,7 +10825,7 @@ body.login-page {
     }
 }
 
-@media(max-width:900px) {
+@media(min-width:768px) and (max-width:900px) {
     .dashboard-filter {
         justify-content: space-between
     }
@@ -12554,60 +10872,7 @@ body.login-page {
     }
 }
 
-@media(max-width:620px) {
-    .owner-kpis {
-        grid-template-columns: 1fr
-    }
 
-    .owner-kpi {
-        padding: 16px
-    }
-
-    .owner-kpi strong {
-        font-size: 22px
-    }
-
-    .dashboard-filter {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr
-    }
-
-    .dashboard-filter .button {
-        grid-column: 1/-1
-    }
-
-    .owner-panel {
-        padding: 16px
-    }
-
-    .business-total {
-        align-items: flex-start;
-        flex-direction: column
-    }
-
-    .revenue-overview {
-        overflow-x: visible !important
-    }
-
-    .owner-revenue-chart {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        min-width: 0 !important
-    }
-
-    .chart-legend {
-        gap: 12px
-    }
-
-    .dash-mini-row {
-        grid-template-columns: 1fr auto
-    }
-
-    .dash-mini-row small {
-        display: none
-    }
-}
 
 /* Final dashboard geometry: filter shares the same full-width container as cards. */
 .page-content.owner-dashboard-page {
@@ -12641,7 +10906,7 @@ body.login-page {
     box-shadow: none !important
 }
 
-@media(max-width:810px) {
+@media(min-width:768px) and (max-width:810px) {
     .owner-dashboard-page .owner-dashboard-head {
         grid-template-columns: 1fr !important;
         align-items: stretch !important;
@@ -12674,234 +10939,7 @@ body.login-page {
     flex: 0 0 auto
 }
 
-@media(max-width: 767px) {
-    .owner-orders-page .page-head {
-        margin-bottom: 18px
-    }
 
-    .owner-orders-page .order-filter-bar {
-        gap: 6px;
-        padding: 9px 8px
-    }
-
-    .owner-orders-page .order-filter-label {
-        display: none
-    }
-
-    .owner-orders-page .order-filter-group {
-        gap: 0
-    }
-
-    .owner-orders-page .order-filter-options {
-        gap: 4px
-    }
-
-    .owner-orders-page .order-filter-button {
-        min-height: 38px;
-        padding: 0 6px;
-        font-size: 8.5px
-    }
-
-    .owner-orders-page .order-filter-button svg {
-        width: 13px;
-        height: 13px
-    }
-
-    .owner-orders-page .order-filter-divider {
-        height: 30px;
-        margin: 0 1px
-    }
-
-    .owner-orders-page .data-table-wrap {
-        overflow: visible;
-        border: 0;
-        background: transparent
-    }
-
-    .owner-orders-page .data-table {
-        display: block;
-        min-width: 0
-    }
-
-    .owner-orders-page .data-table thead {
-        display: none
-    }
-
-    .owner-orders-page .data-table tbody {
-        display: grid;
-        gap: 10px
-    }
-
-    .owner-orders-page .data-table tr {
-        position: relative;
-        display: grid;
-        grid-template-columns: minmax(116px, 1.2fr) minmax(108px, 1fr) minmax(82px, .72fr) auto;
-        grid-template-rows: auto auto;
-        gap: 5px 12px;
-        padding: 10px 12px 10px 15px;
-        border: 1px solid #d8caba;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #fff 0%, #fdfbf8 100%);
-        box-shadow: 0 7px 20px rgba(74, 53, 36, .045);
-        overflow: hidden
-    }
-
-    .owner-orders-page .data-table tr:after {
-        content: "";
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: 3px;
-        background: var(--moss-2);
-        opacity: .78
-    }
-
-    .owner-orders-page #order-results .data-table td {
-        display: grid;
-        align-content: center;
-        justify-content: start;
-        gap: 2px;
-        min-width: 0;
-        height: auto;
-        min-height: 27px;
-        padding: 0;
-        border: 0;
-        font-size: 11px;
-        background: transparent
-    }
-
-    .owner-orders-page .data-table td:before {
-        content: attr(data-label);
-        color: var(--muted);
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: .08em;
-        text-transform: uppercase
-    }
-
-    .owner-orders-page .data-table td:nth-child(2):before,
-    .owner-orders-page .data-table td:nth-child(3):before,
-    .owner-orders-page .data-table td:nth-child(6):before,
-    .owner-orders-page .data-table td:nth-child(7):before {
-        display: none
-    }
-
-    .owner-orders-page .data-table td:nth-child(1) {
-        grid-column: 1;
-        grid-row: 1
-    }
-
-    .owner-orders-page .data-table td:nth-child(2) {
-        grid-column: 2;
-        grid-row: 1
-    }
-
-    .owner-orders-page .data-table td:nth-child(3) {
-        grid-column: 2;
-        grid-row: 2
-    }
-
-    .owner-orders-page .data-table td:nth-child(4) {
-        grid-column: 1;
-        grid-row: 2
-    }
-
-    .owner-orders-page .data-table td:nth-child(5) {
-        grid-column: 3;
-        grid-row: 1/3;
-        align-self: center
-    }
-
-    .owner-orders-page .data-table td:nth-child(6) {
-        grid-column: 4;
-        grid-row: 1;
-        justify-items: end
-    }
-
-    .owner-orders-page .data-table td:nth-child(7) {
-        grid-column: 4;
-        grid-row: 2;
-        justify-items: end
-    }
-
-    .owner-orders-page .data-table td:nth-child(1) strong {
-        font-size: 14px;
-        letter-spacing: .015em
-    }
-
-    .owner-orders-page .data-table td:nth-child(5) strong {
-        white-space: nowrap
-    }
-
-    .owner-orders-page .order-card-meta {
-        color: var(--muted);
-        font-weight: 600
-    }
-
-    .owner-orders-page .order-card-meta svg {
-        width: 16px;
-        height: 16px;
-        color: var(--moss-2)
-    }
-
-    .owner-orders-page .data-table .pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        width: 88px;
-        padding: 6px 8px;
-        background: #edf3ea;
-        color: #486148;
-        font-size: 9px;
-        line-height: 1.3
-    }
-
-    .owner-orders-page .data-table .pill.warn {
-        background: var(--amber-bg);
-        color: var(--amber)
-    }
-
-    .owner-orders-page .data-table .pill.danger {
-        background: var(--rose-bg);
-        color: var(--rose)
-    }
-
-    .owner-orders-page .data-table .table-actions {
-        justify-content: flex-end
-    }
-
-    .owner-orders-page .data-table .table-actions .button {
-        min-height: 32px;
-        padding: 0 9px;
-        background: transparent;
-        color: var(--moss);
-        font-size: 9px;
-        box-shadow: none
-    }
-
-    .owner-orders-page .data-table .table-actions .button:hover {
-        background: var(--mint);
-        transform: none
-    }
-
-    .owner-orders-page .data-table .table-actions .button svg {
-        width: 13px;
-        height: 13px
-    }
-
-    .owner-orders-page .data-table tr.order-table-empty {
-        display: block;
-        padding: 0
-    }
-
-    .owner-orders-page .data-table tr.order-table-empty td {
-        display: block
-    }
-
-    .owner-orders-page .data-table tr.order-table-empty td:before {
-        content: none
-    }
-}
 
 /* Admin menu: keep the real table on iPad; cards are reserved for phones. */
 .admin-pagination {
@@ -12982,7 +11020,7 @@ body.login-page {
     font-weight: 700
 }
 
-@media(min-width:621px) and (max-width:1024px) {
+@media(min-width:768px) and (max-width:1024px) {
     .owner-menu-page .data-table {
         min-width: 100%;
         table-layout: fixed
@@ -13047,165 +11085,7 @@ body.login-page {
     }
 }
 
-@media(max-width:620px) {
-    .admin-pagination {
-        align-items: flex-end;
-        margin-top: 14px
-    }
 
-    .pagination-summary {
-        font-size: 10px
-    }
-
-    .pagination-controls {
-        gap: 5px
-    }
-
-    .pagination-nav,
-    .pagination-page,
-    .pagination-gap {
-        min-width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        font-size: 11px
-    }
-
-    .owner-menu-page .page-head {
-        align-items: end;
-        margin-bottom: 18px
-    }
-
-    .owner-menu-page .page-head .head-actions .button {
-        min-height: 42px;
-        padding: 10px 14px;
-        font-size: 11px
-    }
-
-    .owner-menu-page .data-table-wrap {
-        overflow: visible;
-        border: 0;
-        background: transparent
-    }
-
-    .owner-menu-page .data-table {
-        display: block;
-        min-width: 0
-    }
-
-    .owner-menu-page .data-table thead {
-        display: none
-    }
-
-    .owner-menu-page .data-table tbody {
-        display: grid;
-        gap: 10px
-    }
-
-    .owner-menu-page .data-table tr {
-        display: grid;
-        grid-template-columns: 62px minmax(0, 1fr) auto auto;
-        grid-template-rows: auto auto;
-        align-items: center;
-        gap: 6px 12px;
-        padding: 11px 12px;
-        border: 1px solid var(--line);
-        border-radius: 15px;
-        background: #fff;
-        box-shadow: 0 6px 18px rgba(74, 53, 36, .04)
-    }
-
-    .owner-menu-page .data-table td {
-        display: block;
-        min-width: 0;
-        height: auto;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        font-size: 11px
-    }
-
-    .owner-menu-page .data-table td:before {
-        display: none
-    }
-
-    .owner-menu-page .data-table td:nth-child(1) {
-        grid-column: 1;
-        grid-row: 1/3
-    }
-
-    .owner-menu-page .data-table td:nth-child(2) {
-        grid-column: 2;
-        grid-row: 1
-    }
-
-    .owner-menu-page .data-table td:nth-child(2) strong {
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 14px
-    }
-
-    .owner-menu-page .data-table td:nth-child(2) small {
-        display: block;
-        max-width: 230px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 9px
-    }
-
-    .owner-menu-page .data-table td:nth-child(3) {
-        grid-column: 2;
-        grid-row: 2;
-        color: var(--muted);
-        font-size: 10px
-    }
-
-    .owner-menu-page .data-table td:nth-child(4) {
-        grid-column: 3;
-        grid-row: 1;
-        font-size: 12px;
-        white-space: nowrap
-    }
-
-    .owner-menu-page .data-table td:nth-child(5) {
-        grid-column: 3;
-        grid-row: 2
-    }
-
-    .owner-menu-page .data-table td:nth-child(6) {
-        grid-column: 4;
-        grid-row: 1/3
-    }
-
-    .owner-menu-page .menu-table-image {
-        width: 62px;
-        height: 54px;
-        border-radius: 12px
-    }
-
-    .owner-menu-page .data-table .pill {
-        font-size: 9px;
-        padding: 5px 8px
-    }
-
-    .owner-menu-page .data-table .table-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 5px
-    }
-
-    .owner-menu-page .data-table .table-actions .button {
-        min-height: 31px;
-        font-size: 9px
-    }
-
-    .owner-menu-page .menu-admin-empty {
-        min-height: 260px;
-        padding: 28px 20px
-    }
-}
 
 /* POS sidebar overrides - remove transitions, animations, and hover/active transforms */
 .pos-coffee-page .sidebar nav a,
@@ -13220,7 +11100,7 @@ body.login-page {
 }
 
 /* Global responsive container constraints to prevent horizontal overflow */
-@media(max-width: 1024px) {
+@media(min-width:768px) and (max-width: 1024px) {
     .workspace {
         width: 100% !important;
         max-width: 100% !important;
@@ -13248,7 +11128,7 @@ body.login-page {
 }
 
 /* Responsive tables for general table views (POS orders, Admin users) */
-@media(max-width: 1024px) {
+@media(min-width:768px) and (max-width: 1024px) {
 
     .pos-coffee-page .data-table,
     :not(.owner-orders-page):not(.owner-menu-page)>.data-table-wrap>.data-table {
@@ -13284,22 +11164,6 @@ body.login-page {
         min-height: 38px !important;
         padding: 8px 12px !important;
         font-size: 12px !important;
-    }
-}
-
-@media(max-width: 768px) {
-
-    .pos-coffee-page .data-table th,
-    .pos-coffee-page .data-table td,
-    :not(.owner-orders-page):not(.owner-menu-page) .data-table th,
-    :not(.owner-orders-page):not(.owner-menu-page) .data-table td {
-        padding: 12px 8px !important;
-        font-size: 12.5px !important;
-    }
-
-    .pos-coffee-page .data-table th,
-    :not(.owner-orders-page):not(.owner-menu-page) .data-table th {
-        font-size: 10.5px !important;
     }
 }
 
@@ -13467,1405 +11331,23 @@ body.login-page {
    Kept at the end of the file so older, page-specific media queries cannot
    re-introduce horizontal overflow or cramped tablet geometry on phones.
    -------------------------------------------------------------------------- */
-@media (max-width: 620px) {
 
-    html,
-    body {
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
-    }
-
-    .workspace,
-    .main-area,
-    .page-content {
-        min-width: 0 !important;
-        max-width: 100% !important;
-    }
-
-    .page-content {
-        padding: 16px 12px 28px !important;
-    }
-
-    .topbar {
-        height: 66px !important;
-        padding: 0 10px !important;
-    }
-
-    .top-actions {
-        gap: 6px !important;
-    }
-
-    .topbar {
-        position: relative !important;
-    }
-
-    .clock {
-        position: absolute !important;
-        left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 !important;
-        text-align: center !important;
-        pointer-events: none !important;
-    }
-
-    .clock strong {
-        font-size: 20px !important;
-        font-weight: 700 !important;
-        line-height: 1 !important;
-        color: var(--ink) !important;
-    }
-
-    .clock span {
-        display: none !important;
-    }
-
-    .avatar {
-        width: 36px !important;
-        height: 36px !important;
-    }
-
-    .menu-toggle {
-        width: 42px !important;
-        height: 42px !important;
-    }
-
-    .sidebar {
-        inset: 0 auto 0 0 !important;
-        width: min(260px, 86vw) !important;
-        height: 100dvh !important;
-        border-radius: 0 !important;
-    }
-
-    .sidebar-collapsed .sidebar .brand,
-    .sidebar .brand {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        gap: 12px !important;
-        padding: 5px 10px !important;
-        width: 100% !important;
-    }
-
-    .sidebar-collapsed .sidebar .brand-mark,
-    .sidebar .brand-mark {
-        flex: 0 0 42px !important;
-        width: 42px !important;
-        height: 42px !important;
-        display: grid !important;
-        place-items: center !important;
-    }
-
-    .sidebar-collapsed .brand-copy,
-    .sidebar .brand-copy {
-        display: block !important;
-        opacity: 1 !important;
-        width: auto !important;
-        transform: none !important;
-        pointer-events: auto !important;
-    }
-
-    .sidebar-collapse-toggle {
-        display: none !important;
-    }
-
-    .page-head {
-        align-items: stretch !important;
-        gap: 12px !important;
-        margin-bottom: 16px !important;
-    }
-
-    .page-head h1 {
-        font-size: clamp(25px, 8vw, 30px) !important;
-        line-height: 1.08 !important;
-        white-space: normal !important;
-    }
-
-    .page-head .eyebrow {
-        font-size: 10px !important;
-    }
-
-    .head-actions {
-        width: auto !important;
-        max-width: 100% !important;
-    }
-
-    .button,
-    button,
-    [role="button"] {
-        touch-action: manipulation;
-    }
-
-    /* POS summary cards */
-    .pos-stats,
-    .fishing-pos-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 8px !important;
-        margin-bottom: 12px !important;
-    }
-
-    .pos-stat {
-        min-width: 0 !important;
-        min-height: 72px !important;
-        padding: 10px !important;
-        gap: 9px !important;
-    }
-
-    .pos-stat>span {
-        width: 38px !important;
-        height: 38px !important;
-        flex: 0 0 38px !important;
-    }
-
-    .pos-stat small {
-        font-size: 9px !important;
-    }
-
-    .pos-stat strong {
-        font-size: 15px !important;
-    }
-
-    .pos-stats>.pos-new-order-btn {
-        grid-column: auto !important;
-        min-height: 72px !important;
-        height: 100% !important;
-        margin: 0 !important;
-    }
-
-    .fishing-pos-stats .pos-stat:last-of-type {
-        grid-column: 1 / -1 !important;
-    }
-
-    /* Coffee map */
-    .pos-section,
-    .fishing-map-shell {
-        padding: 12px !important;
-        border-radius: 16px !important;
-    }
-
-    .pos-section-head,
-    .fishing-map-header {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-    }
-
-    .header-actions,
-    .fishing-header-actions {
-        width: 100% !important;
-        margin: 0 !important;
-        justify-content: flex-start !important;
-    }
-
-    .legend {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        width: 100% !important;
-        gap: 8px 12px !important;
-        margin: 0 !important;
-    }
-
-    .legend span {
-        min-width: 0 !important;
-        font-size: 10px !important;
-        white-space: nowrap;
-    }
-
-    .pos-table-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 9px !important;
-    }
-
-    .pos-table-card {
-        min-width: 0 !important;
-        min-height: 78px !important;
-        padding: 11px !important;
-    }
-
-    /* Fishing: on phones the decorative lake gives its space to touch targets. */
-    .fishing-bank-label {
-        display: none !important;
-    }
-
-    .fishing-lake-plan {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        grid-template-rows: none !important;
-        gap: 10px !important;
-        width: 100% !important;
-        height: auto !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        overflow: visible !important;
-    }
-
-    .lake-water {
-        display: none !important;
-    }
-
-    .fishing-slot,
-    .fishing-slot.side-right {
-        position: relative !important;
-        grid-column: auto !important;
-        grid-row: auto !important;
-        grid-template-columns: auto minmax(0, 1fr) 9px !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        min-height: 72px !important;
-        padding: 9px !important;
-        gap: 8px !important;
-        text-align: left !important;
-    }
-
-    .fishing-slot.side-right .fishing-slot-number,
-    .fishing-slot-number {
-        grid-column: 1 !important;
-        grid-row: 1 !important;
-        min-width: 48px !important;
-        height: 42px !important;
-        font-size: 12px !important;
-    }
-
-    .fishing-slot.side-right>span:nth-child(2),
-    .fishing-slot>span:nth-child(2) {
-        grid-column: 2 !important;
-        grid-row: 1 !important;
-        text-align: left !important;
-        min-width: 0 !important;
-    }
-
-    .fishing-slot.side-right>i,
-    .fishing-slot>i {
-        grid-column: 3 !important;
-        grid-row: 1 !important;
-    }
-
-    .fishing-slot strong {
-        font-size: 13px !important;
-    }
-
-    .fishing-slot small {
-        font-size: 10px !important;
-    }
-
-    /* Compact, horizontally scrollable filter controls for both roles. */
-    .order-filter-bar {
-        width: 100% !important;
-        margin: 0 0 12px !important;
-        padding: 8px !important;
-        gap: 8px !important;
-        overflow-x: auto !important;
-        overscroll-behavior-inline: contain;
-        scrollbar-width: none;
-    }
-
-    .order-filter-bar::-webkit-scrollbar {
-        display: none;
-    }
-
-    .order-filter-group,
-    .order-filter-options {
-        flex: 0 0 auto !important;
-    }
-
-    .order-filter-label {
-        display: none !important;
-    }
-
-    .order-filter-button {
-        min-height: 42px !important;
-        padding: 0 12px !important;
-        font-size: 10px !important;
-    }
-
-    /* Employee order history becomes readable cards instead of a squeezed table. */
-    body.pos-coffee-page #order-results .data-table-wrap {
-        overflow: visible !important;
-        border: 0 !important;
-        background: transparent !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table,
-    body.pos-coffee-page #order-results .data-table tbody {
-        display: block !important;
-        min-width: 0 !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table thead {
-        display: none !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table tbody {
-        display: grid !important;
-        gap: 10px !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table tr:not(.order-table-empty) {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 12px 16px !important;
-        padding: 16px !important;
-        border: 1px solid rgba(207, 192, 176, 0.3) !important;
-        border-radius: 16px !important;
-        background: #fff !important;
-        box-shadow: 0 4px 16px rgba(78, 54, 41, 0.05) !important;
-        margin-bottom: 8px !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table td {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 4px !important;
-        align-items: flex-start !important;
-        justify-content: flex-start !important;
-        width: auto !important;
-        height: auto !important;
-        min-width: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-        font-size: 12px !important;
-        text-align: left !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table td::before {
-        content: attr(data-label) !important;
-        color: var(--muted) !important;
-        font-size: 9px !important;
-        font-weight: 700 !important;
-        letter-spacing: .08em !important;
-        text-transform: uppercase !important;
-        margin-bottom: 2px !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table td:nth-child(even) {
-        align-items: flex-end !important;
-        text-align: right !important;
-        justify-items: end !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table td:nth-child(1) strong {
-        font-family: Georgia, serif !important;
-        font-size: 15px !important;
-        color: var(--ink) !important;
-        font-weight: 600 !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table td:nth-child(5) strong {
-        font-size: 15px !important;
-        color: var(--moss) !important;
-        font-weight: 700 !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table td:nth-child(6) span {
-        padding: 4px 8px !important;
-        border-radius: 8px !important;
-        font-size: 10px !important;
-        font-weight: 600 !important;
-        display: inline-block !important;
-    }
-
-    body.pos-coffee-page #order-results .data-table td:nth-child(7) {
-        grid-column: 1 / -1 !important;
-        width: 100% !important;
-        margin-top: 4px !important;
-    }
-
-    body.pos-coffee-page #order-results .table-actions,
-    body.pos-coffee-page #order-results .table-actions .button {
-        width: 100% !important;
-    }
-
-    body.pos-coffee-page #order-results .table-actions .button {
-        min-height: 38px !important;
-        border: 1px solid var(--moss) !important;
-        border-radius: 10px !important;
-        background: transparent !important;
-        color: var(--moss) !important;
-        font-weight: 600 !important;
-        font-size: 12px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 6px !important;
-        transition: all 0.2s ease !important;
-    }
-
-    /* Admin orders: compact two-column cards on phones. */
-    .owner-orders-page #order-results .data-table tr:not(.order-table-empty) {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 12px 16px !important;
-        padding: 16px !important;
-        border: 1px solid rgba(207, 192, 176, 0.3) !important;
-        border-radius: 16px !important;
-        background: #fff !important;
-        box-shadow: 0 4px 16px rgba(78, 54, 41, 0.05) !important;
-        margin-bottom: 8px !important;
-    }
-
-    .owner-orders-page #order-results .data-table td {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 4px !important;
-        align-items: flex-start !important;
-        justify-content: flex-start !important;
-        width: auto !important;
-        height: auto !important;
-        min-width: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-        font-size: 12px !important;
-        text-align: left !important;
-    }
-
-    .owner-orders-page #order-results .data-table td::before {
-        content: attr(data-label) !important;
-        color: var(--muted) !important;
-        font-size: 9px !important;
-        font-weight: 700 !important;
-        letter-spacing: .08em !important;
-        text-transform: uppercase !important;
-        margin-bottom: 2px !important;
-    }
-
-    .owner-orders-page #order-results .data-table td:nth-child(even) {
-        align-items: flex-end !important;
-        text-align: right !important;
-        justify-items: end !important;
-    }
-
-    .owner-orders-page #order-results .data-table td:nth-child(1) strong {
-        font-family: Georgia, serif !important;
-        font-size: 15px !important;
-        color: var(--ink) !important;
-        font-weight: 600 !important;
-    }
-
-    .owner-orders-page #order-results .data-table td:nth-child(5) strong {
-        font-size: 15px !important;
-        color: var(--moss) !important;
-        font-weight: 700 !important;
-    }
-
-    .owner-orders-page #order-results .data-table td:nth-child(6) span {
-        padding: 4px 8px !important;
-        border-radius: 8px !important;
-        font-size: 10px !important;
-        font-weight: 600 !important;
-        display: inline-block !important;
-    }
-
-    .owner-orders-page #order-results .data-table td:nth-child(7) {
-        grid-column: 1 / -1 !important;
-        width: 100% !important;
-        margin-top: 4px !important;
-    }
-
-    .owner-orders-page #order-results .table-actions,
-    .owner-orders-page #order-results .table-actions .button {
-        width: 100% !important;
-    }
-
-    .owner-orders-page #order-results .table-actions .button {
-        min-height: 38px !important;
-        border: 1px solid var(--moss) !important;
-        border-radius: 10px !important;
-        background: transparent !important;
-        color: var(--moss) !important;
-        font-weight: 600 !important;
-        font-size: 12px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 6px !important;
-        transition: all 0.2s ease !important;
-    }
-
-    /* Admin menu remains a compact card list on phones. */
-    .owner-menu-page .data-table tr {
-        grid-template-columns: 58px minmax(0, 1fr) auto !important;
-        grid-template-rows: auto auto auto !important;
-        gap: 5px 10px !important;
-        padding: 11px !important;
-    }
-
-    .owner-menu-page .data-table td:nth-child(1) {
-        grid-column: 1 !important;
-        grid-row: 1 / 4 !important;
-    }
-
-    .owner-menu-page .data-table td:nth-child(2) {
-        grid-column: 2 !important;
-        grid-row: 1 !important;
-    }
-
-    .owner-menu-page .data-table td:nth-child(3) {
-        grid-column: 2 !important;
-        grid-row: 2 !important;
-    }
-
-    .owner-menu-page .data-table td:nth-child(4) {
-        grid-column: 3 !important;
-        grid-row: 1 !important;
-    }
-
-    .owner-menu-page .data-table td:nth-child(5) {
-        grid-column: 2 !important;
-        grid-row: 3 !important;
-    }
-
-    .owner-menu-page .data-table td:nth-child(6) {
-        grid-column: 3 !important;
-        grid-row: 2 / 4 !important;
-    }
-
-    .owner-menu-page .menu-table-image {
-        width: 58px !important;
-        height: 52px !important;
-    }
-
-    /* User management: semantic cards with labels supplied by the renderer. */
-    .owner-users-page .data-table-wrap {
-        overflow: visible !important;
-        border: 0 !important;
-        background: transparent !important;
-    }
-
-    .owner-users-page .data-table,
-    .owner-users-page .data-table tbody {
-        display: block !important;
-        min-width: 0 !important;
-    }
-
-    .owner-users-page .data-table thead {
-        display: none !important;
-    }
-
-    .owner-users-page .data-table tbody {
-        display: grid !important;
-        gap: 10px !important;
-    }
-
-    .owner-users-page .data-table tr {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        gap: 10px 14px !important;
-        padding: 13px !important;
-        border: 1px solid var(--line) !important;
-        border-radius: 15px !important;
-        background: #fff !important;
-    }
-
-    .owner-users-page .data-table td {
-        display: grid !important;
-        gap: 3px !important;
-        width: auto !important;
-        height: auto !important;
-        padding: 0 !important;
-        border: 0 !important;
-        font-size: 11px !important;
-    }
-
-    .owner-users-page .data-table td::before {
-        content: attr(data-label);
-        color: var(--muted);
-        font-size: 8px;
-        font-weight: 800;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-    }
-
-    .owner-users-page .data-table td:nth-child(even) {
-        text-align: right !important;
-        justify-items: end !important;
-    }
-
-    .owner-users-page .data-table td:last-child {
-        grid-column: auto !important;
-    }
-
-    /* Dashboard and forms */
-    .owner-dashboard-page .owner-dashboard-head {
-        grid-template-columns: 1fr !important;
-        gap: 12px !important;
-    }
-
-    .owner-dashboard-page .dashboard-filter-bar {
-        width: 100% !important;
-        justify-self: stretch !important;
-    }
-
-    .owner-dashboard-page .dashboard-filter {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: 8px !important;
-    }
-
-    .owner-dashboard-page .dashboard-filter input,
-    .owner-dashboard-page .dashboard-filter .button {
-        width: 100% !important;
-        min-height: 44px !important;
-    }
-
-    .owner-dashboard-page .filter-separator {
-        display: none !important;
-    }
-
-    .owner-kpis,
-    .owner-main-grid,
-    .owner-bottom-grid {
-        grid-template-columns: 1fr !important;
-    }
-
-    .owner-panel {
-        padding: 14px !important;
-    }
-
-    .owner-panel-head {
-        align-items: flex-start !important;
-    }
-
-    .owner-revenue-chart {
-        width: 100% !important;
-        min-width: 0 !important;
-        height: auto !important;
-    }
-
-    .chart-legend {
-        flex-wrap: wrap !important;
-        gap: 9px 14px !important;
-    }
-
-    .user-form-grid,
-    .user-role-tabs {
-        grid-template-columns: 1fr !important;
-    }
-
-    .menu-batch-modal .modal-body {
-        padding: 12px !important;
-    }
-
-    .menu-batch-toolbar,
-    .menu-batch-row {
-        min-width: 0 !important;
-    }
-
-    .admin-pagination {
-        align-items: center !important;
-        flex-wrap: wrap !important;
-        gap: 9px !important;
-    }
-
-    .pagination-controls {
-        max-width: 100% !important;
-        overflow-x: auto !important;
-        padding-bottom: 2px;
-    }
-
-    /* Ordering modal: a real phone sheet with two independent work areas. */
-    .modal-backdrop:has(.pos-order-modal) {
-        padding: 0 !important;
-        align-items: stretch !important;
-    }
-
-    .pos-order-modal {
-        width: 100% !important;
-        max-width: none !important;
-        height: 100dvh !important;
-        max-height: 100dvh !important;
-        margin: 0 !important;
-        border-radius: 0 !important;
-    }
-
-    .pos-order-modal .modal-head {
-        flex: 0 0 auto !important;
-        padding: 13px 14px !important;
-    }
-
-    .pos-order-modal .modal-head h2 {
-        font-size: 21px !important;
-    }
-
-    .pos-order-modal .modal-body {
-        flex: 1 1 auto !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-    }
-
-    .pos-order-modal .modal-pos-layout {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        grid-template-rows: minmax(0, 50%) minmax(0, 50%) !important;
-        width: 100% !important;
-        height: 100% !important;
-        min-height: 0 !important;
-        margin: 0 !important;
-        gap: 0 !important;
-    }
-
-    .pos-order-modal .pos-menu-section,
-    .pos-order-modal .modal-pos-layout>aside {
-        min-width: 0 !important;
-        min-height: 0 !important;
-        height: 100% !important;
-        overflow: hidden !important;
-    }
-
-    .pos-order-modal .pos-menu-section {
-        padding: 12px !important;
-    }
-
-    .pos-order-modal .pos-product-grid {
-        grid-template-columns: 1fr !important;
-        gap: 9px !important;
-    }
-
-    .pos-order-modal .pos-product-card,
-    .pos-order-modal .product-main {
-        min-height: 80px !important;
-    }
-
-    .pos-order-modal .product-main {
-        grid-template-columns: 64px minmax(0, 1fr) 34px !important;
-        padding: 8px !important;
-    }
-
-    .pos-order-modal .product-art {
-        width: 64px !important;
-        min-width: 64px !important;
-        height: 64px !important;
-    }
-
-    /* Fix category-tabs and search in portrait mobile ordering modal */
-    .pos-order-modal .pos-menu-section>.pos-section-head {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 8px !important;
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head .pos-search {
-        order: 1 !important;
-        width: 100% !important;
-        flex: 0 0 auto !important;
-        position: relative !important;
-    }
-
-    .pos-order-modal .pos-search>span {
-        position: absolute !important;
-        left: 12px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        height: auto !important;
-        display: flex !important;
-        align-items: center !important;
-        pointer-events: none !important;
-    }
-
-    .pos-order-modal .pos-search input {
-        width: 100% !important;
-        height: 40px !important;
-        padding-left: 36px !important;
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head .category-tabs {
-        order: 2 !important;
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        width: 100% !important;
-        height: auto !important;
-        min-height: 42px !important;
-        margin: 8px 0 0 0 !important;
-        scrollbar-width: none !important;
-        flex: 0 0 auto !important;
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head .category-tabs::-webkit-scrollbar {
-        display: none !important;
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head .category-tabs button {
-        flex: 0 0 auto !important;
-        min-height: 36px !important;
-        padding: 6px 12px !important;
-        font-size: 11px !important;
-        border-radius: 8px !important;
-        margin-right: 6px !important;
-        border: 1px solid #d8c3b0 !important;
-        background: #fffdfa !important;
-        color: var(--muted) !important;
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head .category-tabs button.active {
-        background: var(--moss) !important;
-        border-color: var(--moss) !important;
-        color: white !important;
-    }
-}
 
 /* Landscape mobile optimization for ordering modal (height <= 520px) */
-@media (max-height: 520px) and (orientation: landscape) {
-    .modal-backdrop:has(.pos-order-modal) {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 !important;
-    }
 
-    .pos-order-modal {
-        width: 94vw !important;
-        height: 92dvh !important;
-        max-height: 92dvh !important;
-        margin: 0 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
-    }
 
-    .pos-order-modal>.modal-head {
-        padding: 6px 12px !important;
-        min-height: 0 !important;
-    }
 
-    .pos-order-modal>.modal-head h2 {
-        font-size: 16px !important;
-    }
-
-    .pos-order-modal>.modal-body {
-        height: calc(100% - 36px) !important;
-    }
-
-    .pos-order-modal .modal-pos-layout {
-        display: grid !important;
-        grid-template-columns: 1.2fr 0.8fr !important;
-        grid-template-rows: 1fr !important;
-        height: 100% !important;
-    }
-
-    .pos-order-modal .pos-menu-section {
-        padding: 6px 12px !important;
-        border-radius: 0 !important;
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 12px !important;
-        margin-bottom: 6px !important;
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head .category-tabs {
-        order: 1 !important;
-        display: flex !important;
-        flex: 1 !important;
-        margin: 0 !important;
-    }
-
-    .pos-order-modal .pos-menu-section>.pos-section-head .pos-search {
-        order: 2 !important;
-        width: 180px !important;
-        flex: 0 0 auto !important;
-    }
-
-    .pos-order-modal .pos-product-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 6px !important;
-        padding-bottom: 8px !important;
-    }
-
-    .pos-order-modal .pos-product-card {
-        min-height: 58px !important;
-        height: 58px !important;
-    }
-
-    .pos-order-modal .product-main {
-        display: grid !important;
-        grid-template-columns: 48px minmax(0, 1fr) 28px !important;
-        grid-template-rows: auto auto !important;
-        align-items: center !important;
-        padding: 4px !important;
-        min-height: 58px !important;
-        height: 58px !important;
-        gap: 0 8px !important;
-        border: 0 !important;
-        background: none !important;
-    }
-
-    .pos-order-modal .product-art {
-        grid-column: 1 !important;
-        grid-row: 1 / 3 !important;
-        width: 48px !important;
-        min-width: 48px !important;
-        height: 48px !important;
-        border-radius: 8px !important;
-    }
-
-    .pos-order-modal .product-main strong {
-        grid-column: 2 !important;
-        grid-row: 1 !important;
-        font-size: 11px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        display: block !important;
-        line-height: 1.2 !important;
-        color: var(--ink) !important;
-        min-height: 0 !important;
-    }
-
-    .pos-order-modal .product-main b {
-        grid-column: 2 !important;
-        grid-row: 2 !important;
-        font-size: 10px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        display: block !important;
-        line-height: 1.2 !important;
-        color: var(--moss) !important;
-    }
-
-    .pos-order-modal .product-main em {
-        grid-column: 3 !important;
-        grid-row: 1 / 3 !important;
-        position: static !important;
-        width: 24px !important;
-        height: 24px !important;
-        display: grid !important;
-        place-items: center !important;
-    }
-
-    .pos-order-modal .product-main small {
-        display: none !important;
-    }
-
-    .pos-order-modal .modal-order-dock-aside {
-        border-radius: 0 !important;
-        border-left: 1px solid var(--line) !important;
-        border-top: 0 !important;
-    }
-
-    .pos-order-modal .order-dock-head {
-        padding: 4px 10px !important;
-    }
-
-    .pos-order-modal .order-dock-head h2 {
-        font-size: 15px !important;
-    }
-
-    .pos-order-modal .order-resource-select {
-        margin: 3px 6px !important;
-        padding: 3px 6px !important;
-    }
-
-    .pos-order-modal .order-resource-select span {
-        width: 28px !important;
-        height: 28px !important;
-    }
-
-    .pos-order-modal .order-lines {
-        padding: 4px 10px !important;
-        max-height: 80px !important;
-        overflow-y: auto !important;
-    }
-
-    .pos-order-modal .order-line {
-        padding: 4px 0 !important;
-        font-size: 11px !important;
-    }
-
-    .pos-order-modal .order-dock-footer {
-        padding: 4px 10px !important;
-    }
-
-    .pos-order-modal .order-actions {
-        margin-top: 4px !important;
-        gap: 4px !important;
-    }
-
-    .pos-order-modal .order-actions .button {
-        min-height: 28px !important;
-        padding: 4px !important;
-        font-size: 11px !important;
-    }
-}
-
-@media (max-width: 380px) {
-    .page-content {
-        padding-inline: 9px !important;
-    }
-
-    .pos-table-grid,
-    .fishing-lake-plan {
-        gap: 7px !important;
-    }
-
-    .fishing-slot,
-    .fishing-slot.side-right {
-        min-height: 68px !important;
-        padding: 7px !important;
-    }
-
-    .fishing-slot-number {
-        min-width: 42px !important;
-    }
-
-    .owner-menu-page .data-table tr {
-        grid-template-columns: 52px minmax(0, 1fr) !important;
-    }
-
-    .owner-menu-page .data-table td:nth-child(4),
-    .owner-menu-page .data-table td:nth-child(5),
-    .owner-menu-page .data-table td:nth-child(6) {
-        grid-column: 2 !important;
-        grid-row: auto !important;
-    }
-
-    .owner-menu-page .data-table .table-actions {
-        display: flex !important;
-        justify-content: flex-start !important;
-    }
-}
 
 /* --------------------------------------------------------------------------
    Order history parity: Admin uses the exact POS mobile card contract.
    This final layer deliberately resets the older Admin iPad grid placements,
    which otherwise leave time, location and the detail action overlapping.
    -------------------------------------------------------------------------- */
-@media (max-width: 620px) and (orientation: portrait) {
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table-wrap {
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow: visible !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        box-shadow: none !important;
-    }
 
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table,
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table tbody {
-        display: block !important;
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table thead {
-        display: none !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table tbody {
-        display: grid !important;
-        gap: 10px !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table tr:not(.order-table-empty) {
-        position: relative !important;
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        grid-template-rows: none !important;
-        grid-auto-flow: row !important;
-        grid-auto-rows: auto !important;
-        gap: 10px 14px !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-        padding: 13px !important;
-        overflow: hidden !important;
-        border: 1px solid var(--line) !important;
-        border-radius: 15px !important;
-        background: #fff !important;
-        box-shadow: 0 4px 16px rgba(78, 54, 41, .05) !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table tr:not(.order-table-empty)::after {
-        content: none !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td {
-        grid-column: auto !important;
-        grid-row: auto !important;
-        align-self: auto !important;
-        justify-self: stretch !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        justify-content: flex-start !important;
-        gap: 4px !important;
-        width: auto !important;
-        min-width: 0 !important;
-        min-height: 0 !important;
-        height: auto !important;
-        padding: 0 !important;
-        border: 0 !important;
-        background: transparent !important;
-        font-size: 12px !important;
-        line-height: 1.35 !important;
-        text-align: left !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td::before {
-        display: block !important;
-        content: attr(data-label) !important;
-        margin: 0 0 2px !important;
-        color: var(--muted) !important;
-        font-size: 9px !important;
-        font-weight: 700 !important;
-        line-height: 1.2 !important;
-        letter-spacing: .08em !important;
-        text-transform: uppercase !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(even) {
-        align-items: flex-end !important;
-        justify-content: flex-start !important;
-        text-align: right !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(1) strong {
-        overflow-wrap: anywhere !important;
-        font-family: Georgia, serif !important;
-        font-size: 15px !important;
-        font-weight: 600 !important;
-        color: var(--ink) !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(5) strong {
-        font-size: 15px !important;
-        font-weight: 700 !important;
-        color: var(--moss) !important;
-        white-space: nowrap !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(6) .pill {
-        width: auto !important;
-        max-width: 100% !important;
-        padding: 4px 8px !important;
-        border-radius: 8px !important;
-        font-size: 10px !important;
-        font-weight: 600 !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(7) {
-        grid-column: 1 / -1 !important;
-        width: 100% !important;
-        margin-top: 0 !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .table-actions,
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .table-actions .button {
-        width: 100% !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .table-actions .button {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 6px !important;
-        min-height: 42px !important;
-        padding: 0 12px !important;
-        border: 0 !important;
-        border-radius: 12px !important;
-        background: var(--sage) !important;
-        color: var(--moss) !important;
-        box-shadow: none !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .order-table-empty,
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .order-table-empty td {
-        display: block !important;
-        width: 100% !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .order-table-empty td::before {
-        content: none !important;
-    }
-}
 
 /* Phone landscape has enough horizontal room: keep the regular order table.
    This deliberately overrides the phone card rules declared earlier. */
-@media (orientation: landscape) and (max-height: 620px) {
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table-wrap {
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        border: 1px solid var(--line) !important;
-        border-radius: 14px !important;
-        background: var(--surface) !important;
-        box-shadow: 0 8px 24px rgba(74, 53, 36, .035) !important;
-        -webkit-overflow-scrolling: touch;
-    }
 
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table {
-        display: table !important;
-        width: 100% !important;
-        min-width: 680px !important;
-        table-layout: fixed !important;
-        border-collapse: collapse !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table thead {
-        display: table-header-group !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table tbody {
-        display: table-row-group !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table tr,
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table tr:not(.order-table-empty) {
-        position: static !important;
-        display: table-row !important;
-        width: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        box-shadow: none !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table tr::after {
-        content: none !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table th,
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td {
-        display: table-cell !important;
-        width: auto !important;
-        min-width: 0 !important;
-        height: 52px !important;
-        padding: 8px 10px !important;
-        border-bottom: 1px solid var(--line) !important;
-        background: transparent !important;
-        font-size: 10px !important;
-        line-height: 1.35 !important;
-        text-align: left !important;
-        vertical-align: middle !important;
-        white-space: nowrap !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table th {
-        height: 42px !important;
-        background: #faf8f5 !important;
-        color: var(--muted) !important;
-        font-size: 9px !important;
-        font-weight: 700 !important;
-        letter-spacing: .06em !important;
-        text-transform: uppercase !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td::before {
-        content: none !important;
-        display: none !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table th:nth-child(1),
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(1) {
-        width: 17% !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table th:nth-child(2),
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(2) {
-        width: 12% !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table th:nth-child(3),
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(3) {
-        width: 13% !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table th:nth-child(4),
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(4) {
-        width: 18% !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table th:nth-child(5),
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(5) {
-        width: 14% !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table th:nth-child(6),
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(6) {
-        width: 15% !important;
-        text-align: center !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table th:nth-child(7),
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(7) {
-        width: 11% !important;
-        text-align: right !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(1) strong,
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table td:nth-child(5) strong {
-        font-family: inherit !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        color: var(--ink) !important;
-        white-space: nowrap !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .data-table .pill {
-        width: auto !important;
-        min-width: 62px !important;
-        max-width: 100% !important;
-        padding: 4px 6px !important;
-        font-size: 8px !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .table-actions {
-        display: flex !important;
-        width: auto !important;
-        justify-content: flex-end !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .table-actions .button {
-        display: inline-flex !important;
-        width: 30px !important;
-        min-width: 30px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        padding: 0 !important;
-        border: 0 !important;
-        border-radius: 8px !important;
-        background: var(--mint) !important;
-        color: var(--moss) !important;
-        font-size: 0 !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .table-actions .button svg {
-        width: 14px !important;
-        height: 14px !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .order-table-empty {
-        display: table-row !important;
-    }
-
-    :is(body.pos-coffee-page, .owner-orders-page) #order-results .order-table-empty td {
-        display: table-cell !important;
-        width: auto !important;
-    }
-}
 
 /* ============================================================
    MOBILE PORTRAIT FIXES (max-width: 620px)
@@ -14873,36 +11355,7 @@ body.login-page {
    2. Paginator cố định ở cuối trang
    3. Card list scroll độc lập
    ============================================================ */
-@media (max-width: 620px) {
 
-    /* 1. Header cố định ở đầu */
-    .topbar {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        z-index: 20 !important;
-    }
-
-    /* Bù đắp chiều cao header */
-    .workspace {
-        padding-top: 66px !important;
-    }
-
-    /* 2. Paginator cố định ở cuối màn hình */
-    :is(body.pos-coffee-page, .owner-orders-page, .owner-menu-page) .admin-pagination {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        background: var(--paper) !important;
-        border-top: 1px solid var(--line) !important;
-        padding: 7px 14px !important;
-        z-index: 15 !important;
-        margin: 0 !important;
-    }
-
-}
 
 /* Staff POS orders: whole-row touch target, no money/payment/action columns. */
 #order-results .staff-order-table {
@@ -15090,106 +11543,11 @@ body.login-page {
     line-height: 1.35;
 }
 
-@media (max-width: 620px) and (orientation: portrait) {
-    body.pos-coffee-page #order-results .staff-order-table tr:not(.order-table-empty) {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
 
-    body.pos-coffee-page #order-results .staff-order-table td:nth-child(5) {
-        grid-column: 1 / -1 !important;
-        align-items: flex-start !important;
-        text-align: left !important;
-    }
 
-    body.pos-coffee-page #order-results .staff-order-table td:nth-child(5) .pill {
-        min-width: 88px !important;
-        font-size: 10px !important;
-    }
-}
 
-@media (orientation: landscape) and (max-height: 620px) {
-    body.pos-coffee-page #order-results .staff-order-table {
-        min-width: 560px !important;
-    }
 
-    body.pos-coffee-page #order-results .staff-order-table th:nth-child(1),
-    body.pos-coffee-page #order-results .staff-order-table td:nth-child(1) {
-        width: 20% !important;
-    }
 
-    body.pos-coffee-page #order-results .staff-order-table th:nth-child(2),
-    body.pos-coffee-page #order-results .staff-order-table td:nth-child(2) {
-        width: 15% !important;
-    }
-
-    body.pos-coffee-page #order-results .staff-order-table th:nth-child(3),
-    body.pos-coffee-page #order-results .staff-order-table td:nth-child(3) {
-        width: 18% !important;
-    }
-
-    body.pos-coffee-page #order-results .staff-order-table th:nth-child(4),
-    body.pos-coffee-page #order-results .staff-order-table td:nth-child(4) {
-        width: 27% !important;
-    }
-
-    body.pos-coffee-page #order-results .staff-order-table th:nth-child(5),
-    body.pos-coffee-page #order-results .staff-order-table td:nth-child(5) {
-        width: 20% !important;
-    }
-}
-
-@media(max-width:767px) {
-    .modal.staff-order-detail-modal {
-        width: min(100%, calc(100vw - 16px)) !important;
-        max-height: calc(100dvh - 18px) !important;
-        border-radius: 18px 18px 8px 8px;
-    }
-
-    .staff-order-detail-modal>.modal-head {
-        min-height: 52px !important;
-        padding: 9px 10px 9px 15px !important;
-    }
-
-    .staff-order-detail-modal .staff-receipt .pos-receipt-meta>span:nth-child(2) {
-        padding-right: 0;
-    }
-
-    .staff-order-detail-modal .staff-receipt .pos-receipt-head {
-        grid-template-columns: 38px minmax(0, 1fr);
-        padding: 13px 15px 10px;
-    }
-
-    .staff-order-detail-modal .staff-receipt .pos-receipt-head>.pill {
-        grid-column: 2;
-        justify-self: start;
-        margin-top: 2px;
-    }
-
-    .staff-order-detail-modal .staff-receipt .pos-receipt-icon {
-        width: 38px;
-        height: 38px;
-    }
-
-    .staff-order-detail-modal .staff-receipt .pos-receipt-line {
-        grid-template-columns: 50px minmax(0, 1fr);
-        min-height: 68px;
-        padding: 13px 0;
-    }
-
-    .staff-order-detail-modal .staff-receipt .staff-item-quantity {
-        min-width: 46px;
-        height: 34px;
-        font-size: 13px;
-    }
-
-    .staff-order-detail-modal .staff-receipt .pos-receipt-line div>strong {
-        font-size: 17px;
-    }
-
-    .staff-order-detail-modal .staff-receipt .pos-receipt-line div>small {
-        font-size: 12px;
-    }
-}
 
 /* Compact ordering modal chrome so the menu and bill lines get more room. */
 .pos-order-modal>.modal-head {
@@ -15289,81 +11647,9 @@ body.login-page {
     }
 }
 
-@media(max-width:767px) {
-    .pos-order-modal>.modal-head {
-        min-height: 52px !important;
-        padding: 9px 14px !important;
-    }
 
-    .pos-order-modal>.modal-head h2 {
-        font-size: 18px !important;
-    }
 
-    .pos-order-modal>.modal-head .modal-close {
-        width: 38px !important;
-        height: 38px !important;
-    }
 
-    .pos-order-modal .order-dock-head {
-        padding: 9px 13px !important;
-    }
-
-    .pos-order-modal .order-dock-head h2 {
-        font-size: 17px !important;
-    }
-
-    .pos-order-modal .order-dock-footer {
-        padding: 9px 12px 10px !important;
-    }
-
-    .pos-order-modal .order-dock-footer .summary-row {
-        font-size: 10px !important;
-    }
-
-    .pos-order-modal .order-dock-footer .summary-row.total {
-        font-size: 15px !important;
-    }
-
-    .pos-order-modal .order-actions .button {
-        min-height: 38px !important;
-        padding: 8px 7px !important;
-        font-size: 11px !important;
-    }
-}
-
-@media(max-height:520px) and (orientation: landscape) {
-    .pos-order-modal>.modal-head {
-        min-height: 0 !important;
-        padding: 6px 12px !important;
-    }
-
-    .pos-order-modal>.modal-head h2 {
-        font-size: 16px !important;
-    }
-
-    .pos-order-modal .order-dock-head {
-        padding: 4px 10px !important;
-    }
-
-    .pos-order-modal .order-dock-head h2 {
-        font-size: 15px !important;
-    }
-
-    .pos-order-modal .order-dock-footer {
-        padding: 4px 10px !important;
-    }
-
-    .pos-order-modal .order-actions {
-        margin-top: 4px !important;
-        gap: 4px !important;
-    }
-
-    .pos-order-modal .order-actions .button {
-        min-height: 28px !important;
-        padding: 4px !important;
-        font-size: 11px !important;
-    }
-}
 
 /* Denser ordering workspace: prioritize menu browsing and ordered item lines. */
 .pos-order-modal .pos-menu-section {
@@ -16002,29 +12288,7 @@ body[data-role="employee"] #modal-root .variable-price-input-wrap input[data-var
     }
 }
 
-@media(max-width:767px) {
-    .pos-order-modal .pos-menu-section {
-        padding: 10px !important;
-    }
 
-    .pos-order-modal .pos-menu-section>.pos-section-head .category-tabs button {
-        min-height: 32px !important;
-        font-size: 10px !important;
-    }
-
-    .pos-order-modal .pos-product-card,
-    .pos-order-modal .product-main {
-        min-height: 76px !important;
-    }
-
-    .pos-order-modal .order-resource-select {
-        margin-inline: 10px !important;
-    }
-
-    .pos-order-modal .order-lines {
-        padding-inline: 10px !important;
-    }
-}
 
 /* POS staff design language refresh.
    Scoped to employee POS screens so admin/owner surfaces keep their current layout. */
@@ -16517,7 +12781,7 @@ body[data-role="employee"].pos-coffee-page #order-results .staff-order-table .or
     color: var(--pos-muted) !important;
 }
 
-@media (min-width: 621px) {
+@media(min-width:768px) {
     body[data-role="employee"].pos-coffee-page #order-results .data-table-wrap {
         overflow: hidden !important;
         background-clip: padding-box !important;
@@ -16537,12 +12801,7 @@ body[data-role="employee"].pos-coffee-page #order-results .staff-order-table .or
     }
 }
 
-@media (orientation: landscape) and (max-height: 620px) {
-    body[data-role="employee"].pos-coffee-page #order-results .data-table-wrap {
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-    }
-}
+
 
 body[data-role="employee"].pos-coffee-page .fishing-slot {
     --pos-slot-ring: var(--pos-line);
@@ -16657,12 +12916,12 @@ body[data-role="employee"] #modal-root .modal-backdrop {
     background: rgba(44, 34, 27, .42) !important;
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px) !important;
-    padding: 20px !important;
+    padding: 20px 20px calc(20px + var(--modal-keyboard-offset)) !important;
 }
 
 body[data-role="employee"] #modal-root .modal {
     width: min(560px, calc(100vw - 36px)) !important;
-    max-height: min(760px, calc(100dvh - 40px)) !important;
+    max-height: min(760px, calc(100dvh - 40px - var(--modal-keyboard-offset))) !important;
     background: var(--pos-card) !important;
     color: var(--pos-ink) !important;
     border: 1px solid var(--pos-line) !important;
@@ -17564,7 +13823,7 @@ body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt 
     border-top: 1px solid var(--line);
 }
 
-@media(max-width: 1100px) {
+@media(min-width:768px) and (max-width: 1100px) {
 
     .payment-settings-panel,
     .payment-settings-grid {
@@ -17690,57 +13949,7 @@ body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt 
     font-size: 9.5px !important;
 }
 
-@media(max-width: 767px) {
-    body[data-role="employee"] #modal-root .modal-backdrop {
-        padding: 10px !important;
-    }
 
-    body[data-role="employee"] #modal-root .modal,
-    body[data-role="employee"] #modal-root .modal.wide,
-    body[data-role="employee"] #modal-root .modal.pos-order-modal {
-        width: min(100%, calc(100vw - 20px)) !important;
-        max-height: calc(100dvh - 20px) !important;
-        border-radius: 10px !important;
-    }
-
-    body[data-role="employee"] #modal-root .modal-head {
-        min-height: 52px !important;
-        padding: 10px 12px 10px 14px !important;
-    }
-
-    body[data-role="employee"] #modal-root .modal-head h2 {
-        font-size: 16px !important;
-    }
-
-    body[data-role="employee"] #modal-root .modal-body {
-        padding: 14px !important;
-    }
-
-    body[data-role="employee"] #modal-root .modal-foot {
-        padding: 10px 14px !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-    }
-
-    body[data-role="employee"] #modal-root .modal-foot>div,
-    body[data-role="employee"] #modal-root .modal-foot .button {
-        width: 100% !important;
-    }
-
-    .payment-settings-panel,
-    .payment-settings-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .payment-settings-actions {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    #modal-root .checkout-qr-panel {
-        grid-template-columns: 1fr;
-    }
-}
 
 /* Admin visual language aligned with the POS surface. */
 body[data-role="admin"] {
@@ -18113,10 +14322,12 @@ body[data-role="admin"] #modal-root .modal-backdrop {
     background: rgba(44, 34, 27, .42) !important;
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px) !important;
+    padding-bottom: calc(24px + var(--modal-keyboard-offset)) !important;
 }
 
 body[data-role="admin"] #modal-root .modal {
     border-radius: 12px !important;
+    max-height: min(90vh, calc(100dvh - 48px - var(--modal-keyboard-offset))) !important;
     box-shadow: var(--pos-shadow-pop) !important;
 }
 
@@ -18219,22 +14430,7 @@ body[data-role="admin"] .pos-receipt-line {
     border-color: var(--pos-line) !important;
 }
 
-@media(max-width: 767px) {
-    body[data-role="admin"] .owner-orders-page .data-table tr,
-    body[data-role="admin"] .owner-menu-page .data-table tr,
-    body[data-role="admin"] .owner-users-page .data-table tr {
-        border-radius: 8px !important;
-        border-color: var(--pos-line) !important;
-        background: var(--pos-card) !important;
-        box-shadow: var(--pos-shadow-card) !important;
-    }
 
-    body[data-role="admin"] .owner-orders-page #order-results .data-table td,
-    body[data-role="admin"] .owner-menu-page .data-table td,
-    body[data-role="admin"] .owner-users-page .data-table td {
-        background: transparent !important;
-    }
-}
 
 /* Admin orders: visible filter cards, whole-row detail affordance, POS paginator rhythm. */
 body[data-role="admin"] .owner-orders-page {
@@ -18976,16 +15172,9 @@ body[data-role="admin"] .menu-availability-card input:checked+i:after {
     transform: translateX(18px);
 }
 
-@media(max-width: 760px) {
-    body[data-role="admin"] .menu-media-column {
-        padding-right: 0;
-        padding-bottom: 14px;
-        border-right: 0;
-        border-bottom: 1px solid var(--pos-line);
-    }
-}
 
-@media(max-width: 1040px) {
+
+@media(min-width:768px) and (max-width: 1040px) {
     body[data-role="admin"] .admin-order-filter-bar {
         gap: 8px !important;
     }
@@ -19010,53 +15199,7 @@ body[data-role="admin"] .menu-availability-card input:checked+i:after {
     }
 }
 
-@media(max-width: 620px) and (orientation: portrait) {
-    body[data-role="admin"] .admin-order-filter-bar {
-        margin-bottom: 10px !important;
-    }
 
-    body[data-role="admin"] .owner-orders-page .paginated-scroll {
-        border: 0;
-        background: transparent;
-        box-shadow: none;
-    }
-
-    body[data-role="admin"] .owner-orders-page .admin-order-table tr:not(.order-table-empty) {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 10px 14px !important;
-        padding: 13px !important;
-        cursor: pointer;
-    }
-
-    body[data-role="admin"] .owner-orders-page .admin-order-table td:nth-child(1),
-    body[data-role="admin"] .owner-orders-page .admin-order-table td:nth-child(2),
-    body[data-role="admin"] .owner-orders-page .admin-order-table td:nth-child(3),
-    body[data-role="admin"] .owner-orders-page .admin-order-table td:nth-child(4),
-    body[data-role="admin"] .owner-orders-page .admin-order-table td:nth-child(5),
-    body[data-role="admin"] .owner-orders-page .admin-order-table td:nth-child(6) {
-        grid-column: auto !important;
-        grid-row: auto !important;
-        align-self: auto !important;
-        justify-self: stretch !important;
-        width: auto !important;
-    }
-
-    body[data-role="admin"] .owner-orders-page .admin-order-table td:nth-child(even) {
-        align-items: flex-end !important;
-        text-align: right !important;
-    }
-
-    body[data-role="admin"] .owner-orders-page .admin-order-table td:nth-child(6) {
-        grid-column: 1 / -1 !important;
-        align-items: flex-start !important;
-        text-align: left !important;
-    }
-
-    body[data-role="admin"] .owner-orders-page .admin-order-table td:nth-child(6) .pill {
-        min-width: 88px !important;
-        width: auto !important;
-    }
-}
 
 /* Admin payment methods: management table plus a flatter editor. */
 body[data-role="admin"] .owner-payment-page {
@@ -19254,20 +15397,7 @@ body[data-role="admin"] .payment-method-modal .payment-qr-overlay {
     min-height: 34px;
 }
 
-@media(max-width: 760px) {
-    body[data-role="admin"] .payment-method-form-grid,
-    body[data-role="admin"] .payment-method-qr-fields,
-    body[data-role="admin"] .payment-settings-grid {
-        grid-template-columns: 1fr;
-    }
 
-    body[data-role="admin"] .payment-method-qr-media {
-        padding-right: 0;
-        padding-bottom: 14px;
-        border-right: 0;
-        border-bottom: 1px solid var(--pos-line);
-    }
-}
 
 /* Admin map modals: flatten the resource editor so it matches the newer admin forms. */
 body[data-role="admin"] .admin-resource-form {
@@ -19392,16 +15522,7 @@ body[data-role="admin"] .admin-resource-toggle-row input:checked+i:after {
     transform: translateX(18px);
 }
 
-@media(max-width: 767px) {
-    body[data-role="admin"] .admin-resource-summary {
-        grid-template-columns: 44px minmax(0, 1fr);
-    }
 
-    body[data-role="admin"] .admin-resource-summary em {
-        grid-column: 1 / -1;
-        width: max-content;
-    }
-}
 
 /* Admin orders: model selector follows the map toolbar; status/search follow menu filtering. */
 body[data-role="admin"] .owner-orders-page .page-head {
@@ -19512,7 +15633,7 @@ body[data-role="admin"] .admin-order-service-tabs .admin-map-tab:hover:not(.acti
     color: var(--pos-brand);
 }
 
-@media(max-width: 980px) {
+@media(min-width:768px) and (max-width: 980px) {
     body[data-role="admin"] .owner-orders-page .page-head {
         align-items: flex-start;
     }
@@ -19528,23 +15649,7 @@ body[data-role="admin"] .admin-order-service-tabs .admin-map-tab:hover:not(.acti
     }
 }
 
-@media(max-width: 760px) {
-    body[data-role="admin"] .admin-order-filter-bar {
-        gap: 10px !important;
-    }
 
-    body[data-role="admin"] .admin-order-status-tabs button,
-    body[data-role="admin"] .admin-order-service-tabs .admin-map-tab {
-        min-height: 36px;
-        padding-left: 11px;
-        padding-right: 11px;
-    }
-
-    body[data-role="admin"] .admin-order-search {
-        flex-basis: 210px;
-        max-width: 210px;
-    }
-}
 
 /* All POS/admin paginators sit flush without a separator line above. */
 .admin-pagination {
@@ -19682,14 +15787,17 @@ body[data-role="employee"] #modal-root .checkout-modal-layout>.checkout-payment-
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-list {
     gap: 0 !important;
-    max-height: min(128px, 26dvh) !important;
+    max-height: min(220px, 34dvh) !important;
+    padding: 4px 0 !important;
     border-top: 1px solid var(--pos-line);
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line {
-    gap: 8px !important;
-    min-height: 0 !important;
-    padding: 7px 0 !important;
+    grid-template-columns: 18px minmax(0, 1fr) auto minmax(76px, auto) !important;
+    gap: 12px !important;
+    min-height: 58px !important;
+    padding: 10px 0 11px !important;
+    align-items: center !important;
     border: 0 !important;
     border-bottom: 1px solid var(--pos-line) !important;
     border-left: 0 !important;
@@ -19708,40 +15816,49 @@ body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line.paid-it
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line input[type="checkbox"] {
-    width: 16px !important;
-    height: 16px !important;
+    width: 18px !important;
+    height: 18px !important;
+}
+
+body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line>div:nth-child(2) {
+    display: grid !important;
+    gap: 4px !important;
+    min-width: 0 !important;
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line strong {
-    font-size: 12px !important;
-    line-height: 1.14 !important;
+    display: block !important;
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+    overflow-wrap: anywhere !important;
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line small,
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line div[style*="font-style: italic"] {
-    font-size: 9px !important;
-    line-height: 1.12 !important;
-    margin-top: 1px !important;
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+    margin-top: 0 !important;
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line .quantity {
-    gap: 3px !important;
+    gap: 4px !important;
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line .quantity button {
-    width: 24px !important;
-    height: 24px !important;
+    width: 28px !important;
+    height: 28px !important;
     border-radius: 6px !important;
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line .quantity span {
-    min-width: 16px !important;
-    font-size: 11px !important;
+    min-width: 18px !important;
+    font-size: 12px !important;
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line b {
-    min-width: 58px !important;
-    font-size: 11px !important;
+    min-width: 76px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
 }
 
 body[data-role="employee"] #modal-root .checkout-qr-panel {
@@ -19781,22 +15898,7 @@ body[data-role="employee"] #modal-root .checkout-payment-section .summary-row.to
     padding-top: 9px !important;
 }
 
-@media(max-width: 767px) {
-    body[data-role="employee"] #modal-root .checkout-modal-layout .bill-list {
-        max-height: min(118px, 24dvh) !important;
-    }
 
-    body[data-role="employee"] #modal-root .checkout-qr-panel {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-    }
-
-    body[data-role="employee"] #modal-root .checkout-qr-image {
-        width: 120px !important;
-        max-width: 120px !important;
-        justify-self: center !important;
-    }
-}
 
 /* Payment management: align the page with other admin tables and flatten the editor. */
 body[data-role="admin"] .page-content.owner-payment-page {
@@ -19950,18 +16052,7 @@ body[data-role="admin"] .payment-method-modal .payment-method-footnote {
     font-size: 12px !important;
 }
 
-@media(max-width: 760px) {
-    body[data-role="admin"] .payment-method-modal .payment-method-qr-fields {
-        grid-template-columns: 1fr !important;
-    }
 
-    body[data-role="admin"] .payment-method-modal .payment-method-qr-media {
-        padding-right: 0 !important;
-        padding-bottom: 14px !important;
-        border-right: 0 !important;
-        border-bottom: 1px solid var(--pos-line) !important;
-    }
-}
 
 /* POS order bill: flatten the sales slip so item rows do not read as stacked cards. */
 #modal-root .pos-order-modal .modal-order-dock-aside {
@@ -20215,7 +16306,7 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
     box-shadow: none !important;
 }
 
-@media(max-width:820px) {
+@media(min-width:768px) and (max-width:820px) {
     body[data-role="admin"] #modal-root .menu-batch-row {
         grid-template-columns: 100px minmax(0, 1fr) !important;
     }
@@ -20227,28 +16318,7 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
     }
 }
 
-@media(max-width:560px) {
-    body[data-role="admin"] #modal-root .menu-batch-modal {
-        width: calc(100vw - 24px) !important;
-    }
 
-    body[data-role="admin"] #modal-root .menu-batch-modal .modal-body {
-        padding: 14px !important;
-    }
-
-    body[data-role="admin"] #modal-root .menu-batch-row {
-        grid-template-columns: 88px minmax(0, 1fr) !important;
-        gap: 10px !important;
-    }
-
-    body[data-role="admin"] #modal-root .menu-batch-fields {
-        grid-template-columns: 1fr !important;
-    }
-
-    body[data-role="admin"] #modal-root .menu-batch-description {
-        grid-column: auto !important;
-    }
-}
 
 /* POS order bill: keep note, quantity controls, and line total on one compact row. */
 #modal-root .pos-order-modal .order-line.unpaid-item:not(.session-item) {
@@ -20380,28 +16450,7 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
     white-space: nowrap !important;
 }
 
-@media(max-width:560px) {
-    #modal-root .pos-order-modal .order-line-note-row,
-    #modal-root .pos-order-modal .order-line-paid-row {
-        grid-template-columns: minmax(0, 1fr) auto minmax(76px, auto) !important;
-        gap: 7px !important;
-    }
 
-    #modal-root .pos-order-modal .order-line-note-row .quantity button {
-        width: 32px !important;
-        height: 32px !important;
-    }
-
-    #modal-root .pos-order-modal .order-line-note-row>b {
-        min-width: 76px !important;
-        font-size: 12px !important;
-    }
-
-    #modal-root .pos-order-modal .order-line-paid-row>b {
-        min-width: 76px !important;
-        font-size: 12px !important;
-    }
-}
 
 /* POS order bill: tighter receipt lines for unpaid, paid, and fishing-session items. */
 #modal-root .pos-order-modal .order-line,
@@ -20616,21 +16665,7 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
     grid-row: 1 !important;
 }
 
-@media(max-width:560px) {
-    #modal-root .pos-order-modal .order-line-note-row,
-    #modal-root .pos-order-modal .order-line.paid-item:not(.session-item),
-    #modal-root .pos-order-modal .order-line.session-item {
-        grid-template-columns: minmax(0, 1fr) auto minmax(82px, auto) !important;
-        gap: 6px !important;
-    }
 
-    #modal-root .pos-order-modal .order-line-note-row>b,
-    #modal-root .pos-order-modal .order-line-paid-row>b,
-    #modal-root .pos-order-modal .order-line.session-item>b {
-        min-width: 82px !important;
-        font-size: 12px !important;
-    }
-}
 
 /* Admin map: match POS occupancy states and compact the map segmented control. */
 body[data-role="admin"] .head-actions .admin-map-toolbar,
@@ -20737,19 +16772,10 @@ body[data-role="admin"] .admin-fishing-preview .fishing-slot.disabled {
     word-break: normal !important;
 }
 
-@media(max-width:520px) {
-    .login-page .lp-copy-stack span,
-    .login-page .lp-help span {
-        display: inline;
-    }
 
-    .login-page .lp-help span+span::before {
-        content: " ";
-    }
-}
 
 /* POS staff orders: the table body scrolls while the header stays pinned. */
-@media (min-width: 621px) {
+@media(min-width:768px) {
     body[data-role="employee"].pos-orders-page #order-results .paginated-scroll {
         overflow: auto !important;
         border: 1px solid var(--pos-line, #e4d7ca) !important;
@@ -20883,7 +16909,7 @@ body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges .button.ac
     color: #fff !important;
 }
 
-@media(max-width: 1100px) {
+@media(min-width:768px) and (max-width: 1100px) {
     body[data-role="admin"] .owner-dashboard-page .owner-dashboard-head {
         grid-template-columns: 1fr !important;
         align-items: stretch !important;
@@ -20912,7 +16938,7 @@ body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges .button.ac
     }
 }
 
-@media(max-width: 860px) {
+@media(min-width:768px) and (max-width: 860px) {
     body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
         align-items: stretch !important;
         flex-direction: column !important;
@@ -20928,34 +16954,7 @@ body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges .button.ac
     }
 }
 
-@media(max-width: 767px) {
-    body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
-        align-items: stretch !important;
-    }
 
-    body[data-role="admin"] .owner-dashboard-page .dashboard-filter {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
-        gap: 8px !important;
-        width: 100% !important;
-    }
-
-    body[data-role="admin"] .owner-dashboard-page .dashboard-filter input {
-        flex-basis: auto !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: none !important;
-    }
-
-    body[data-role="admin"] .owner-dashboard-page .dashboard-filter .primary {
-        grid-column: 1 / -1 !important;
-        width: 100% !important;
-    }
-
-    body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges {
-        padding-bottom: 1px !important;
-    }
-}
 
 /* Admin dashboard KPI cards: no period comparison, keep icons visually even. */
 body[data-role="admin"] .owner-dashboard-page .owner-kpi {
@@ -20996,7 +16995,7 @@ body[data-role="admin"] .owner-dashboard-page .owner-kpi .dash-trend {
     color: var(--pos-muted) !important;
 }
 
-@media(max-width: 900px) {
+@media(min-width:768px) and (max-width: 900px) {
     body[data-role="admin"] .owner-dashboard-page .owner-kpi {
         gap: 14px !important;
         min-height: 104px !important;
@@ -21021,7 +17020,7 @@ body[data-role="admin"] .owner-dashboard-page .owner-kpi .dash-trend {
    and landscape. Keep this as the final tablet layer so older width-only
    rules cannot accidentally push tablets into phone layouts.
    ========================================================================== */
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
+@media(min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
        (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
     html,
     body {
@@ -21282,7 +17281,7 @@ body[data-role="admin"] .owner-dashboard-page .owner-kpi .dash-trend {
     }
 
     body[data-role="employee"] #modal-root .modal:not(.pos-order-modal) {
-        max-height: calc(100dvh - 44px) !important;
+        max-height: calc(100dvh - 44px - var(--modal-keyboard-offset)) !important;
     }
 
     body[data-role="employee"] #modal-root .checkout-modal-layout {
@@ -21290,7 +17289,7 @@ body[data-role="admin"] .owner-dashboard-page .owner-kpi .dash-trend {
     }
 }
 
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+@media(min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
     html:not(.sidebar-collapsed) .app-shell,
     html:not(.sidebar-collapsed) .pos-coffee-page .app-shell {
         grid-template-columns: var(--app-sidebar-open) minmax(0, 1fr) !important;
@@ -21582,7 +17581,7 @@ body[data-role="admin"] .owner-dashboard-page .owner-kpi .dash-trend {
     }
 }
 
-@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+@media(min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
     .page-content {
         padding: 24px !important;
     }
@@ -21687,7 +17686,7 @@ body[data-role="admin"] .owner-dashboard-page .owner-kpi .dash-trend {
     }
 }
 
-@media (min-width: 1181px) and (max-width: 1366px) and (orientation: landscape) {
+@media(min-width: 1181px) and (max-width: 1366px) and (orientation: landscape) {
     .coffee-pos-layout {
         grid-template-columns: minmax(0, 1fr) !important;
     }
@@ -21709,23 +17708,26 @@ body[data-role="admin"] .notification-bell {
     height: 42px;
     display: grid;
     place-items: center;
-    border: 1px solid var(--pos-line, #e4d7ca);
+    border: 1px solid var(--pos-line);
     border-radius: 8px;
-    background: #fffefa;
-    color: var(--pos-ink, #3d2b22);
+    background: var(--pos-card);
+    color: var(--pos-muted);
+    box-shadow: inset 0 0 0 1px rgba(86, 57, 42, .02);
     cursor: pointer;
-    transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
 }
 
 body[data-role="admin"] .notification-bell:hover,
 body[data-role="admin"] .notification-bell[aria-expanded="true"] {
-    border-color: #c9b6a6;
-    background: #f8f2ea;
-    color: #56392a;
+    border-color: rgba(86, 57, 42, .22);
+    background: var(--pos-soft);
+    color: var(--pos-brand);
+    box-shadow: inset 0 0 0 1px rgba(86, 57, 42, .05);
 }
 
 body[data-role="admin"] .notification-bell.has-unread {
-    border-color: rgba(163, 77, 70, .32);
+    border-color: rgba(163, 77, 70, .28);
+    color: var(--pos-brand);
 }
 
 body[data-role="admin"] .notification-badge {
@@ -21738,287 +17740,348 @@ body[data-role="admin"] .notification-badge {
     display: inline-grid;
     place-items: center;
     border-radius: 999px;
-    background: #a34d46;
+    background: var(--pos-alert);
     color: #fff;
     font-size: 9px;
     font-weight: 850;
     line-height: 1;
-    box-shadow: 0 0 0 2px #fffefa;
+    box-shadow: 0 0 0 2px var(--pos-card);
 }
 
-.notification-drawer-scrim {
+body[data-role="admin"] .notification-drawer-scrim {
     position: fixed;
     inset: 0;
     z-index: 225;
     border: 0;
-    background: rgba(35, 27, 21, .22);
+    background: rgba(44, 34, 27, .34);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     cursor: default;
 }
 
-.notification-drawer {
+body[data-role="admin"] .notification-drawer {
     position: fixed;
     top: 0;
     right: 0;
     z-index: 230;
-    width: min(430px, 100vw);
+    width: min(440px, 100vw);
     height: 100dvh;
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr) auto;
-    background: #fffefa;
-    border-left: 1px solid #e4d7ca;
-    box-shadow: -24px 0 55px rgba(43, 31, 24, .18);
+    background: var(--pos-page);
+    border-left: 1px solid var(--pos-line);
+    box-shadow: var(--pos-shadow-pop);
     transform: translateX(104%);
     transition: transform .22s ease;
 }
 
-.notification-drawer.open {
+body[data-role="admin"] .notification-drawer.open {
     transform: translateX(0);
 }
 
-.notification-drawer-head {
-    min-height: 78px;
-    padding: 18px 18px 14px;
+body[data-role="admin"] .notification-drawer-head {
+    min-height: 68px;
+    padding: 14px 16px 13px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    border-bottom: 1px solid #eadfd4;
+    border-bottom: 1px solid var(--pos-line);
+    background: linear-gradient(180deg, #fffefa 0%, #fffaf4 100%);
 }
 
-.notification-drawer-head small,
-.notification-drawer-head strong {
+body[data-role="admin"] .notification-drawer-head small,
+body[data-role="admin"] .notification-drawer-head strong {
     display: block;
 }
 
-.notification-drawer-head small {
-    color: #907b69;
+body[data-role="admin"] .notification-drawer-head small {
+    color: var(--pos-brand-2);
     font-size: 9px;
     font-weight: 850;
-    letter-spacing: .14em;
+    letter-spacing: .08em;
 }
 
-.notification-drawer-head strong {
-    margin-top: 3px;
-    color: #35231a;
-    font-size: 18px;
+body[data-role="admin"] .notification-drawer-head strong {
+    margin-top: 2px;
+    color: var(--pos-ink);
+    font-size: 19px;
+    font-weight: 850;
+    line-height: 1.15;
     letter-spacing: 0;
 }
 
-.notification-drawer-head .icon-button {
-    width: 34px;
-    height: 34px;
+body[data-role="admin"] .notification-drawer-head .icon-button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--pos-line);
     border-radius: 8px;
-    font-size: 24px;
+    background: var(--pos-soft);
+    color: var(--pos-ink);
+    font-size: 22px;
     line-height: 1;
+    box-shadow: none;
 }
 
-.notification-drawer-controls {
+body[data-role="admin"] .notification-drawer-controls {
     display: grid;
-    gap: 10px;
-    padding: 12px 14px;
-    border-bottom: 1px solid #eadfd4;
-    background: #fbf7f1;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--pos-line);
+    background: #fffdf8;
 }
 
-.notification-tabs,
-.notification-category-tabs {
+body[data-role="admin"] .notification-tabs,
+body[data-role="admin"] .notification-category-tabs {
     display: flex;
     align-items: center;
-    gap: 6px;
     overflow-x: auto;
     scrollbar-width: none;
 }
 
-.notification-tabs::-webkit-scrollbar,
-.notification-category-tabs::-webkit-scrollbar {
+body[data-role="admin"] .notification-tabs::-webkit-scrollbar,
+body[data-role="admin"] .notification-category-tabs::-webkit-scrollbar {
     display: none;
 }
 
-.notification-tabs button,
-.notification-category-tabs button {
-    flex: 0 0 auto;
-    height: 32px;
-    padding: 0 11px;
-    border: 1px solid #e1d3c6;
+body[data-role="admin"] .notification-tabs {
+    width: fit-content;
+    max-width: 100%;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--pos-line);
     border-radius: 8px;
-    background: #fffefa;
-    color: #6f5b49;
+    background: var(--pos-soft);
+}
+
+body[data-role="admin"] .notification-category-tabs {
+    gap: 6px;
+}
+
+body[data-role="admin"] .notification-tabs button,
+body[data-role="admin"] .notification-category-tabs button {
+    flex: 0 0 auto;
+    height: 30px;
+    border-radius: 8px;
+    color: var(--pos-muted);
     font-size: 11px;
-    font-weight: 750;
+    font-weight: 800;
+    letter-spacing: 0;
     cursor: pointer;
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease;
 }
 
-.notification-tabs button.active,
-.notification-category-tabs button.active {
-    border-color: #56392a;
-    background: #56392a;
+body[data-role="admin"] .notification-tabs button {
+    padding: 0 12px;
+    border: 0;
+    background: transparent;
+}
+
+body[data-role="admin"] .notification-category-tabs button {
+    padding: 0 10px;
+    border: 1px solid transparent;
+    background: transparent;
+}
+
+body[data-role="admin"] .notification-tabs button:hover,
+body[data-role="admin"] .notification-category-tabs button:hover {
+    color: var(--pos-brand);
+}
+
+body[data-role="admin"] .notification-tabs button.active {
+    background: var(--pos-brand);
     color: #fff;
+    box-shadow: 0 6px 14px rgba(86, 57, 42, .16);
 }
 
-.notification-drawer-list {
+body[data-role="admin"] .notification-category-tabs button.active {
+    border-color: rgba(86, 57, 42, .12);
+    background: var(--pos-card);
+    color: var(--pos-brand);
+    box-shadow: inset 0 0 0 1px rgba(86, 57, 42, .03);
+}
+
+body[data-role="admin"] .notification-drawer-list {
     min-height: 0;
     overflow: auto;
-    padding: 12px 14px 18px;
+    padding: 10px 16px 18px;
+    background: var(--pos-card);
 }
 
-.notification-drawer-list h3 {
-    margin: 14px 2px 8px;
-    color: #907b69;
-    font-size: 10px;
+body[data-role="admin"] .notification-drawer-list h3 {
+    margin: 16px 0 5px;
+    padding: 0 2px;
+    color: var(--pos-brand-2);
+    font-size: 9px;
     font-weight: 850;
-    letter-spacing: .12em;
+    letter-spacing: .08em;
     text-transform: uppercase;
 }
 
-.notification-drawer-list h3:first-child {
+body[data-role="admin"] .notification-drawer-list h3:first-child {
     margin-top: 0;
 }
 
-.notification-item {
+body[data-role="admin"] .notification-item {
     width: 100%;
-    min-height: 72px;
+    min-height: 66px;
     display: grid;
-    grid-template-columns: 32px minmax(0, 1fr) 9px;
+    grid-template-columns: 30px minmax(0, 1fr) 10px;
     align-items: start;
-    gap: 10px;
-    margin-bottom: 8px;
-    padding: 10px;
-    border: 1px solid #eadfd4;
-    border-radius: 8px;
-    background: #fff;
-    color: #35231a;
+    gap: 11px;
+    margin: 0 -8px;
+    padding: 12px 8px;
+    border: 0;
+    border-bottom: 1px solid var(--pos-line);
+    border-radius: 0;
+    background: transparent;
+    color: var(--pos-ink);
     text-align: left;
     cursor: pointer;
+    transition: background-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 
-.notification-item:hover {
-    border-color: #cdbba9;
-    background: #fffaf3;
+body[data-role="admin"] .notification-item:hover {
+    border-radius: 8px;
+    background: #fffaf4;
 }
 
-.notification-item.is-unread {
-    border-color: rgba(86, 57, 42, .32);
-    background: #fff8ef;
+body[data-role="admin"] .notification-item:active {
+    transform: translateY(1px);
 }
 
-.notification-item-icon {
+body[data-role="admin"] .notification-item.is-unread {
+    border-radius: 8px;
+    background: #fff9f0;
+    box-shadow: inset 3px 0 0 var(--pos-brand-2);
+}
+
+body[data-role="admin"] .notification-item-icon {
     width: 30px;
     height: 30px;
     display: grid;
     place-items: center;
     border-radius: 8px;
-    background: #efe3d7;
-    color: #56392a;
+    background: var(--pos-soft);
+    color: var(--pos-brand);
     font-size: 9px;
     font-weight: 900;
 }
 
-.notification-item-icon.payments {
-    background: #dcefe0;
-    color: #44744b;
+body[data-role="admin"] .notification-item-icon.payments {
+    background: var(--pos-active-bg);
+    color: var(--pos-active);
 }
 
-.notification-item-icon.map {
+body[data-role="admin"] .notification-item-icon.map {
     background: #dceff0;
     color: #356f76;
 }
 
-.notification-item-icon.system {
+body[data-role="admin"] .notification-item-icon.system {
     background: #f2e4c8;
     color: #8a6a3b;
 }
 
-.notification-item-copy {
+body[data-role="admin"] .notification-item-copy {
     min-width: 0;
     display: grid;
-    gap: 4px;
+    gap: 5px;
 }
 
-.notification-item-copy>span {
+body[data-role="admin"] .notification-item-copy>span {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 10px;
 }
 
-.notification-item-copy strong,
-.notification-item-copy small,
-.notification-item-copy em,
-.notification-item-copy time {
+body[data-role="admin"] .notification-item-copy strong,
+body[data-role="admin"] .notification-item-copy small,
+body[data-role="admin"] .notification-item-copy em,
+body[data-role="admin"] .notification-item-copy time {
     display: block;
     letter-spacing: 0;
 }
 
-.notification-item-copy strong {
+body[data-role="admin"] .notification-item-copy strong {
     min-width: 0;
     overflow: hidden;
-    color: #35231a;
-    font-size: 12px;
+    color: var(--pos-ink);
+    font-size: 13px;
     font-weight: 850;
+    line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.notification-item-copy small {
+body[data-role="admin"] .notification-item-copy small {
     flex: 0 0 auto;
-    color: #8a6a3b;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: var(--pos-soft);
+    color: var(--pos-brand);
     font-size: 9px;
     font-weight: 800;
+    line-height: 1;
 }
 
-.notification-item-copy em {
-    color: #6f5b49;
-    font-size: 11px;
+body[data-role="admin"] .notification-item-copy em {
+    color: var(--pos-muted);
+    font-size: 12px;
     font-style: normal;
-    line-height: 1.35;
+    line-height: 1.42;
 }
 
-.notification-item-copy time {
-    color: #9b8877;
+body[data-role="admin"] .notification-item-copy time {
+    color: var(--pos-subtle);
     font-size: 10px;
-    font-weight: 650;
+    font-weight: 750;
 }
 
-.notification-unread-dot {
+body[data-role="admin"] .notification-unread-dot {
     width: 8px;
     height: 8px;
-    margin-top: 11px;
+    margin-top: 12px;
     border-radius: 999px;
-    background: #a34d46;
+    background: var(--pos-alert);
 }
 
-.notification-empty {
+body[data-role="admin"] .notification-empty {
     min-height: 160px;
     display: grid;
     place-items: center;
     padding: 24px;
-    color: #8c7a68;
+    color: var(--pos-muted);
     font-size: 12px;
+    font-weight: 700;
     text-align: center;
 }
 
-.notification-load-more {
+body[data-role="admin"] .notification-load-more {
     width: 100%;
-    height: 38px;
-    border: 1px solid #e1d3c6;
+    height: 36px;
+    margin-top: 10px;
+    border: 1px solid var(--pos-line);
     border-radius: 8px;
-    background: #fbf7f1;
-    color: #56392a;
+    background: var(--pos-soft);
+    color: var(--pos-brand);
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
 }
 
-.notification-drawer-foot {
-    padding: 12px 14px max(14px, env(safe-area-inset-bottom));
-    border-top: 1px solid #eadfd4;
-    background: #fffefa;
+body[data-role="admin"] .notification-drawer-foot {
+    padding: 10px 14px max(14px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--pos-line);
+    background: #fffdf8;
 }
 
-.notification-drawer-foot .button {
+body[data-role="admin"] .notification-drawer-foot .button {
     width: 100%;
-    min-height: 40px;
+    min-height: 38px;
     border-radius: 8px;
+    box-shadow: none !important;
 }
 
 .notification-order-summary {
@@ -22175,14 +18238,4 @@ body[data-role="admin"] .notification-badge {
     border-radius: 8px;
     color: var(--muted);
     font-size: 12px;
-}
-
-@media(max-width: 560px) {
-    .notification-drawer {
-        width: 100vw;
-    }
-
-    .notification-order-stats {
-        grid-template-columns: 1fr;
-    }
 }
