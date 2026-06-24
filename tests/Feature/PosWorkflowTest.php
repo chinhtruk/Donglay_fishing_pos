@@ -962,6 +962,39 @@ class PosWorkflowTest extends TestCase
             ->assertJsonCount(0, 'notifications');
     }
 
+    public function test_notifications_can_be_paginated_and_filtered_by_category(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        foreach ([
+            ['type' => 'coffee_order_created', 'title' => 'Đơn mới'],
+            ['type' => 'coffee_payment_completed', 'title' => 'Thanh toán'],
+            ['type' => 'fishing_session_expired', 'title' => 'Hết giờ'],
+        ] as $payload) {
+            $admin->notifications()->create([
+                'id' => \Illuminate\Support\Str::uuid()->toString(),
+                'type' => 'App\Notifications\TestNotification',
+                'data' => ['type' => $payload['type'], 'title' => $payload['title'], 'message' => 'Test'],
+                'read_at' => null,
+            ]);
+        }
+
+        $this->actingAs($admin);
+
+        $this->getJson('/api/v1/notifications?per_page=2')->assertOk()
+            ->assertJsonCount(2, 'notifications')
+            ->assertJsonPath('meta.total', 3)
+            ->assertJsonPath('unread_count', 3);
+
+        $this->getJson('/api/v1/notifications?category=payments')->assertOk()
+            ->assertJsonCount(1, 'notifications')
+            ->assertJsonPath('notifications.0.data.type', 'coffee_payment_completed');
+
+        $this->getJson('/api/v1/notifications?category=map')->assertOk()
+            ->assertJsonCount(1, 'notifications')
+            ->assertJsonPath('notifications.0.data.type', 'fishing_session_expired');
+    }
+
     public function test_pos_operational_day_resets_visibility_without_mutating_orders(): void
     {
         $employee = User::factory()->create(['role' => 'employee']);

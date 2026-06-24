@@ -49,6 +49,12 @@
             <button id="menu-toggle" class="icon-button mobile-only" aria-label="Mở menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
             <div class="clock"><strong id="live-time">--:--</strong><span id="live-date">--</span></div>
             <div class="top-actions">
+                @if(auth()->user()->isAdmin())
+                    <button id="notification-bell" class="notification-bell" type="button" aria-label="Mở trung tâm thông báo" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+                        <span id="notification-badge" class="notification-badge hidden">0</span>
+                    </button>
+                @endif
                 <div class="profile-menu-wrap">
                     <button id="profile-menu-button" class="profile" type="button" aria-haspopup="menu" aria-expanded="false">
                         <span class="avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
@@ -72,6 +78,37 @@
     </div>
 </div>
 <div id="modal-root"></div>
+@if(auth()->user()->isAdmin())
+    <button id="notification-drawer-scrim" class="notification-drawer-scrim hidden" type="button" aria-label="Đóng trung tâm thông báo"></button>
+    <aside id="notification-drawer" class="notification-drawer" aria-hidden="true" aria-label="Trung tâm thông báo">
+        <header class="notification-drawer-head">
+            <div>
+                <small>TRUNG TÂM</small>
+                <strong>Thông báo</strong>
+            </div>
+            <button id="notification-drawer-close" class="icon-button" type="button" aria-label="Đóng trung tâm thông báo">×</button>
+        </header>
+        <div class="notification-drawer-controls">
+            <div class="notification-tabs" role="tablist" aria-label="Trạng thái thông báo">
+                <button type="button" class="active" data-notification-read-filter="all" aria-pressed="true">Tất cả</button>
+                <button type="button" data-notification-read-filter="unread" aria-pressed="false">Chưa đọc</button>
+            </div>
+            <div class="notification-category-tabs" aria-label="Loại thông báo">
+                <button type="button" class="active" data-notification-category="" aria-pressed="true">Tất cả</button>
+                <button type="button" data-notification-category="orders" aria-pressed="false">Đơn hàng</button>
+                <button type="button" data-notification-category="payments" aria-pressed="false">Thanh toán</button>
+                <button type="button" data-notification-category="map" aria-pressed="false">Sơ đồ</button>
+                <button type="button" data-notification-category="system" aria-pressed="false">Hệ thống</button>
+            </div>
+        </div>
+        <div id="notification-drawer-list" class="notification-drawer-list">
+            <div class="notification-empty">Đang tải thông báo...</div>
+        </div>
+        <footer class="notification-drawer-foot">
+            <button id="notification-read-all" class="button secondary" type="button">Đánh dấu tất cả đã đọc</button>
+        </footer>
+    </aside>
+@endif
 <div id="toast-root" class="toast-root" aria-live="polite"></div>
 </body>
 </html>
