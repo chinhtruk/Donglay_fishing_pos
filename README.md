@@ -22,6 +22,7 @@
 - [API](#api)
 - [Queue, Scheduler và thông báo](#queue-scheduler-và-thông-báo)
 - [Ảnh món và lưu trữ](#ảnh-món-và-lưu-trữ)
+- [Workflow phát triển](#workflow-phát-triển)
 - [Kiểm thử](#kiểm-thử)
 - [Triển khai production](#triển-khai-production)
 - [Sao lưu, khôi phục và làm sạch dữ liệu](#sao-lưu-khôi-phục-và-làm-sạch-dữ-liệu)
@@ -38,6 +39,7 @@
 - Tạo **đơn tại quầy** khi chưa xác định bàn; có thể chọn bàn sau.
 - Thêm, giảm hoặc cập nhật số lượng món chưa thanh toán.
 - Ghi chú riêng trên từng dòng món.
+- Món có giá biến động được nhập giá ngay trong phiếu bán hàng, không dùng dialog trình duyệt.
 - Thanh toán toàn bộ hoặc tách thanh toán theo số lượng món.
 - Hiển thị rõ số lượng đã trả, số tiền đã thanh toán và số tiền còn lại.
 - Gộp hóa đơn, bao gồm trường hợp một đơn đã thanh toán một phần.
@@ -49,7 +51,8 @@
 - Quản lý 20 chòi câu.
 - Mỗi phiên mặc định kéo dài **240 phút** và có giá **200.000 đ**.
 - Đếm ngược thời gian phiên câu theo mốc thời gian máy chủ.
-- Gia hạn mỗi lần thêm 4 giờ và thêm một dòng phí phiên câu bất biến vào đơn.
+- Gia hạn trọn phiên 4 giờ hoặc theo giờ; tiền gia hạn được thêm vào đơn như dòng phí bất biến.
+- Phiên đã trả trước nhưng chưa phóng chòi vẫn có thể gia hạn tiếp; phần gia hạn mới trở thành khoản chưa thanh toán.
 - Chòi hết giờ vẫn được giữ cho đến khi gia hạn hoặc hoàn tất thanh toán/kết thúc phiên.
 - Có thể gọi thêm món ăn, nước uống vào đơn câu cá.
 - Hỗ trợ gộp hóa đơn, thanh toán tách/toàn bộ và phóng chòi.
@@ -61,6 +64,7 @@
 - Danh sách đơn POS ưu tiên đơn vừa có hoạt động mới nhất, ví dụ bàn cũ gọi thêm món sẽ được đẩy lên trên.
 - Mã đơn ngắn, dễ đọc: `CF-XXXXXX` hoặc `FS-XXXXXX`.
 - Lưu snapshot tên món và đơn giá tại thời điểm gọi món.
+- Lưu `ordered_at` trên từng dòng món để nhóm món theo lần gọi, giúp nhân viên xem đúng thứ tự cần pha/chế biến.
 - Thanh toán tiền mặt hoặc QR/chuyển khoản theo các phương thức đang bật.
 - Với tiền mặt, lưu tiền khách đưa và tiền thừa; với QR/chuyển khoản, lưu phương thức nhân viên đã xác nhận.
 - Payment line bất biến giúp truy vết chính xác từng phần đã trả.
@@ -72,10 +76,11 @@
 - Giao diện tiếng Việt, tông nâu ấm, tối giản và tối ưu thao tác chạm.
 - Responsive cho iPad Gen 9 xoay ngang/dọc, desktop và điện thoại.
 - Sidebar theo vai trò, có thể thu gọn/mở rộng.
-- Topbar dùng chung gồm đồng hồ, ngày, chuông thông báo và menu tài khoản.
+- Topbar dùng chung gồm đồng hồ, ngày và menu tài khoản; sự kiện vận hành được đẩy bằng toast polling ở góc trên bên phải.
 - Icon được dựng bằng SVG nội tuyến.
 - Modal gọi món tách vùng cuộn menu và phiếu bán hàng; vùng tổng tiền/thanh toán được giữ cố định.
 - Phiếu bán hàng dùng layout compact thống nhất cho món chưa trả, món đã trả và phí phiên câu.
+- Tab đơn hàng nhân viên ưu tiên thao tác cảm ứng: chạm trực tiếp vào hàng để mở chi tiết, ẩn bớt tổng tiền/thanh toán và tập trung vào danh sách món.
 - Bảng đơn hàng dùng header sticky, vùng cuộn độc lập và phân trang tròn đồng bộ giữa POS/admin.
 - Tiền hiển thị theo định dạng Việt Nam, không hiển thị số thập phân; ô tiền khách đưa tự chèn dấu phân cách hàng nghìn.
 - Thông báo lỗi có nội dung mềm mại, dễ hiểu và hướng dẫn được bước tiếp theo.
@@ -129,9 +134,9 @@ Các endpoint xác thực được giới hạn 8 request/phút.
 2. Máy chủ khóa chòi, tạo order, fishing session và dòng phí 4 giờ.
 3. `ends_at` được tính từ thời gian máy chủ.
 4. Giao diện render đồng hồ mỗi giây, đồng bộ trạng thái từ API theo chu kỳ.
-5. Gia hạn cộng thêm 240 phút từ thời điểm kết thúc hiện tại và thêm một dòng phí 200.000 đ.
+5. Gia hạn có thể cộng thêm một block 240 phút hoặc 1-3 giờ; mỗi lần tạo/cập nhật dòng phí gia hạn tương ứng trong đơn.
 6. Scheduler đổi phiên sang `expired` khi hết giờ và tạo thông báo.
-7. Chòi hết giờ vẫn bị chiếm cho đến khi gia hạn hoặc kết thúc đơn.
+7. Chòi hết giờ hoặc đã thanh toán trước vẫn bị chiếm cho đến khi gia hạn tiếp hoặc phóng chòi/kết thúc đơn.
 
 ### Tách thanh toán
 
@@ -444,10 +449,11 @@ Các bảng tương ứng được tạo bởi migration có sẵn.
 return [
     'session_minutes' => 240,
     'session_price' => 200000.00,
+    'hourly_extension_price' => 50000.00,
 ];
 ```
 
-Thay đổi hai giá trị này chỉ nên thực hiện sau khi đánh giá ảnh hưởng đến đơn đang mở. Dòng phí cũ vẫn giữ snapshot giá tại thời điểm tạo.
+Thay đổi các giá trị này chỉ nên thực hiện sau khi đánh giá ảnh hưởng đến đơn đang mở. Dòng phí cũ vẫn giữ snapshot giá tại thời điểm tạo.
 
 ## Cấu hình SMTP Gmail và OTP
 
@@ -596,7 +602,7 @@ Tất cả JSON API dùng prefix `/api/v1`, session authentication và CSRF cùn
 | --- | --- | --- |
 | `GET` | `/fishing/map` | Trạng thái chòi, timer và menu |
 | `POST` | `/fishing/spots/{spot}/start` | Bắt đầu phiên 4 giờ |
-| `POST` | `/fishing/orders/{order}/extend` | Gia hạn 4 giờ |
+| `POST` | `/fishing/orders/{order}/extend` | Gia hạn trọn phiên hoặc theo giờ |
 | `PUT` | `/fishing/orders/{order}` | Cập nhật món gọi thêm |
 | `POST` | `/fishing/orders/{order}/merge` | Gộp hóa đơn |
 | `POST` | `/fishing/orders/{order}/checkout` | Thanh toán |
@@ -664,7 +670,9 @@ Không chạy đồng thời nhiều cơ chế scheduler nếu chưa có chủ �
 
 ### Sự kiện thông báo POS
 
-Hệ thống tạo thông báo cho các sự kiện chính: đơn mới, gọi thêm/cập nhật món, gán bàn, thanh toán, gộp bill, kết thúc bàn/chòi, bắt đầu phiên, gia hạn và hết giờ câu. Chạm vào thông báo sẽ điều hướng/mở dữ liệu liên quan trên giao diện.
+Hệ thống tạo thông báo cho các sự kiện chính: đơn mới, gọi thêm/cập nhật món, gán bàn, thanh toán, gộp bill, kết thúc bàn/chòi, bắt đầu phiên, gia hạn và hết giờ câu.
+
+Frontend polling thông báo khoảng mỗi 3 giây, hiển thị bằng toast lớn ở góc trên bên phải và tự đánh dấu đã đọc khi phù hợp. Khi có sự kiện mới, danh sách đơn POS/Admin và sơ đồ admin được làm mới nhẹ để nhân viên/quản trị không phải reload trang.
 
 ## Ảnh món và lưu trữ
 
@@ -704,7 +712,19 @@ Nếu dùng PHP-FPM, phải sửa đúng `php.ini` của FPM rồi restart servi
 
 `storage/app/public/*` và `public/storage` không được commit. Production phải dùng persistent storage và có chiến lược backup file ảnh.
 
+## Workflow phát triển
+
+Repo này đang được tinh chỉnh liên tục theo ảnh/test thực tế tại quán, đặc biệt ở POS iPad/mobile và màn admin. Khi sửa, ưu tiên nhịp làm việc gọn:
+
+- Trước khi sửa: xem `git status`, đọc đúng đoạn source liên quan và kiểm tra diff nếu file đang có thay đổi cũ.
+- Sửa đúng phạm vi yêu cầu, bám pattern sẵn có trong `resources/js/app.js`, `resources/css/app.css`, service/controller Laravel và test hiện tại.
+- Sau mỗi thay đổi chỉ chạy kiểm tra nhanh đủ liên quan: tài liệu thì `git diff --check -- README.md`; CSS/JS thì `npm run build`; module JS thì `npm test`; backend/nghiệp vụ thì chạy đúng filter test nhỏ như `php artisan test --filter=PosWorkflowTest`.
+- Browser/UI check chỉ cần dùng khi thay đổi có rủi ro vỡ layout hoặc luồng chạm; kiểm thử sâu từng màn để chủ dự án tự test thực tế.
+- Khi commit, chỉ stage file thuộc phạm vi thay đổi hiện tại, tránh kéo theo các file đang dở ở worktree.
+
 ## Kiểm thử
+
+Nhịp mặc định cho dự án là test vừa đủ theo phạm vi sửa. Các lệnh dưới đây dùng khi cần kiểm đầy đủ hơn.
 
 ### Chạy toàn bộ
 
@@ -725,10 +745,11 @@ Bộ test bao phủ:
 - Admin login, OTP một lần, tài khoản bị vô hiệu hóa.
 - Tạo đơn cà phê, đơn tại quầy, gán bàn và chống tranh chấp bàn.
 - Optimistic version và stale update.
+- `ordered_at` trên dòng món để nhóm đơn theo lần gọi trong modal nhân viên.
 - Tách thanh toán, thanh toán cuối, tự động/phóng bàn thủ công.
 - Thanh toán QR/chuyển khoản và quản lý nhiều phương thức thanh toán từ admin.
 - Danh sách đơn ưu tiên hoạt động mới nhất.
-- Phiên câu, gọi thêm món, gia hạn, hết giờ và notification idempotent.
+- Phiên câu, gọi thêm món, gia hạn theo block hoặc theo giờ, hết giờ và notification idempotent.
 - Gộp đơn cà phê/câu cá và trường hợp paid + unpaid.
 - Ghi chú dòng món.
 - Quy tắc xóa menu đang được sử dụng.
@@ -953,7 +974,7 @@ Các file nhạy cảm/runtime đã được `.gitignore` loại trừ, gồm `.
 - Thanh toán tiền mặt và QR/chuyển khoản được nhân viên xác nhận thủ công.
 - Không VAT/thuế, giảm giá, tồn kho, loyalty hoặc payment gateway tự động.
 - Không in bếp/in hóa đơn phần cứng.
-- Không tính phí quá giờ tự động ngoài các block gia hạn 4 giờ.
+- Không tự phát sinh phí quá giờ; mọi khoản gia hạn do nhân viên chọn trọn phiên hoặc theo giờ.
 - Không tự tái chiếm bàn/chòi khi admin đảo một thanh toán đã hoàn tất.
 - Email OTP dùng SMTP; production cần thông tin SMTP thật và worker ổn định.
 
