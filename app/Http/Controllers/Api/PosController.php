@@ -4,20 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\CoffeeTable;
-use App\Models\FishingSession;
 use App\Models\FishingSpot;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\PaymentQrSetting;
 use App\Models\User;
-use App\Notifications\FishingSessionExpired;
 use App\Notifications\PosEventNotification;
 use App\Services\CoffeeOrderService;
+use App\Services\FishingSessionExpirationNotifier;
 use App\Services\FishingService;
 use App\Services\OrderPresenter;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PosController extends Controller
 {
@@ -48,6 +48,7 @@ class PosController extends Controller
                 'completed_today' => Order::where('service_type', 'coffee')->where('status', 'paid')->whereDate('completed_at', today())->count(),
             ],
             'menu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
+            'payment_settings' => $this->paymentSettingsPayload(),
         ]);
     }
 
@@ -121,15 +122,20 @@ class PosController extends Controller
 
     public function coffeeCheckout(Request $request, Order $order, CoffeeOrderService $service): JsonResponse
     {
+        $method = (string) $request->input('payment_method', PaymentQrSetting::TYPE_CASH);
+        $this->assertPaymentMethodAvailable($method);
+
         $data = $request->validate([
             'version' => ['required', 'integer'],
-            'cash_received' => ['required', 'numeric', 'min:0'],
+            'payment_method' => ['sometimes', 'string', 'max:20'],
+            'cash_received' => [$method === PaymentQrSetting::TYPE_CASH ? 'required' : 'nullable', 'numeric', 'min:0'],
             'items' => ['sometimes', 'array'],
             'items.*.order_item_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'release' => ['sometimes', 'boolean']
         ]);
-        $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) $data['cash_received']);
+        $method = $data['payment_method'] ?? PaymentQrSetting::TYPE_CASH;
+        $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) ($data['cash_received'] ?? 0), $method);
 
         $freshOrder = $order->fresh();
         if (!empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
@@ -140,9 +146,9 @@ class PosController extends Controller
         return response()->json(['message' => 'Thanh toán hoàn tất. Cảm ơn bạn!', 'payment' => $payment, 'order' => OrderPresenter::make($order->fresh())]);
     }
 
-    public function fishingMap(): JsonResponse
+    public function fishingMap(FishingSessionExpirationNotifier $expirationNotifier): JsonResponse
     {
-        $this->syncExpiredFishingNotifications();
+        $expirationNotifier->sync();
 
         $spots = FishingSpot::orderBy('id')->get()->map(function ($spot) {
             $order = $spot->orders()->whereNull('completed_at')->where('status', '!=', 'void')->latest()->first();
@@ -163,6 +169,7 @@ class PosController extends Controller
             'session_price' => number_format((float) config('fishing.session_price'), 2, '.', ''),
             'session_minutes' => config('fishing.session_minutes'),
             'menu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
+            'payment_settings' => $this->paymentSettingsPayload(),
         ]);
     }
 
@@ -176,12 +183,20 @@ class PosController extends Controller
 
     public function extendFishing(Request $request, Order $order, FishingService $service): JsonResponse
     {
-        $data = $request->validate(['version' => ['required', 'integer']]);
-        $order = $service->extend($order, $data['version']);
+        $data = $request->validate([
+            'version' => ['required', 'integer'],
+            'blocks' => ['sometimes', 'integer', 'min:1', 'max:4'],
+        ]);
+        $blocks = (int) ($data['blocks'] ?? 1);
+        $sessionMinutes = (int) config('fishing.session_minutes');
+        $durationMinutes = $sessionMinutes * $blocks;
+        $durationText = $durationMinutes % 60 === 0 ? ($durationMinutes / 60).' giờ' : $durationMinutes.' phút';
+        $sessionText = $blocks.' phiên câu';
+        $order = $service->extend($order, $data['version'], $blocks);
         $order->loadMissing('fishingSession');
-        $this->notifyOrderEvent('Gia hạn chòi câu', "{$this->resourceLabel($order)} vừa gia hạn thêm 4 giờ, kết thúc lúc {$order->fishingSession->ends_at->format('H:i')}.", $order, 'fishing_session_extended');
+        $this->notifyOrderEvent('Gia hạn chòi câu', "{$this->resourceLabel($order)} vừa gia hạn thêm {$sessionText} ({$durationText}), kết thúc lúc {$order->fishingSession->ends_at->format('H:i')}.", $order, 'fishing_session_extended');
 
-        return response()->json(['message' => 'Đã gia hạn thêm 4 giờ.', 'order' => OrderPresenter::make($order)]);
+        return response()->json(['message' => "Đã gia hạn thêm {$sessionText}.", 'order' => OrderPresenter::make($order)]);
     }
 
     public function updateFishing(Request $request, Order $order, FishingService $service): JsonResponse
@@ -206,15 +221,20 @@ class PosController extends Controller
 
     public function fishingCheckout(Request $request, Order $order, FishingService $service): JsonResponse
     {
+        $method = (string) $request->input('payment_method', PaymentQrSetting::TYPE_CASH);
+        $this->assertPaymentMethodAvailable($method);
+
         $data = $request->validate([
             'version' => ['required', 'integer'],
-            'cash_received' => ['required', 'numeric', 'min:0'],
+            'payment_method' => ['sometimes', 'string', 'max:20'],
+            'cash_received' => [$method === PaymentQrSetting::TYPE_CASH ? 'required' : 'nullable', 'numeric', 'min:0'],
             'items' => ['sometimes', 'array'],
             'items.*.order_item_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'release' => ['sometimes', 'boolean']
         ]);
-        $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) $data['cash_received']);
+        $method = $data['payment_method'] ?? PaymentQrSetting::TYPE_CASH;
+        $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) ($data['cash_received'] ?? 0), $method);
 
         $freshOrder = $order->fresh();
         if (!empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
@@ -304,26 +324,6 @@ class PosController extends Controller
         );
     }
 
-    private function syncExpiredFishingNotifications(): void
-    {
-        FishingSession::query()
-            ->where('status', 'active')
-            ->whereNull('expired_notified_at')
-            ->where('ends_at', '<=', now())
-            ->with('fishingSpot')
-            ->each(function (FishingSession $session): void {
-                DB::transaction(function () use ($session): void {
-                    $locked = FishingSession::lockForUpdate()->find($session->id);
-                    if (! $locked || $locked->expired_notified_at || $locked->status !== 'active') {
-                        return;
-                    }
-                    $locked->update(['status' => 'expired', 'expired_notified_at' => now()]);
-                    $locked->load('fishingSpot');
-                    Notification::send(User::where('is_active', true)->get(), new FishingSessionExpired($locked));
-                });
-            });
-    }
-
     private function resourceLabel(Order $order): string
     {
         $order->loadMissing(['coffeeTable', 'fishingSpot']);
@@ -347,6 +347,21 @@ class PosController extends Controller
     private function moneyText(float $amount): string
     {
         return number_format($amount, 0, ',', '.').' đ';
+    }
+
+    private function paymentSettingsPayload(): array
+    {
+        return [
+            'methods' => PaymentQrSetting::methodsPayload(enabledOnly: true),
+            'qr' => PaymentQrSetting::current()->payload(),
+        ];
+    }
+
+    private function assertPaymentMethodAvailable(string $method): void
+    {
+        if (! PaymentQrSetting::activeByCode($method)) {
+            throw ValidationException::withMessages(['payment_method' => 'Phương thức thanh toán này chưa được bật hoặc chưa đủ cấu hình. Bạn chọn phương thức khác hoặc báo quản trị viên cập nhật nhé.']);
+        }
     }
 
     private function orderUrl(Order $order): string

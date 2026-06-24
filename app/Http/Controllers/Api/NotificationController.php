@@ -3,14 +3,24 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\FishingSessionExpirationNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, FishingSessionExpirationNotifier $expirationNotifier): JsonResponse
     {
-        return response()->json(['unread_count' => $request->user()->unreadNotifications()->count(), 'notifications' => $request->user()->notifications()->limit(20)->get()]);
+        $expirationNotifier->sync();
+
+        $query = $request->boolean('unread')
+            ? $request->user()->unreadNotifications()
+            : $request->user()->notifications();
+
+        return response()->json([
+            'unread_count' => $request->user()->unreadNotifications()->count(),
+            'notifications' => $query->limit(20)->get(),
+        ]);
     }
 
     public function read(Request $request, string $id): JsonResponse

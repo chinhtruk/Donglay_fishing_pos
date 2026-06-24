@@ -3,6 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
+use App\Models\CoffeeTable;
+use App\Models\FishingSpot;
+use App\Models\MenuCategory;
+use App\Models\MenuItem;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -71,6 +75,72 @@ class AdminDashboardTest extends TestCase
             ->assertDontSee('VẬN HÀNH')
             ->assertDontSee('/pos/coffee', false)
             ->assertDontSee('/pos/fishing', false);
+    }
+
+    public function test_admin_order_index_can_filter_by_service_type_and_status(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'username' => 'manager']);
+        $spot = FishingSpot::create(['label' => 'Chòi 20']);
+        $table = CoffeeTable::create(['label' => 'Bàn 2']);
+
+        Order::create([
+            'order_number' => 'FS-OPEN01',
+            'service_type' => 'fishing',
+            'fishing_spot_id' => $spot->id,
+            'opened_by' => $admin->id,
+            'status' => 'open',
+            'subtotal' => 200000,
+            'total' => 200000,
+        ]);
+        Order::create([
+            'order_number' => 'CF-OPEN01',
+            'service_type' => 'coffee',
+            'coffee_table_id' => $table->id,
+            'opened_by' => $admin->id,
+            'status' => 'open',
+            'subtotal' => 30000,
+            'total' => 30000,
+        ]);
+        Order::create([
+            'order_number' => 'FS-PAID01',
+            'service_type' => 'fishing',
+            'opened_by' => $admin->id,
+            'status' => 'paid',
+            'subtotal' => 200000,
+            'total' => 200000,
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/v1/orders?service_type=fishing&status=open')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.order_number', 'FS-OPEN01')
+            ->assertJsonPath('data.0.service_type', 'fishing')
+            ->assertJsonPath('data.0.status', 'open');
+
+        $this->actingAs($admin)
+            ->getJson('/api/v1/orders?q='.rawurlencode('Chòi 20'))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.order_number', 'FS-OPEN01');
+    }
+
+    public function test_admin_menu_index_can_filter_by_category_and_search(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'username' => 'manager']);
+        $coffee = MenuCategory::create(['name' => 'Cà phê', 'sort_order' => 1, 'is_active' => true]);
+        $snacks = MenuCategory::create(['name' => 'Ăn vặt', 'sort_order' => 2, 'is_active' => true]);
+
+        MenuItem::create(['category_id' => $coffee->id, 'category' => $coffee->name, 'name' => 'Cà phê đen', 'price' => 20000, 'is_available' => true]);
+        MenuItem::create(['category_id' => $coffee->id, 'category' => $coffee->name, 'name' => 'Bạc xỉu', 'price' => 25000, 'is_available' => true]);
+        MenuItem::create(['category_id' => $snacks->id, 'category' => $snacks->name, 'name' => 'Khoai tây chiên', 'price' => 30000, 'is_available' => true]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/v1/admin/menu?category='.rawurlencode('Cà phê').'&q='.rawurlencode('đen'))
+            ->assertOk()
+            ->assertJsonCount(1, 'items')
+            ->assertJsonPath('items.0.name', 'Cà phê đen')
+            ->assertJsonPath('items.0.category', 'Cà phê');
     }
 
     public function test_dashboard_does_not_treat_partial_payment_as_completed_order(): void

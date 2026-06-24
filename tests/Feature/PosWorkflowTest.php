@@ -7,10 +7,12 @@ use App\Models\FishingSpot;
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\PaymentQrSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -39,6 +41,42 @@ class PosWorkflowTest extends TestCase
         $item = MenuItem::create(['category' => 'Trà', 'name' => 'Trà đào', 'price' => 35000, 'is_available' => true]);
         $order = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table->id}/orders", ['items' => [['menu_item_id' => $item->id, 'quantity' => 1]]])->json('order');
         $this->putJson("/api/v1/coffee/orders/{$order['id']}", ['version' => $order['version'] - 1, 'items' => [['menu_item_id' => $item->id, 'quantity' => 2]]])->assertStatus(409);
+    }
+
+    public function test_order_index_prioritizes_recent_order_activity(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $firstTable = CoffeeTable::create(['label' => 'Bàn 1']);
+        $secondTable = CoffeeTable::create(['label' => 'Bàn 2']);
+        $item = MenuItem::create(['category' => 'Cà phê', 'name' => 'Bạc xỉu', 'price' => 30000, 'is_available' => true]);
+
+        Carbon::setTestNow('2026-06-24 09:00:00');
+
+        try {
+            $firstOrder = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$firstTable->id}/orders", [
+                'items' => [['menu_item_id' => $item->id, 'quantity' => 1]],
+            ])->assertCreated()->json('order');
+
+            Carbon::setTestNow('2026-06-24 10:00:00');
+            $this->postJson("/api/v1/coffee/tables/{$secondTable->id}/orders", [
+                'items' => [['menu_item_id' => $item->id, 'quantity' => 1]],
+            ])->assertCreated();
+
+            Carbon::setTestNow('2026-06-24 11:00:00');
+            $this->putJson("/api/v1/coffee/orders/{$firstOrder['id']}", [
+                'version' => $firstOrder['version'],
+                'items' => [['menu_item_id' => $item->id, 'quantity' => 2]],
+            ])->assertOk();
+
+            $this->getJson('/api/v1/orders')
+                ->assertOk()
+                ->assertJsonPath('data.0.id', $firstOrder['id'])
+                ->assertJsonPath('data.0.resource.label', 'Bàn 1')
+                ->assertJsonPath('data.0.opened_at', '2026-06-24T09:00:00+07:00')
+                ->assertJsonPath('data.0.activity_at', '2026-06-24T11:00:00+07:00');
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_counter_order_can_stay_unassigned_and_receive_a_table_later(): void
@@ -91,6 +129,91 @@ class PosWorkflowTest extends TestCase
         $this->assertSame('400000.00', $extended['total']);
         $this->assertSame(2, $extended['fishing_session']['blocks_count']);
         $this->postJson("/api/v1/fishing/orders/{$order['id']}/checkout", ['version' => $extended['version'], 'cash_received' => 500000])->assertOk()->assertJsonPath('order.status', 'paid');
+    }
+
+    public function test_fishing_session_can_extend_by_multiple_session_blocks(): void
+    {
+        $employee = User::factory()->create();
+        $spot = FishingSpot::create(['label' => 'Chòi 2']);
+        $order = $this->actingAs($employee)->postJson("/api/v1/fishing/spots/{$spot->id}/start")->assertCreated()->json('order');
+
+        $extended = $this->postJson("/api/v1/fishing/orders/{$order['id']}/extend", [
+            'version' => $order['version'],
+            'blocks' => 3,
+        ])->assertOk()
+            ->assertJsonPath('message', 'Đã gia hạn thêm 3 phiên câu.')
+            ->json('order');
+
+        $this->assertSame('800000.00', $extended['total']);
+        $this->assertSame(4, $extended['fishing_session']['blocks_count']);
+        $this->assertSame(4, collect($extended['items'])->firstWhere('line_type', 'fishing_session')['quantity']);
+    }
+
+    public function test_expired_fishing_session_extension_restarts_countdown_from_confirm_time(): void
+    {
+        Carbon::setTestNow('2026-06-24 08:00:00');
+
+        try {
+            $employee = User::factory()->create();
+            $spot = FishingSpot::create(['label' => 'Chòi 4']);
+            $order = $this->actingAs($employee)->postJson("/api/v1/fishing/spots/{$spot->id}/start")->assertCreated()->json('order');
+            $session = Order::findOrFail($order['id'])->fishingSession;
+            $session->update([
+                'ends_at' => Carbon::parse('2026-06-24 07:30:00'),
+                'status' => 'expired',
+                'expired_notified_at' => Carbon::parse('2026-06-24 07:30:00'),
+            ]);
+
+            $extended = $this->postJson("/api/v1/fishing/orders/{$order['id']}/extend", [
+                'version' => $order['version'],
+                'blocks' => 1,
+            ])->assertOk()->json('order');
+
+            $this->assertSame('active', $extended['fishing_session']['status']);
+            $this->assertSame('2026-06-24T12:00:00+07:00', $extended['fishing_session']['ends_at']);
+            $this->assertSame(2, $extended['fishing_session']['blocks_count']);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_paid_expired_fishing_session_can_be_extended_before_release(): void
+    {
+        Carbon::setTestNow('2026-06-24 08:00:00');
+
+        try {
+            $employee = User::factory()->create(['role' => 'employee']);
+            $spot = FishingSpot::create(['label' => 'Chòi 20']);
+
+            $order = $this->actingAs($employee)->postJson("/api/v1/fishing/spots/{$spot->id}/start")->assertCreated()->json('order');
+            $paid = $this->postJson("/api/v1/fishing/orders/{$order['id']}/checkout", [
+                'version' => $order['version'],
+                'cash_received' => 200000,
+            ])->assertOk()->json('order');
+
+            $session = Order::findOrFail($order['id'])->fishingSession;
+            $session->update([
+                'ends_at' => Carbon::parse('2026-06-24 07:30:00'),
+                'status' => 'expired',
+                'expired_notified_at' => Carbon::parse('2026-06-24 07:30:00'),
+            ]);
+
+            $extended = $this->postJson("/api/v1/fishing/orders/{$order['id']}/extend", [
+                'version' => $paid['version'],
+                'blocks' => 1,
+            ])->assertOk()->json('order');
+
+            $sessionLine = collect($extended['items'])->firstWhere('line_type', 'fishing_session');
+            $this->assertSame('partially_paid', $extended['status']);
+            $this->assertSame('400000.00', $extended['total']);
+            $this->assertSame(2, $sessionLine['quantity']);
+            $this->assertSame(1, $sessionLine['paid_quantity']);
+            $this->assertSame('active', $extended['fishing_session']['status']);
+            $this->assertSame('2026-06-24T12:00:00+07:00', $extended['fishing_session']['ends_at']);
+            $this->assertNull($extended['completed_at']);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_fishing_session_can_order_beverages_and_checkout_together(): void
@@ -166,6 +289,102 @@ class PosWorkflowTest extends TestCase
 
         $this->assertSame('paid', $checkoutResult['status']);
         $this->assertNotNull($checkoutResult['completed_at']);
+    }
+
+    public function test_coffee_order_can_checkout_with_qr_payment_method(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $table = CoffeeTable::create(['label' => 'Bàn QR']);
+        $item = MenuItem::create(['category' => 'Cà phê', 'name' => 'Cà phê QR', 'price' => 40000, 'is_available' => true]);
+        PaymentQrSetting::create(['is_enabled' => true, 'qr_image_path' => 'payment-qr/sample.png']);
+
+        $order = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
+            'items' => [['menu_item_id' => $item->id, 'quantity' => 1]],
+        ])->assertCreated()->json('order');
+
+        $response = $this->postJson("/api/v1/coffee/orders/{$order['id']}/checkout", [
+            'version' => $order['version'],
+            'payment_method' => 'qr',
+        ])->assertOk();
+
+        $response->assertJsonPath('payment.method', 'qr')
+            ->assertJsonPath('payment.cash_received', '40000.00')
+            ->assertJsonPath('payment.change_due', '0.00')
+            ->assertJsonPath('order.status', 'paid');
+    }
+
+    public function test_admin_can_configure_qr_payment_for_pos_checkout(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['role' => 'admin', 'username' => 'admin']);
+
+        $response = $this->actingAs($admin)->post('/api/v1/admin/payment-settings', [
+            'is_enabled' => '1',
+            'bank_name' => 'Vietcombank',
+            'account_name' => 'DONG LAY FISHING',
+            'account_number' => '123456789',
+            'transfer_note' => 'DONG LAY',
+            'extra_info' => 'Dua man hinh thanh toan thanh cong cho nhan vien xac nhan.',
+            'qr_image' => UploadedFile::fake()->image('qr.png', 900, 900),
+        ])->assertOk();
+
+        $setting = PaymentQrSetting::firstOrFail();
+        Storage::disk('public')->assertExists($setting->qr_image_path);
+
+        $response
+            ->assertJsonPath('qr.is_enabled', true)
+            ->assertJsonPath('qr.bank_name', 'Vietcombank')
+            ->assertJsonPath('qr.account_name', 'DONG LAY FISHING')
+            ->assertJsonPath('qr.account_number', '123456789')
+            ->assertJsonPath('qr.transfer_note', 'DONG LAY')
+            ->assertJsonPath('qr.qr_image_url', '/storage/'.$setting->qr_image_path);
+
+        $this->getJson('/api/v1/coffee/map')
+            ->assertOk()
+            ->assertJsonPath('payment_settings.qr.is_enabled', true)
+            ->assertJsonPath('payment_settings.qr.qr_image_url', '/storage/'.$setting->qr_image_path);
+    }
+
+    public function test_admin_can_add_payment_method_and_pos_can_checkout_with_it(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['role' => 'admin', 'username' => 'admin']);
+        $employee = User::factory()->create(['role' => 'employee']);
+        $table = CoffeeTable::create(['label' => 'Bàn QR 2']);
+        $item = MenuItem::create(['category' => 'Cà phê', 'name' => 'Bạc xỉu QR', 'price' => 45000, 'is_available' => true]);
+
+        $methodResponse = $this->actingAs($admin)->post('/api/v1/admin/payment-methods', [
+            'name' => 'VietinBank QR',
+            'type' => 'qr',
+            'is_enabled' => '1',
+            'bank_name' => 'VietinBank',
+            'account_name' => 'DONG LAY FISHING',
+            'account_number' => '987654321',
+            'transfer_note' => 'DONG LAY',
+            'qr_image' => UploadedFile::fake()->image('qr-vietin.png', 900, 900),
+        ])->assertCreated();
+
+        $code = $methodResponse->json('method.code');
+        $this->assertSame('qr_2', $code);
+
+        $this->actingAs($employee)
+            ->getJson('/api/v1/coffee/map')
+            ->assertOk()
+            ->assertJsonPath('payment_settings.methods.1.code', $code)
+            ->assertJsonPath('payment_settings.methods.1.name', 'VietinBank QR');
+
+        $order = $this->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
+            'items' => [['menu_item_id' => $item->id, 'quantity' => 1]],
+        ])->assertCreated()->json('order');
+
+        $this->postJson("/api/v1/coffee/orders/{$order['id']}/checkout", [
+            'version' => $order['version'],
+            'payment_method' => $code,
+        ])->assertOk()
+            ->assertJsonPath('payment.method', $code)
+            ->assertJsonPath('payment.cash_received', '45000.00')
+            ->assertJsonPath('payment.change_due', '0.00')
+            ->assertJsonPath('order.status', 'paid');
     }
 
     public function test_fishing_order_checkout_with_release_flag_releases_spot_automatically(): void
@@ -370,6 +589,29 @@ class PosWorkflowTest extends TestCase
         $this->assertCount(2, $employee->fresh()->notifications);
     }
 
+    public function test_notification_polling_syncs_expired_fishing_sessions(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $spot = FishingSpot::create(['label' => 'Chòi 10']);
+        $order = $this->actingAs($employee)->postJson("/api/v1/fishing/spots/{$spot->id}/start")->json('order');
+        $session = Order::findOrFail($order['id'])->fishingSession;
+
+        $employee->notifications()->delete();
+        $session->update(['ends_at' => now()->subMinute()]);
+
+        $notifications = $this->getJson('/api/v1/notifications?unread=1')
+            ->assertOk()
+            ->json('notifications');
+
+        $this->assertSame('expired', $session->fresh()->status);
+        $this->assertCount(1, $notifications);
+        $this->assertSame('fishing_session_expired', $notifications[0]['data']['type']);
+
+        $this->getJson('/api/v1/notifications?unread=1')
+            ->assertOk()
+            ->assertJsonCount(1, 'notifications');
+    }
+
     public function test_coffee_orders_can_be_merged_successfully(): void
     {
         $employee = User::factory()->create(['role' => 'employee']);
@@ -424,6 +666,46 @@ class PosWorkflowTest extends TestCase
         $this->assertSame('90000.00', $response['total']);
         $this->assertSame('partially_paid', $response['status']);
         $this->assertSame('void', Order::find($order1['id'])->status);
+    }
+
+    public function test_counter_order_can_be_merged_into_an_empty_coffee_table(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $table = CoffeeTable::create(['label' => 'Bàn 7']);
+        $coffee = MenuItem::create(['category' => 'Cà phê', 'name' => 'Bạc xỉu', 'price' => 25000, 'is_available' => true]);
+
+        $counter = $this->actingAs($employee)->postJson('/api/v1/coffee/orders', [
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2]],
+        ])->assertCreated()->json('order');
+
+        $response = $this->postJson("/api/v1/coffee/orders/{$counter['id']}/merge", [
+            'version' => $counter['version'],
+            'target_table_id' => $table->id,
+        ])->assertOk()->json('order');
+
+        $this->assertSame('Bàn 7', $response['resource']['label']);
+        $this->assertSame('50000.00', $response['total']);
+        $this->assertSame($table->id, Order::findOrFail($counter['id'])->coffee_table_id);
+    }
+
+    public function test_occupied_coffee_order_can_be_moved_into_an_empty_table_by_merge(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $sourceTable = CoffeeTable::create(['label' => 'Bàn 1']);
+        $targetTable = CoffeeTable::create(['label' => 'Bàn 9']);
+        $coffee = MenuItem::create(['category' => 'Cà phê', 'name' => 'Cà phê muối', 'price' => 25000, 'is_available' => true]);
+
+        $order = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$sourceTable->id}/orders", [
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]],
+        ])->assertCreated()->json('order');
+
+        $response = $this->postJson("/api/v1/coffee/orders/{$order['id']}/merge", [
+            'version' => $order['version'],
+            'target_table_id' => $targetTable->id,
+        ])->assertOk()->json('order');
+
+        $this->assertSame('Bàn 9', $response['resource']['label']);
+        $this->assertSame($targetTable->id, Order::findOrFail($order['id'])->coffee_table_id);
     }
 
     public function test_fishing_orders_can_be_merged_successfully(): void
@@ -504,6 +786,38 @@ class PosWorkflowTest extends TestCase
         $this->assertSame('available', $map['tables'][0]['state']);
     }
 
+    public function test_paid_coffee_order_can_receive_new_unpaid_items_before_release(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $table = CoffeeTable::create(['label' => 'Bàn 7']);
+        $paidItem = MenuItem::create(['category' => 'Cà phê', 'name' => 'Cà phê đen', 'price' => 25000, 'is_available' => true]);
+        $newItem = MenuItem::create(['category' => 'Ăn vặt', 'name' => 'Khoai tây chiên', 'price' => 30000, 'is_available' => true]);
+
+        $created = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
+            'items' => [['menu_item_id' => $paidItem->id, 'quantity' => 1]],
+        ])->assertCreated()->json('order');
+
+        $paid = $this->postJson("/api/v1/coffee/orders/{$created['id']}/checkout", [
+            'version' => $created['version'],
+            'cash_received' => 25000,
+        ])->assertOk()->assertJsonPath('order.status', 'paid')->json('order');
+
+        $updated = $this->putJson("/api/v1/coffee/orders/{$created['id']}", [
+            'version' => $paid['version'],
+            'items' => [
+                ['menu_item_id' => $paidItem->id, 'quantity' => 1],
+                ['menu_item_id' => $newItem->id, 'quantity' => 1],
+            ],
+        ])->assertOk()->json('order');
+
+        $items = collect($updated['items'])->keyBy('menu_item_id');
+        $this->assertSame('partially_paid', $updated['status']);
+        $this->assertSame('55000.00', $updated['total']);
+        $this->assertSame(1, $items[$paidItem->id]['paid_quantity']);
+        $this->assertSame(0, $items[$newItem->id]['paid_quantity']);
+        $this->assertNull($updated['completed_at']);
+    }
+
     public function test_paid_fishing_order_remains_active_until_released(): void
     {
         $employee = User::factory()->create(['role' => 'employee']);
@@ -571,9 +885,14 @@ class PosWorkflowTest extends TestCase
         $this->getJson('/api/v1/notifications')->assertOk()
             ->assertJsonPath('unread_count', 2);
 
+        $this->getJson('/api/v1/notifications?unread=1')->assertOk()
+            ->assertJsonCount(2, 'notifications');
+
         $this->postJson('/api/v1/notifications/read-all')->assertOk();
         $this->getJson('/api/v1/notifications')->assertOk()
             ->assertJsonPath('unread_count', 0);
+        $this->getJson('/api/v1/notifications?unread=1')->assertOk()
+            ->assertJsonCount(0, 'notifications');
 
         $this->postJson('/api/v1/notifications/delete-all')->assertOk();
         $this->getJson('/api/v1/notifications')->assertOk()

@@ -10,7 +10,9 @@ use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentQrSetting;
 use App\Models\User;
+use App\Services\OrderPresenter;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -226,7 +228,18 @@ class AdminController extends Controller
 
     public function menu(Request $request): JsonResponse
     {
+        $category = trim((string) $request->input('category', ''));
+        $search = trim((string) $request->input('q', ''));
+
         $items = MenuItem::query()
+            ->when($category !== '', fn ($query) => $query->where('category', $category))
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('category', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('category')
             ->orderBy('name')
             ->paginate(15);
@@ -245,6 +258,143 @@ class AdminController extends Controller
                 'per_page' => $items->perPage(),
                 'total' => $items->total(),
             ],
+        ]);
+    }
+
+    public function paymentSettings(): JsonResponse
+    {
+        return response()->json([
+            'methods' => PaymentQrSetting::methodsPayload(forAdmin: true),
+            'qr' => PaymentQrSetting::current()->payload(),
+        ]);
+    }
+
+    public function updatePaymentSettings(Request $request): JsonResponse
+    {
+        $setting = PaymentQrSetting::current();
+        $before = $setting->toArray();
+        $data = $request->validate([
+            'is_enabled' => ['sometimes', 'boolean'],
+            'bank_name' => ['nullable', 'string', 'max:120'],
+            'account_name' => ['nullable', 'string', 'max:120'],
+            'account_number' => ['nullable', 'string', 'max:80'],
+            'transfer_note' => ['nullable', 'string', 'max:160'],
+            'extra_info' => ['nullable', 'string', 'max:1000'],
+            'qr_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:30720'],
+            'remove_qr_image' => ['sometimes', 'boolean'],
+        ], [
+            'qr_image.image' => 'Tệp QR chưa phải là ảnh phù hợp. Bạn chọn JPG, PNG hoặc WebP nhé.',
+            'qr_image.mimes' => 'Ảnh QR hỗ trợ JPG, PNG hoặc WebP nhé.',
+            'qr_image.max' => 'Ảnh QR không được lớn hơn 30 MB nhé.',
+        ]);
+
+        $payload = [
+            'code' => $setting->code ?: PaymentQrSetting::TYPE_QR,
+            'name' => $setting->name ?: 'QR chuyển khoản',
+            'type' => PaymentQrSetting::TYPE_QR,
+            'sort_order' => $setting->sort_order ?? 10,
+            'is_enabled' => $request->boolean('is_enabled'),
+            'bank_name' => filled($data['bank_name'] ?? null) ? trim($data['bank_name']) : null,
+            'account_name' => filled($data['account_name'] ?? null) ? trim($data['account_name']) : null,
+            'account_number' => filled($data['account_number'] ?? null) ? trim($data['account_number']) : null,
+            'transfer_note' => filled($data['transfer_note'] ?? null) ? trim($data['transfer_note']) : null,
+            'extra_info' => filled($data['extra_info'] ?? null) ? trim($data['extra_info']) : null,
+        ];
+
+        $storedPath = null;
+        $oldImagePath = $setting->qr_image_path;
+
+        try {
+            if ($request->hasFile('qr_image')) {
+                $storedPath = $request->file('qr_image')->store('payment-qr', 'public');
+                $payload['qr_image_path'] = $storedPath;
+            } elseif ($request->boolean('remove_qr_image')) {
+                $payload['qr_image_path'] = null;
+            }
+
+            $finalImagePath = array_key_exists('qr_image_path', $payload)
+                ? $payload['qr_image_path']
+                : $setting->qr_image_path;
+
+            if ($payload['is_enabled'] && ! $finalImagePath) {
+                throw ValidationException::withMessages(['qr_image' => 'Bạn cần thêm ảnh QR trước khi bật thanh toán QR.']);
+            }
+
+            $setting->update($payload);
+
+            if (($storedPath || $request->boolean('remove_qr_image')) && $oldImagePath && $oldImagePath !== $setting->qr_image_path) {
+                Storage::disk('public')->delete($oldImagePath);
+            }
+        } catch (\Throwable $exception) {
+            if ($storedPath) {
+                Storage::disk('public')->delete($storedPath);
+            }
+            throw $exception;
+        }
+
+        $this->audit($request, 'payment_qr.updated', $setting, $before, $setting->fresh()->toArray());
+
+        return response()->json([
+            'message' => 'Cấu hình thanh toán QR đã được lưu.',
+            'methods' => PaymentQrSetting::methodsPayload(forAdmin: true),
+            'qr' => $setting->fresh()->payload(),
+        ]);
+    }
+
+    public function storePaymentMethod(Request $request): JsonResponse
+    {
+        [$payload, $storedPath] = $this->paymentMethodPayload($request);
+
+        if ($payload['type'] === PaymentQrSetting::TYPE_CASH && PaymentQrSetting::query()->where('type', PaymentQrSetting::TYPE_CASH)->exists()) {
+            throw ValidationException::withMessages(['type' => 'Phương thức tiền mặt đã có sẵn. Bạn chỉ cần chỉnh sửa dòng hiện tại nhé.']);
+        }
+
+        $payload['code'] = PaymentQrSetting::nextCode($payload['type']);
+        $payload['sort_order'] = ((int) PaymentQrSetting::query()->max('sort_order')) + 10;
+
+        try {
+            $method = PaymentQrSetting::create($payload);
+        } catch (\Throwable $exception) {
+            if ($storedPath) {
+                Storage::disk('public')->delete($storedPath);
+            }
+            throw $exception;
+        }
+
+        $this->audit($request, 'payment_method.created', $method, null, $method->toArray());
+
+        return response()->json([
+            'message' => 'Phương thức thanh toán đã được thêm.',
+            'method' => $method->fresh()->adminPayload(),
+            'methods' => PaymentQrSetting::methodsPayload(forAdmin: true),
+        ], 201);
+    }
+
+    public function updatePaymentMethod(Request $request, PaymentQrSetting $paymentMethod): JsonResponse
+    {
+        $before = $paymentMethod->toArray();
+        [$payload, $storedPath] = $this->paymentMethodPayload($request, $paymentMethod);
+        $oldImagePath = $paymentMethod->qr_image_path;
+
+        try {
+            $paymentMethod->update($payload);
+
+            if (($storedPath || $request->boolean('remove_qr_image') || array_key_exists('qr_image_path', $payload)) && $oldImagePath && $oldImagePath !== $paymentMethod->qr_image_path) {
+                Storage::disk('public')->delete($oldImagePath);
+            }
+        } catch (\Throwable $exception) {
+            if ($storedPath) {
+                Storage::disk('public')->delete($storedPath);
+            }
+            throw $exception;
+        }
+
+        $this->audit($request, 'payment_method.updated', $paymentMethod, $before, $paymentMethod->fresh()->toArray());
+
+        return response()->json([
+            'message' => 'Phương thức thanh toán đã được cập nhật.',
+            'method' => $paymentMethod->fresh()->adminPayload(),
+            'methods' => PaymentQrSetting::methodsPayload(forAdmin: true),
         ]);
     }
 
@@ -351,7 +501,37 @@ class AdminController extends Controller
 
     public function map(): JsonResponse
     {
-        return response()->json(['tables' => CoffeeTable::orderBy('id')->get(), 'spots' => FishingSpot::orderBy('id')->get()]);
+        $tables = CoffeeTable::orderBy('id')->get()->map(function (CoffeeTable $table) {
+            $order = $table->orders()->whereNull('completed_at')->where('status', '!=', 'void')->latest()->first();
+
+            return [
+                'id' => $table->id,
+                'label' => $table->label,
+                'position_x' => $table->position_x,
+                'position_y' => $table->position_y,
+                'is_enabled' => $table->is_enabled,
+                'state' => ! $table->is_enabled ? 'disabled' : ($order ? 'occupied' : 'available'),
+                'order' => $order ? OrderPresenter::make($order) : null,
+            ];
+        });
+
+        $spots = FishingSpot::orderBy('id')->get()->map(function (FishingSpot $spot) {
+            $order = $spot->orders()->whereNull('completed_at')->where('status', '!=', 'void')->latest()->first();
+            $session = $order?->fishingSession;
+            $isExpired = $session && ($session->ends_at?->isPast() || $session->status === 'expired');
+
+            return [
+                'id' => $spot->id,
+                'label' => $spot->label,
+                'position_x' => $spot->position_x,
+                'position_y' => $spot->position_y,
+                'is_enabled' => $spot->is_enabled,
+                'state' => ! $spot->is_enabled ? 'disabled' : (! $order ? 'available' : ($isExpired ? 'expired' : 'occupied')),
+                'order' => $order ? OrderPresenter::make($order) : null,
+            ];
+        });
+
+        return response()->json(['tables' => $tables, 'spots' => $spots]);
     }
 
     public function updateMap(Request $request): JsonResponse
@@ -545,6 +725,80 @@ class AdminController extends Controller
             ['name' => $name],
             ['sort_order' => (int) MenuCategory::max('sort_order') + 1, 'is_active' => true],
         );
+    }
+
+    private function paymentMethodPayload(Request $request, ?PaymentQrSetting $method = null): array
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'type' => ['required', Rule::in([PaymentQrSetting::TYPE_CASH, PaymentQrSetting::TYPE_QR])],
+            'is_enabled' => ['sometimes', 'boolean'],
+            'bank_name' => ['nullable', 'string', 'max:120'],
+            'account_name' => ['nullable', 'string', 'max:120'],
+            'account_number' => ['nullable', 'string', 'max:80'],
+            'transfer_note' => ['nullable', 'string', 'max:160'],
+            'extra_info' => ['nullable', 'string', 'max:1000'],
+            'qr_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:30720'],
+            'remove_qr_image' => ['sometimes', 'boolean'],
+        ], [
+            'qr_image.image' => 'Tệp QR chưa phải là ảnh phù hợp. Bạn chọn JPG, PNG hoặc WebP nhé.',
+            'qr_image.mimes' => 'Ảnh QR hỗ trợ JPG, PNG hoặc WebP nhé.',
+            'qr_image.max' => 'Ảnh QR không được lớn hơn 30 MB nhé.',
+        ]);
+
+        if ($method) {
+            $data['type'] = $method->type ?: $data['type'];
+        }
+
+        $payload = [
+            'name' => trim($data['name']),
+            'type' => $data['type'],
+            'is_enabled' => $request->boolean('is_enabled'),
+            'bank_name' => filled($data['bank_name'] ?? null) ? trim($data['bank_name']) : null,
+            'account_name' => filled($data['account_name'] ?? null) ? trim($data['account_name']) : null,
+            'account_number' => filled($data['account_number'] ?? null) ? trim($data['account_number']) : null,
+            'transfer_note' => filled($data['transfer_note'] ?? null) ? trim($data['transfer_note']) : null,
+            'extra_info' => filled($data['extra_info'] ?? null) ? trim($data['extra_info']) : null,
+        ];
+
+        if ($method) {
+            $payload['code'] = $method->code ?: PaymentQrSetting::nextCode($payload['type']);
+            $payload['sort_order'] = $method->sort_order ?? 10;
+        }
+
+        $storedPath = null;
+        if ($request->hasFile('qr_image')) {
+            $storedPath = $request->file('qr_image')->store('payment-qr', 'public');
+            $payload['qr_image_path'] = $storedPath;
+        } elseif ($request->boolean('remove_qr_image')) {
+            $payload['qr_image_path'] = null;
+        }
+
+        if ($payload['type'] === PaymentQrSetting::TYPE_CASH) {
+            if ($storedPath) {
+                Storage::disk('public')->delete($storedPath);
+                $storedPath = null;
+            }
+            $payload['bank_name'] = null;
+            $payload['account_name'] = null;
+            $payload['account_number'] = null;
+            $payload['transfer_note'] = null;
+            $payload['extra_info'] = null;
+            $payload['qr_image_path'] = null;
+        }
+
+        $finalImagePath = array_key_exists('qr_image_path', $payload)
+            ? $payload['qr_image_path']
+            : $method?->qr_image_path;
+
+        if ($payload['is_enabled'] && $payload['type'] === PaymentQrSetting::TYPE_QR && ! $finalImagePath) {
+            if ($storedPath) {
+                Storage::disk('public')->delete($storedPath);
+            }
+            throw ValidationException::withMessages(['qr_image' => 'Bạn cần thêm ảnh QR trước khi bật phương thức này.']);
+        }
+
+        return [$payload, $storedPath];
     }
 
     private function userData(Request $request, ?User $user = null): array

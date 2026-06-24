@@ -31,18 +31,28 @@ class FishingService
         });
     }
 
-    public function extend(Order $order, int $version): Order
+    public function extend(Order $order, int $version, int $blocks = 1): Order
     {
-        return DB::transaction(function () use ($order, $version) {
+        $blocks = max(1, min(4, $blocks));
+
+        return DB::transaction(function () use ($order, $version, $blocks) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
             $session = $order->fishingSession()->lockForUpdate()->firstOrFail();
-            $price = (float) config('fishing.session_price');
-            $session->update(['ends_at' => $session->ends_at->addMinutes((int) config('fishing.session_minutes')), 'blocks_count' => $session->blocks_count + 1, 'status' => 'active', 'expired_notified_at' => null]);
+            $extensionBase = $session->ends_at->isFuture() ? $session->ends_at : now();
+            $session->update(['ends_at' => $extensionBase->copy()->addMinutes((int) config('fishing.session_minutes') * $blocks), 'blocks_count' => $session->blocks_count + $blocks, 'status' => 'active', 'expired_notified_at' => null]);
             $item = $order->items()->where('line_type', 'fishing_session')->firstOrFail();
-            $item->increment('quantity');
+            $item->increment('quantity', $blocks);
+            $hasUnpaid = $order->items()->whereColumn('paid_quantity', '<', 'quantity')->exists();
+            $hasPaid = $order->items()->where('paid_quantity', '>', 0)->exists();
+            $newStatus = 'open';
+            if (! $hasUnpaid) {
+                $newStatus = 'paid';
+            } elseif ($hasPaid) {
+                $newStatus = 'partially_paid';
+            }
             $total = (float) $order->items()->sum(DB::raw('unit_price * quantity'));
-            $order->update(['subtotal' => $total, 'total' => $total, 'version' => $order->version + 1]);
+            $order->update(['status' => $newStatus, 'subtotal' => $total, 'total' => $total, 'version' => $order->version + 1, 'completed_at' => null]);
 
             return $order->fresh();
         });
@@ -123,9 +133,9 @@ class FishingService
         });
     }
 
-    public function checkout(Order $order, User $cashier, int $version, array $selections, float $cashReceived): Payment
+    public function checkout(Order $order, User $cashier, int $version, array $selections, float $cashReceived, string $method = 'cash'): Payment
     {
-        return DB::transaction(function () use ($order, $cashier, $version, $selections, $cashReceived) {
+        return DB::transaction(function () use ($order, $cashier, $version, $selections, $cashReceived, $method) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
             $items = $order->items()->lockForUpdate()->get()->keyBy('id');
@@ -147,7 +157,10 @@ class FishingService
                 $amount += (float) $item->unit_price * $quantity;
             }
 
-            if ($cashReceived < $amount) {
+            $method = $method ?: 'cash';
+            if ($method !== 'cash') {
+                $cashReceived = $amount;
+            } elseif ($cashReceived < $amount) {
                 throw ValidationException::withMessages(['cash_received' => 'Số tiền nhận chưa đủ một chút. Bạn kiểm tra lại giúp mình nhé.']);
             }
 
@@ -155,6 +168,7 @@ class FishingService
                 'payment_number' => $this->number('PM'),
                 'order_id' => $order->id,
                 'cashier_id' => $cashier->id,
+                'method' => $method,
                 'amount' => $amount,
                 'cash_received' => $cashReceived,
                 'change_due' => $cashReceived - $amount,

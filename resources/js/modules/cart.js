@@ -36,6 +36,31 @@ export class Cart {
         }
         return this;
     }
+    updatePrice(id, oldPrice, newPrice) {
+        id = Number(id);
+        oldPrice = Number(oldPrice);
+        newPrice = Math.max(0, Number(newPrice) || 0);
+
+        const oldKey = `${id}-${oldPrice}`;
+        const current = this.lines.get(oldKey);
+        if (!current) return this;
+
+        if (oldPrice === newPrice) {
+            current.price = newPrice;
+            return this;
+        }
+
+        this.lines.delete(oldKey);
+        const newKey = `${id}-${newPrice}`;
+        const existing = this.lines.get(newKey);
+        if (existing) {
+            existing.quantity = Math.min(99, existing.quantity + current.quantity);
+            if (!existing.note && current.note) existing.note = current.note;
+        } else {
+            this.lines.set(newKey, { ...current, price: newPrice });
+        }
+        return this;
+    }
     setNote(id, note, price = null) {
         let key = `${id}-${price}`;
         if (price === null) {

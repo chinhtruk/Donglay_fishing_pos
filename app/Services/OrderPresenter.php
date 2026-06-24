@@ -19,6 +19,7 @@ class OrderPresenter
             'subtotal' => $order->subtotal,
             'total' => $order->total,
             'opened_at' => $order->created_at?->toIso8601String(),
+            'activity_at' => $order->updated_at?->toIso8601String(),
             'completed_at' => $order->completed_at?->toIso8601String(),
             'resource' => $order->coffeeTable ?? $order->fishingSpot,
             'fishing_session' => $order->fishingSession ? [
@@ -43,6 +44,7 @@ class OrderPresenter
             'payments' => $order->payments->map(fn ($payment) => [
                 'id' => $payment->id,
                 'payment_number' => $payment->payment_number,
+                'method' => $payment->method,
                 'amount' => $payment->amount,
                 'cash_received' => $payment->cash_received,
                 'change_due' => $payment->change_due,

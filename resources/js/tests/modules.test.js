@@ -9,6 +9,17 @@ test('cart tracks quantities and totals independently of the UI', () => {
     assert.equal(cart.quantity(1), 2); assert.equal(cart.total(), 60000); assert.deepEqual(cart.payload(), [{ menu_item_id:1, quantity:2, unit_price: 30000, note: '' }]);
 });
 
+test('cart can update an inline variable menu price', () => {
+    const cart = new Cart();
+    cart.add({ id: 2, name: 'Khoai tây chiên', price: 0 });
+    assert.equal(cart.total(), 0);
+
+    cart.updatePrice(2, 0, 30000);
+    assert.equal(cart.quantity(2, 30000), 1);
+    assert.equal(cart.total(), 30000);
+    assert.deepEqual(cart.payload(), [{ menu_item_id: 2, quantity: 1, unit_price: 30000, note: '' }]);
+});
+
 test('metrics render without decimal places', () => {
     assert.equal(number(12), '12'); assert.equal(number(12.6), '13');
 });

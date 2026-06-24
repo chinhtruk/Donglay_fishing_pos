@@ -78,7 +78,7 @@
             <div id="employee-otp-stage" class="lp-stage hidden">
                 <header class="lp-intro">
                     <h1>Kiểm tra hộp thư</h1>
-                    <p>Mã xác minh vừa được gửi đến email của bạn. Mã có hiệu lực trong 10 phút.</p>
+                    <p class="lp-copy-stack"><span>Mã xác minh vừa được gửi đến email của bạn.</span><span>Mã có hiệu lực trong 10 phút.</span></p>
                 </header>
 
                 {{-- Email summary box (floating label style) --}}
@@ -147,7 +147,7 @@
         </form>
 
         <p id="login-message" class="lp-message" aria-live="polite"></p>
-        <p class="lp-help">Bạn gặp khó khăn khi đăng nhập? Hãy liên hệ quản trị viên của quán.</p>
+        <p class="lp-help"><span>Bạn gặp khó khăn khi đăng nhập?</span><span>Hãy liên hệ quản trị viên của quán.</span></p>
 
     </section>
 </main>

@@ -39,7 +39,7 @@ class AuthController extends Controller
             }
         }
 
-        return response()->json(['message' => 'Nếu email đã được đăng ký, mã đăng nhập sẽ đến trong ít phút. Bạn nhớ kiểm tra cả thư rác nhé.']);
+        return response()->json(['message' => "Nếu email đã được đăng ký, mã sẽ được gửi trong ít phút.\nBạn nhớ kiểm tra cả thư rác nhé."]);
     }
 
     public function verifyOtp(Request $request): JsonResponse

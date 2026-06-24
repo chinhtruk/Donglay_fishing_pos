@@ -61,9 +61,9 @@ class CoffeeOrderService
         });
     }
 
-    public function checkout(Order $order, User $cashier, int $version, array $selections, float $cashReceived): Payment
+    public function checkout(Order $order, User $cashier, int $version, array $selections, float $cashReceived, string $method = 'cash'): Payment
     {
-        return DB::transaction(function () use ($order, $cashier, $version, $selections, $cashReceived) {
+        return DB::transaction(function () use ($order, $cashier, $version, $selections, $cashReceived, $method) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
             $items = $order->items()->lockForUpdate()->get()->keyBy('id');
@@ -79,12 +79,15 @@ class CoffeeOrderService
                 }
                 $amount += (float) $item->unit_price * $quantity;
             }
-            if ($cashReceived < $amount) {
+            $method = $method ?: 'cash';
+            if ($method !== 'cash') {
+                $cashReceived = $amount;
+            } elseif ($cashReceived < $amount) {
                 throw ValidationException::withMessages(['cash_received' => 'Số tiền nhận chưa đủ một chút. Bạn kiểm tra lại giúp mình nhé.']);
             }
             $payment = Payment::create([
                 'payment_number' => $this->number('PM'), 'order_id' => $order->id, 'cashier_id' => $cashier->id,
-                'amount' => $amount, 'cash_received' => $cashReceived, 'change_due' => $cashReceived - $amount, 'paid_at' => now(),
+                'method' => $method, 'amount' => $amount, 'cash_received' => $cashReceived, 'change_due' => $cashReceived - $amount, 'paid_at' => now(),
             ]);
             foreach ($selections as $selection) {
                 $item = $items->get((int) $selection['order_item_id']);
@@ -112,12 +115,18 @@ class CoffeeOrderService
             $line['menu_item_id'] = (int) $line['menu_item_id'];
             $line['unit_price'] = (float) ($line['unit_price'] ?? 0);
             return $line;
-        })->keyBy(fn ($line) => $line['menu_item_id'] . '-' . $line['unit_price']);
+        });
 
         $menu = MenuItem::whereIn('id', $requested->pluck('menu_item_id'))->where('is_available', true)->get()->keyBy('id');
         if ($menu->count() !== $requested->pluck('menu_item_id')->unique()->count() || $requested->contains(fn ($line) => (int) $line['quantity'] < 1 || (int) $line['quantity'] > 99)) {
             throw ValidationException::withMessages(['items' => 'Có món vừa hết hoặc số lượng chưa phù hợp. Bạn chọn lại giúp mình nhé.']);
         }
+        $requested = $requested->map(function ($line) use ($menu) {
+            $product = $menu->get($line['menu_item_id']);
+            $line['unit_price'] = $product->price == 0 ? (float) $line['unit_price'] : (float) $product->price;
+
+            return $line;
+        })->keyBy(fn ($line) => $line['menu_item_id'] . '-' . $line['unit_price']);
 
         $existing = $order->items()->get()->keyBy(fn ($item) => $item->menu_item_id . '-' . (float) $item->unit_price);
         foreach ($existing as $key => $item) {
@@ -173,9 +182,29 @@ class CoffeeOrderService
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
 
-            $targetOrder = $targetTable->orders()->whereNull('completed_at')->where('status', '!=', 'void')->latest()->first();
+            $targetTable = CoffeeTable::lockForUpdate()->findOrFail($targetTable->id);
+            if (! $targetTable->is_enabled) {
+                throw ValidationException::withMessages(['table' => 'Bàn này đang tạm nghỉ. Mời bạn chọn một bàn khác nhé.']);
+            }
+
+            $targetOrder = $targetTable->orders()
+                ->whereNull('completed_at')
+                ->where('status', '!=', 'void')
+                ->lockForUpdate()
+                ->latest()
+                ->first();
+
             if (! $targetOrder) {
-                throw ValidationException::withMessages(['table' => 'Bàn mục tiêu không có đơn hàng đang hoạt động.']);
+                $order->update([
+                    'coffee_table_id' => $targetTable->id,
+                    'version' => $order->version + 1,
+                ]);
+
+                return $order->fresh();
+            }
+
+            if ($targetOrder->is($order)) {
+                throw ValidationException::withMessages(['table' => 'Đây đã là bàn nhận rồi. Bạn chọn thêm hóa đơn khác để gộp nhé.']);
             }
 
             foreach ($order->items as $item) {

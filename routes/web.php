@@ -12,7 +12,7 @@ Route::view('/login', 'auth.login')->name('login');
 
 Route::middleware('auth')->group(function () {
     Route::view('/pos/{section?}', 'app')->where('section', 'coffee|fishing|orders')->middleware('role:admin,employee');
-    Route::view('/admin/{section?}', 'app')->where('section', 'dashboard|menu|map|users|orders')->middleware('role:admin');
+    Route::view('/admin/{section?}', 'app')->where('section', 'dashboard|menu|map|users|orders|settings')->middleware('role:admin');
 });
 
 Route::prefix('api/v1')->group(function () {
@@ -61,6 +61,11 @@ Route::prefix('api/v1')->group(function () {
             Route::put('/map', [AdminController::class, 'updateMap']);
             Route::post('/map', [AdminController::class, 'storeMapSlot']);
             Route::delete('/map/{type}/{id}', [AdminController::class, 'deleteMapSlot']);
+            Route::get('/payment-settings', [AdminController::class, 'paymentSettings']);
+            Route::post('/payment-settings', [AdminController::class, 'updatePaymentSettings']);
+            Route::post('/payment-methods', [AdminController::class, 'storePaymentMethod']);
+            Route::post('/payment-methods/{paymentMethod}', [AdminController::class, 'updatePaymentMethod']);
+            Route::put('/payment-methods/{paymentMethod}', [AdminController::class, 'updatePaymentMethod']);
             Route::get('/users', [AdminController::class, 'users']);
             Route::post('/users', [AdminController::class, 'storeUser']);
             Route::put('/users/{user}', [AdminController::class, 'updateUser']);

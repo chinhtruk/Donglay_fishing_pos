@@ -31,6 +31,7 @@
                 <a href="/admin/menu" data-nav="menu" title="Quản lý Menu"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg></span><span class="nav-label">Quản lý Menu</span></a>
                 <a href="/admin/map" data-nav="map" title="Quản lý Sơ đồ"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg></span><span class="nav-label">Quản lý Sơ đồ</span></a>
                 <a href="/admin/users" data-nav="users" title="Quản lý User"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span><span class="nav-label">Quản lý User</span></a>
+                <a href="/admin/settings" data-nav="settings" title="Quản lý thanh toán"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M3 9h18"></path><path d="M7 15h4"></path><path d="M16 13.5h2"></path><path d="M16 16.5h2"></path></svg></span><span class="nav-label">Quản lý thanh toán</span></a>
             @else
                 <p>VẬN HÀNH</p>
                 <a href="/pos/coffee" data-nav="coffee" title="Cà phê"><span class="nav-icon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"></path><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17"></path><path d="M3 22h16"></path><path d="M8 2v3M12 2v3"></path></svg></span><span class="nav-label">Cà phê</span></a>
@@ -43,16 +44,11 @@
         </button>
     </aside>
     <button id="sidebar-scrim" class="sidebar-scrim" type="button" aria-label="Đóng menu"></button>
-    <button id="notification-scrim" class="notification-scrim" type="button" aria-label="Đóng thông báo"></button>
-    <div id="notification-panel" class="popover"><div class="popover-head"><strong>Thông báo</strong><div class="popover-actions"><button id="read-all">Đọc tất cả</button><span class="action-divider">|</span><button id="delete-all">Xóa tất cả</button><span class="action-divider">|</span><button id="close-notifications" style="color:var(--rose);font-weight:bold;padding:0 4px;background:none;border:none;cursor:pointer" aria-label="Đóng">✕</button></div></div><div id="notification-list" class="notification-list"></div></div>
     <div class="workspace">
         <header class="topbar">
             <button id="menu-toggle" class="icon-button mobile-only" aria-label="Mở menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
             <div class="clock"><strong id="live-time">--:--</strong><span id="live-date">--</span></div>
             <div class="top-actions">
-                <div class="notification-wrap">
-                    <button id="notification-button" class="icon-button" aria-label="Thông báo"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg><span id="notification-badge" class="badge hidden">0</span></button>
-                </div>
                 <div class="profile-menu-wrap">
                     <button id="profile-menu-button" class="profile" type="button" aria-haspopup="menu" aria-expanded="false">
                         <span class="avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>

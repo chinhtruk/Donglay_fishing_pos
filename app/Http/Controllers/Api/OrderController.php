@@ -12,12 +12,24 @@ class OrderController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Order::with(['coffeeTable', 'fishingSpot', 'opener:id,name'])->where('status', '!=', 'void')->latest();
+        $query = Order::with(['coffeeTable', 'fishingSpot', 'opener:id,name'])
+            ->where('status', '!=', 'void')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }
         if ($request->filled('service_type')) {
             $query->where('service_type', $request->string('service_type'));
+        }
+        if ($request->filled('q')) {
+            $term = trim((string) $request->string('q'));
+            $query->where(function ($query) use ($term) {
+                $query->where('order_number', 'like', "%{$term}%")
+                    ->orWhereHas('coffeeTable', fn ($table) => $table->where('label', 'like', "%{$term}%"))
+                    ->orWhereHas('fishingSpot', fn ($spot) => $spot->where('label', 'like', "%{$term}%"));
+            });
         }
         if ($request->user()->role !== 'admin') {
             $query->where('created_at', '>=', now()->subDays(30));
