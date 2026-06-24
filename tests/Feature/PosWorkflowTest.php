@@ -79,6 +79,40 @@ class PosWorkflowTest extends TestCase
         }
     }
 
+    public function test_order_items_expose_ordered_at_for_staff_order_grouping(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $table = CoffeeTable::create(['label' => 'Bàn 4']);
+        $coffee = MenuItem::create(['category' => 'Cà phê', 'name' => 'Bạc xỉu', 'price' => 30000, 'is_available' => true]);
+
+        Carbon::setTestNow('2026-06-24 08:15:00');
+
+        try {
+            $created = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
+                'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]],
+            ])->assertCreated()
+                ->assertJsonPath('order.items.0.ordered_at', '2026-06-24T08:15:00+07:00')
+                ->json('order');
+
+            Carbon::setTestNow('2026-06-24 09:30:00');
+            $updated = $this->putJson("/api/v1/coffee/orders/{$created['id']}", [
+                'version' => $created['version'],
+                'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2]],
+            ])->assertOk()->json('order');
+
+            $items = collect($updated['items'])->sortBy('ordered_at')->values();
+            $this->assertCount(2, $items);
+            $this->assertSame($coffee->id, $items[0]['menu_item_id']);
+            $this->assertSame(1, $items[0]['quantity']);
+            $this->assertSame('2026-06-24T08:15:00+07:00', $items[0]['ordered_at']);
+            $this->assertSame($coffee->id, $items[1]['menu_item_id']);
+            $this->assertSame(1, $items[1]['quantity']);
+            $this->assertSame('2026-06-24T09:30:00+07:00', $items[1]['ordered_at']);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
     public function test_counter_order_can_stay_unassigned_and_receive_a_table_later(): void
     {
         $employee = User::factory()->create(['role' => 'employee']);
@@ -147,6 +181,35 @@ class PosWorkflowTest extends TestCase
         $this->assertSame('800000.00', $extended['total']);
         $this->assertSame(4, $extended['fishing_session']['blocks_count']);
         $this->assertSame(4, collect($extended['items'])->firstWhere('line_type', 'fishing_session')['quantity']);
+    }
+
+    public function test_fishing_session_can_extend_by_hourly_fee(): void
+    {
+        Carbon::setTestNow('2026-06-24 08:00:00');
+
+        try {
+            $employee = User::factory()->create();
+            $spot = FishingSpot::create(['label' => 'Chòi 9']);
+            $order = $this->actingAs($employee)->postJson("/api/v1/fishing/spots/{$spot->id}/start")->assertCreated()->json('order');
+
+            $extended = $this->postJson("/api/v1/fishing/orders/{$order['id']}/extend", [
+                'version' => $order['version'],
+                'mode' => 'hour',
+                'hours' => 2,
+            ])->assertOk()
+                ->assertJsonPath('message', 'Đã gia hạn thêm 2 giờ.')
+                ->json('order');
+
+            $hourlyLine = collect($extended['items'])->firstWhere('line_type', 'hourly_extension');
+            $this->assertSame('300000.00', $extended['total']);
+            $this->assertSame(1, $extended['fishing_session']['blocks_count']);
+            $this->assertSame('2026-06-24T14:00:00+07:00', $extended['fishing_session']['ends_at']);
+            $this->assertSame('Gia hạn 2 giờ', $hourlyLine['name']);
+            $this->assertSame('100000.00', $hourlyLine['unit_price']);
+            $this->assertSame(1, $hourlyLine['quantity']);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_expired_fishing_session_extension_restarts_countdown_from_confirm_time(): void
@@ -897,5 +960,105 @@ class PosWorkflowTest extends TestCase
         $this->postJson('/api/v1/notifications/delete-all')->assertOk();
         $this->getJson('/api/v1/notifications')->assertOk()
             ->assertJsonCount(0, 'notifications');
+    }
+
+    public function test_pos_operational_day_resets_visibility_without_mutating_orders(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $table = CoffeeTable::create(['label' => 'Bàn 23']);
+        $coffee = MenuItem::create(['category' => 'Cà phê', 'name' => 'Cà phê đen', 'price' => 20000, 'is_available' => true]);
+
+        Carbon::setTestNow('2026-06-24 23:58:00');
+
+        try {
+            $created = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
+                'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]],
+            ])->assertCreated()->json('order');
+
+            $this->getJson('/api/v1/coffee/map')
+                ->assertOk()
+                ->assertJsonPath('tables.0.state', 'occupied')
+                ->assertJsonPath('stats.active_tables', 1)
+                ->assertJsonPath('operational_day.resets_at', '2026-06-24T23:59:00+07:00');
+
+            $this->getJson('/api/v1/orders')
+                ->assertOk()
+                ->assertJsonPath('meta.total', 1)
+                ->assertJsonPath('data.0.id', $created['id']);
+
+            Carbon::setTestNow('2026-06-24 23:59:00');
+
+            $this->getJson('/api/v1/coffee/map')
+                ->assertOk()
+                ->assertJsonPath('tables.0.state', 'available')
+                ->assertJsonPath('stats.active_tables', 0)
+                ->assertJsonPath('operational_day.starts_at', '2026-06-24T23:59:00+07:00')
+                ->assertJsonPath('operational_day.resets_at', '2026-06-25T23:59:00+07:00');
+
+            $this->getJson('/api/v1/orders')
+                ->assertOk()
+                ->assertJsonPath('meta.total', 0);
+            $this->getJson("/api/v1/orders/{$created['id']}")
+                ->assertNotFound();
+
+            $storedOrder = Order::findOrFail($created['id']);
+            $this->assertSame('open', $storedOrder->status);
+            $this->assertNull($storedOrder->completed_at);
+
+            $this->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
+                'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]],
+            ])->assertCreated();
+
+            $this->assertSame(2, Order::where('coffee_table_id', $table->id)->count());
+            $this->getJson('/api/v1/coffee/map')
+                ->assertOk()
+                ->assertJsonPath('tables.0.state', 'occupied')
+                ->assertJsonPath('stats.active_tables', 1);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_pos_operational_day_ignores_previous_fishing_session_for_new_day(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $spot = FishingSpot::create(['label' => 'Chòi 23']);
+
+        Carbon::setTestNow('2026-06-24 23:58:00');
+
+        try {
+            $created = $this->actingAs($employee)
+                ->postJson("/api/v1/fishing/spots/{$spot->id}/start")
+                ->assertCreated()
+                ->json('order');
+
+            $this->getJson('/api/v1/fishing/map')
+                ->assertOk()
+                ->assertJsonPath('spots.0.state', 'occupied')
+                ->assertJsonPath('stats.active_spots', 1);
+
+            Carbon::setTestNow('2026-06-24 23:59:00');
+
+            $this->getJson('/api/v1/fishing/map')
+                ->assertOk()
+                ->assertJsonPath('spots.0.state', 'available')
+                ->assertJsonPath('stats.active_spots', 0);
+
+            $storedOrder = Order::findOrFail($created['id']);
+            $this->assertSame('open', $storedOrder->status);
+            $this->assertNull($storedOrder->completed_at);
+            $this->assertSame('active', $storedOrder->fishingSession->status);
+
+            $this->postJson("/api/v1/fishing/spots/{$spot->id}/start")
+                ->assertCreated();
+
+            $this->assertSame(2, Order::where('fishing_spot_id', $spot->id)->count());
+            $this->getJson('/api/v1/fishing/map')
+                ->assertOk()
+                ->assertJsonPath('spots.0.state', 'occupied')
+                ->assertJsonPath('stats.active_spots', 1);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 }

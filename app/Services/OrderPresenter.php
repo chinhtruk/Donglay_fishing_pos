@@ -38,6 +38,7 @@ class OrderPresenter
                 'quantity' => $item->quantity,
                 'paid_quantity' => $item->paid_quantity,
                 'unpaid_quantity' => $item->quantity - $item->paid_quantity,
+                'ordered_at' => $item->ordered_at?->toIso8601String() ?? $item->created_at?->toIso8601String(),
                 'note' => $item->note,
                 'line_total' => number_format((float) $item->unit_price * $item->quantity, 2, '.', ''),
             ])->values(),

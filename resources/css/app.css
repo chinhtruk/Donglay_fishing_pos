@@ -8756,42 +8756,6 @@ html.sidebar-collapsed .sidebar {
     height: 9px
 }
 
-@media(min-width:768px) and (max-width:1180px) {
-    .fishing-lake-plan {
-        grid-template-columns: minmax(170px, 190px) minmax(190px, 1fr) minmax(170px, 190px);
-        grid-template-rows: repeat(10, minmax(56px, 1fr));
-        gap: 7px 8px;
-        min-height: 650px;
-        padding: 9px
-    }
-
-    .fishing-slot {
-        grid-template-columns: auto minmax(0, 1fr) 9px;
-        gap: 7px;
-        min-height: 56px;
-        padding: 7px 8px
-    }
-
-    .fishing-slot.side-right {
-        grid-template-columns: 9px minmax(0, 1fr) auto
-    }
-
-    .fishing-slot-number {
-        height: 38px;
-        min-width: 45px;
-        padding: 0 7px;
-        font-size: 11px
-    }
-
-    .fishing-slot strong {
-        font-size: 11px
-    }
-
-    .fishing-slot small {
-        font-size: 8px
-    }
-}
-
 @media(max-width:620px) {
     .fishing-lake-plan {
         grid-template-columns: 112px minmax(64px, 1fr) 112px;
@@ -17285,6 +17249,46 @@ body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt 
     padding: 0 !important;
 }
 
+body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-order-time-group {
+    padding: 0 !important;
+    border-bottom: 1px solid var(--pos-line) !important;
+}
+
+body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-order-time-group:last-child {
+    border-bottom: 0 !important;
+}
+
+body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-order-time-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 12px 0 4px !important;
+    color: var(--pos-brand-2) !important;
+}
+
+body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-order-time-head span {
+    font-size: 10px !important;
+    font-weight: 850 !important;
+    letter-spacing: .08em !important;
+    text-transform: uppercase !important;
+}
+
+body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-order-time-head strong {
+    padding: 5px 10px !important;
+    border-radius: 999px !important;
+    background: var(--pos-soft) !important;
+    color: var(--pos-brand) !important;
+    font-size: 11px !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-order-time-lines {
+    display: grid !important;
+}
+
 body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line {
     min-height: 64px !important;
     padding: 14px 0 !important;
@@ -18599,7 +18603,7 @@ body[data-role="admin"] .owner-menu-page .admin-pagination {
     margin-top: 0 !important;
     padding: 4px 2px 0 !important;
     background: var(--pos-page);
-    border-top: 1px solid var(--pos-line);
+    border-top: 0 !important;
 }
 
 body[data-role="admin"] .owner-menu-page .pagination-controls {
@@ -19656,7 +19660,7 @@ body[data-role="employee"] #modal-root .modal:has(.checkout-modal-layout)>.modal
 body[data-role="employee"] #modal-root .checkout-modal-layout {
     gap: 0 !important;
     margin: -18px -18px 0 !important;
-    padding: 18px 18px 8px !important;
+    padding: 14px 18px 6px !important;
     background: transparent !important;
     border-radius: 0 !important;
 }
@@ -19671,18 +19675,21 @@ body[data-role="employee"] #modal-root .checkout-modal-layout>.checkout-payment-
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout>.checkout-payment-section {
-    margin-top: 14px !important;
-    padding-top: 14px !important;
+    margin-top: 10px !important;
+    padding-top: 10px !important;
     border-top: 1px solid var(--pos-line) !important;
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-list {
     gap: 0 !important;
+    max-height: min(128px, 26dvh) !important;
     border-top: 1px solid var(--pos-line);
 }
 
 body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line {
-    padding: 10px 0 !important;
+    gap: 8px !important;
+    min-height: 0 !important;
+    padding: 7px 0 !important;
     border: 0 !important;
     border-bottom: 1px solid var(--pos-line) !important;
     border-left: 0 !important;
@@ -19700,8 +19707,47 @@ body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line.paid-it
     background: transparent !important;
 }
 
+body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line input[type="checkbox"] {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line strong {
+    font-size: 12px !important;
+    line-height: 1.14 !important;
+}
+
+body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line small,
+body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line div[style*="font-style: italic"] {
+    font-size: 9px !important;
+    line-height: 1.12 !important;
+    margin-top: 1px !important;
+}
+
+body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line .quantity {
+    gap: 3px !important;
+}
+
+body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line .quantity button {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 6px !important;
+}
+
+body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line .quantity span {
+    min-width: 16px !important;
+    font-size: 11px !important;
+}
+
+body[data-role="employee"] #modal-root .checkout-modal-layout .bill-line b {
+    min-width: 58px !important;
+    font-size: 11px !important;
+}
+
 body[data-role="employee"] #modal-root .checkout-qr-panel {
-    padding: 12px 0 0 !important;
+    grid-template-columns: 132px minmax(0, 1fr) !important;
+    gap: 14px !important;
+    padding: 10px 0 0 !important;
     border: 0 !important;
     border-top: 1px solid var(--pos-line) !important;
     border-radius: 0 !important;
@@ -19710,9 +19756,19 @@ body[data-role="employee"] #modal-root .checkout-qr-panel {
 }
 
 body[data-role="employee"] #modal-root .checkout-qr-image {
+    max-width: 132px !important;
     border-color: var(--pos-line) !important;
     background: #fff !important;
     box-shadow: none !important;
+}
+
+body[data-role="employee"] #modal-root .checkout-qr-copy {
+    gap: 5px !important;
+}
+
+body[data-role="employee"] #modal-root .checkout-qr-copy dl {
+    gap: 4px !important;
+    margin-top: 0 !important;
 }
 
 body[data-role="employee"] #modal-root .checkout-qr-note {
@@ -19721,6 +19777,25 @@ body[data-role="employee"] #modal-root .checkout-qr-note {
 
 body[data-role="employee"] #modal-root .checkout-payment-section .summary-row.total {
     border-top: 1px solid var(--pos-line) !important;
+    margin-top: 10px !important;
+    padding-top: 9px !important;
+}
+
+@media(max-width: 767px) {
+    body[data-role="employee"] #modal-root .checkout-modal-layout .bill-list {
+        max-height: min(118px, 24dvh) !important;
+    }
+
+    body[data-role="employee"] #modal-root .checkout-qr-panel {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    body[data-role="employee"] #modal-root .checkout-qr-image {
+        width: 120px !important;
+        max-width: 120px !important;
+        justify-self: center !important;
+    }
 }
 
 /* Payment management: align the page with other admin tables and flatten the editor. */
@@ -20336,6 +20411,17 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
     padding: 10px 0 !important;
 }
 
+#modal-root .pos-order-modal .order-total-count {
+    display: inline-block !important;
+    margin-left: 4px !important;
+    color: var(--pos-muted) !important;
+    font-size: 10px !important;
+    font-weight: 750 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    vertical-align: baseline !important;
+}
+
 #modal-root .pos-order-modal .order-line:not(.session-item)>.order-line-title {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
@@ -20688,11 +20774,930 @@ body[data-role="admin"] .admin-fishing-preview .fishing-slot.disabled {
         border-spacing: 0 !important;
     }
 
-    body[data-role="employee"].pos-orders-page #order-results .staff-order-table thead th {
+body[data-role="employee"].pos-orders-page #order-results .staff-order-table thead th {
         position: sticky !important;
         top: 0;
         z-index: 5;
         background: #fff7ee !important;
         box-shadow: 0 1px 0 var(--pos-line, #e4d7ca), 0 8px 14px rgba(78, 54, 41, .035);
+    }
+}
+
+/* Admin dashboard: compact date controls and range chips share one header row. */
+body[data-role="admin"] .owner-dashboard-page .owner-dashboard-head {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    column-gap: 18px !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-self: end !important;
+    justify-content: space-between !important;
+    gap: 18px !important;
+    width: min(760px, 100%) !important;
+    max-width: 100% !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .dashboard-filter {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 0 0 auto !important;
+    width: fit-content !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .dashboard-filter input {
+    flex: 0 0 138px !important;
+    width: 138px !important;
+    min-width: 138px !important;
+    max-width: 138px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    background: #fffdfa !important;
+    font-size: 11px !important;
+    font-weight: 850 !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .dashboard-filter .primary {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 66px !important;
+    min-height: 38px !important;
+    height: 38px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    border-radius: 10px !important;
+    font-size: 11px !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+}
+
+body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges::-webkit-scrollbar {
+    display: none;
+}
+
+body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges .button {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 8px 14px !important;
+    border: 1px solid var(--pos-line) !important;
+    border-radius: 9px !important;
+    background: #fffefa !important;
+    color: var(--pos-muted) !important;
+    box-shadow: none !important;
+    font-size: 11px !important;
+    font-weight: 850 !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges .button.active {
+    border-color: var(--pos-brand) !important;
+    background: var(--pos-brand) !important;
+    color: #fff !important;
+}
+
+@media(max-width: 1100px) {
+    body[data-role="admin"] .owner-dashboard-page .owner-dashboard-head {
+        grid-template-columns: 1fr !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
+        align-items: center !important;
+        flex-direction: row !important;
+        justify-self: stretch !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter {
+        justify-content: flex-end !important;
+        width: fit-content !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges {
+        justify-content: flex-start !important;
+        flex: 1 1 auto !important;
+        width: auto !important;
+    }
+}
+
+@media(max-width: 860px) {
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges {
+        width: 100% !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter {
+        justify-content: flex-start !important;
+    }
+}
+
+@media(max-width: 767px) {
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
+        align-items: stretch !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter input {
+        flex-basis: auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter .primary {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges {
+        padding-bottom: 1px !important;
+    }
+}
+
+/* Admin dashboard KPI cards: no period comparison, keep icons visually even. */
+body[data-role="admin"] .owner-dashboard-page .owner-kpi {
+    align-items: center !important;
+    gap: 20px !important;
+    min-height: 116px !important;
+    padding: 22px 26px !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .owner-kpi-icon {
+    display: grid !important;
+    place-items: center !important;
+    flex: 0 0 54px !important;
+    width: 54px !important;
+    height: 54px !important;
+    border-radius: 10px !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .owner-kpi-icon svg {
+    display: block !important;
+    width: 23px !important;
+    height: 23px !important;
+    stroke-width: 1.9 !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .owner-kpi>div {
+    display: grid !important;
+    gap: 8px !important;
+    align-content: center !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .owner-kpi small {
+    line-height: 1.12 !important;
+}
+
+body[data-role="admin"] .owner-dashboard-page .owner-kpi .dash-trend {
+    margin-top: 0 !important;
+    color: var(--pos-muted) !important;
+}
+
+@media(max-width: 900px) {
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi {
+        gap: 14px !important;
+        min-height: 104px !important;
+        padding: 18px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi-icon {
+        flex-basis: 46px !important;
+        width: 46px !important;
+        height: 46px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi-icon svg {
+        width: 21px !important;
+        height: 21px !important;
+    }
+}
+
+/* ==========================================================================
+   iPad responsive layer
+   Covers iPad mini 5, iPad 9th gen, Air M1, and Pro 2018+ in both portrait
+   and landscape. Keep this as the final tablet layer so older width-only
+   rules cannot accidentally push tablets into phone layouts.
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
+       (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    html,
+    body {
+        overflow-x: hidden;
+    }
+
+    .app-shell,
+    .pos-coffee-page .app-shell {
+        min-height: 100dvh;
+    }
+
+    .workspace {
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+    .page-content {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .page-head {
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .page-head h1,
+    .owner-dashboard-title h1 {
+        max-width: 100%;
+        line-height: 1.05;
+        text-wrap: balance;
+    }
+
+    .head-actions {
+        min-width: 0;
+    }
+
+    .category-tabs,
+    .admin-menu-category-tabs,
+    .admin-order-status-tabs,
+    .order-filter-bar {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-pagination {
+        min-height: 42px !important;
+        margin-top: 6px !important;
+        padding: 2px 2px 0 !important;
+        border-top: 0 !important;
+    }
+
+    .pagination-controls {
+        gap: 5px !important;
+    }
+
+    .pagination-nav,
+    .pagination-page,
+    .pagination-gap {
+        width: 36px !important;
+        min-width: 36px !important;
+        height: 36px !important;
+        background: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .pagination-page.active {
+        background: var(--moss) !important;
+        border-color: var(--moss) !important;
+        color: #fff !important;
+    }
+
+    body[data-role="admin"] .pagination-page.active {
+        background: var(--pos-brand) !important;
+        border-color: var(--pos-brand) !important;
+    }
+
+    .paginated-scroll .data-table thead th,
+    body[data-role="employee"].pos-orders-page #order-results .staff-order-table thead th,
+    body[data-role="admin"] .owner-orders-page .admin-order-table thead th,
+    body[data-role="admin"] .owner-menu-page .menu-admin-table thead th {
+        position: sticky !important;
+        top: 0;
+        z-index: 5;
+    }
+
+    body[data-role="admin"] .data-table-wrap,
+    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll {
+        background-clip: padding-box;
+    }
+
+    body[data-role="admin"] .admin-menu-toolbar,
+    body[data-role="admin"] .admin-order-filter-bar {
+        min-width: 0;
+    }
+
+    body[data-role="admin"] .admin-menu-category-tabs,
+    body[data-role="admin"] .admin-order-status-tabs {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    body[data-role="admin"] .admin-menu-category-tabs button,
+    body[data-role="admin"] .admin-order-status-tabs button,
+    body[data-role="admin"] .admin-order-service-tabs .admin-map-tab,
+    body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges .button {
+        min-height: 42px !important;
+        padding: 9px 15px !important;
+        border-radius: 10px !important;
+        font-size: 12px !important;
+    }
+
+    body[data-role="admin"] .admin-menu-search,
+    body[data-role="admin"] .admin-order-search {
+        flex: 0 0 280px;
+        width: 280px;
+        max-width: 280px;
+    }
+
+    body[data-role="admin"] .admin-menu-search input,
+    body[data-role="admin"] .admin-order-search input {
+        height: 42px !important;
+        border-radius: 10px !important;
+        font-size: 12px !important;
+    }
+
+    body[data-role="admin"] .head-actions .admin-map-toolbar {
+        height: 42px !important;
+        min-height: 42px !important;
+        padding: 2px !important;
+        border-radius: 12px !important;
+    }
+
+    body[data-role="admin"] .head-actions .admin-map-toolbar .admin-map-tab {
+        width: auto !important;
+        min-width: 118px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 16px !important;
+        border-radius: 9px !important;
+        font-size: 12px !important;
+    }
+
+    body[data-role="admin"] .head-actions .button,
+    body[data-role="admin"] .page-head .button.primary {
+        min-height: 42px !important;
+        border-radius: 9px !important;
+        font-size: 12px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
+        gap: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter {
+        gap: 8px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter input {
+        flex: 0 0 146px !important;
+        width: 146px !important;
+        min-width: 146px !important;
+        max-width: 146px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
+        font-size: 12px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter .primary {
+        min-width: 72px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
+        font-size: 12px !important;
+    }
+
+    body[data-role="admin"] .owner-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body[data-role="admin"] .owner-main-grid,
+    body[data-role="admin"] .owner-bottom-grid,
+    body[data-role="admin"] .management-dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    body[data-role="admin"] .owner-kpi {
+        min-height: 112px !important;
+    }
+
+    body[data-role="admin"] .admin-map-pos-preview .pos-table-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    body[data-role="admin"] .admin-map-pos-preview .pos-table-card {
+        min-height: 84px !important;
+        padding: 13px !important;
+    }
+
+    body[data-role="admin"] .admin-fishing-preview .fishing-lake-plan,
+    body[data-role="employee"].pos-fishing-page .fishing-lake-plan {
+        display: grid !important;
+        grid-template-columns: minmax(210px, 1fr) minmax(150px, .82fr) minmax(210px, 1fr) !important;
+        grid-template-rows: repeat(10, minmax(64px, 1fr)) !important;
+        column-gap: 10px !important;
+        row-gap: 10px !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 760px !important;
+        padding: 12px !important;
+        overflow: hidden !important;
+    }
+
+    body[data-role="admin"] .admin-fishing-preview .lake-water,
+    body[data-role="employee"].pos-fishing-page .lake-water {
+        display: flex !important;
+    }
+
+    body[data-role="admin"] .admin-fishing-preview .fishing-slot,
+    body[data-role="admin"] .admin-fishing-preview .fishing-slot.side-right,
+    body[data-role="employee"].pos-fishing-page .fishing-slot,
+    body[data-role="employee"].pos-fishing-page .fishing-slot.side-right {
+        min-height: 64px !important;
+        padding: 9px 10px !important;
+    }
+
+    body[data-role="admin"] .admin-fishing-preview .fishing-slot-number,
+    body[data-role="employee"].pos-fishing-page .fishing-slot-number {
+        height: 40px !important;
+        min-width: 50px !important;
+        padding: 0 9px !important;
+        border-radius: 10px !important;
+        font-size: 13px !important;
+    }
+
+    body[data-role="employee"].pos-coffee-page .pos-online {
+        display: inline-flex !important;
+    }
+
+    body[data-role="admin"] .payment-method-table-wrap {
+        max-width: 100%;
+    }
+
+    body[data-role="admin"] .payment-method-table th,
+    body[data-role="admin"] .payment-method-table td {
+        padding-inline: 14px !important;
+    }
+
+    body[data-role="employee"] #order-results {
+        min-height: 0;
+    }
+
+    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll {
+        max-height: none;
+    }
+
+    body[data-role="employee"] #modal-root .modal:not(.pos-order-modal) {
+        max-height: calc(100dvh - 44px) !important;
+    }
+
+    body[data-role="employee"] #modal-root .checkout-modal-layout {
+        padding-top: 16px !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    html:not(.sidebar-collapsed) .app-shell,
+    html:not(.sidebar-collapsed) .pos-coffee-page .app-shell {
+        grid-template-columns: var(--app-sidebar-open) minmax(0, 1fr) !important;
+    }
+
+    html:not(.sidebar-collapsed) .sidebar,
+    html:not(.sidebar-collapsed) .pos-coffee-page .sidebar {
+        width: var(--app-sidebar-open) !important;
+        padding: 18px 14px 74px !important;
+    }
+
+    html.sidebar-collapsed .app-shell,
+    html.sidebar-collapsed .pos-coffee-page .app-shell {
+        grid-template-columns: 78px minmax(0, 1fr) !important;
+    }
+
+    html.sidebar-collapsed .sidebar,
+    html.sidebar-collapsed .pos-coffee-page .sidebar {
+        width: 78px !important;
+        padding: 20px 10px 74px !important;
+    }
+
+    html.sidebar-collapsed .sidebar .brand,
+    html.sidebar-collapsed .pos-coffee-page .brand {
+        justify-content: center !important;
+        padding: 4px !important;
+    }
+
+    html.sidebar-collapsed .brand-copy,
+    html.sidebar-collapsed .sidebar nav p,
+    html.sidebar-collapsed .sidebar-foot>span:last-child,
+    html.sidebar-collapsed .pos-coffee-page .brand>span:last-child,
+    html.sidebar-collapsed body[data-role="admin"] .brand-copy,
+    html.sidebar-collapsed body[data-role="admin"] .nav-label,
+    html.sidebar-collapsed body[data-role="employee"] .brand-copy,
+    html.sidebar-collapsed body[data-role="employee"] .nav-label {
+        display: none !important;
+    }
+
+    html.sidebar-collapsed .sidebar nav a,
+    html.sidebar-collapsed .pos-coffee-page .sidebar nav a {
+        justify-content: center !important;
+        padding: 12px 8px !important;
+        font-size: 0 !important;
+    }
+
+    html.sidebar-collapsed .sidebar nav a .nav-label,
+    html.sidebar-collapsed .pos-coffee-page .sidebar nav a .nav-label {
+        display: none !important;
+    }
+
+    html.sidebar-collapsed .sidebar nav a .nav-icon,
+    html.sidebar-collapsed .pos-coffee-page .sidebar nav a span:first-child {
+        font-size: 18px !important;
+    }
+
+    .workspace,
+    .pos-coffee-page .workspace,
+    body[data-role="admin"] .workspace,
+    body[data-role="employee"] .workspace {
+        grid-column: 2 !important;
+    }
+
+    .topbar {
+        height: 72px !important;
+        padding: 0 18px !important;
+    }
+
+    .page-content {
+        padding: 22px 18px !important;
+    }
+
+    .page-content.paginated-page {
+        height: calc(100dvh - 72px) !important;
+        padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    }
+
+    body[data-role="employee"].pos-coffee-page .page-content:not(.paginated-page) {
+        height: calc(100dvh - 72px) !important;
+        overflow: hidden !important;
+    }
+
+    .coffee-pos-layout {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 14px !important;
+        min-height: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+    }
+
+    .pos-main-flow,
+    .coffee-pos-layout>.pos-main-flow {
+        min-height: 0 !important;
+        width: 100% !important;
+        overflow: auto !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body[data-role="employee"].pos-coffee-page .coffee-pos-main,
+    body[data-role="employee"].pos-coffee-page .pos-section {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    body[data-role="employee"].pos-coffee-page .pos-table-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    }
+
+    .pos-product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .product-art {
+        height: 96px !important;
+    }
+
+    .order-dock {
+        position: sticky !important;
+        inset: auto !important;
+        top: 14px !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        width: auto !important;
+        height: calc(100dvh - 100px) !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        transform: none !important;
+        border-radius: 10px !important;
+        order: initial !important;
+    }
+
+    .mobile-order-toggle,
+    .mobile-order-close {
+        display: none !important;
+    }
+
+    .order-dock>#pos-order-panel {
+        min-height: 0 !important;
+        height: 100% !important;
+    }
+
+    .order-lines {
+        max-height: none !important;
+    }
+
+    body[data-role="admin"] .page-head:not(.owner-dashboard-head) {
+        align-items: flex-end !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        gap: 16px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    body[data-role="admin"] .page-head:not(.owner-dashboard-head)>div:first-child {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    body[data-role="admin"] .page-head:not(.owner-dashboard-head) h1 {
+        white-space: normal !important;
+    }
+
+    body[data-role="admin"] .page-head:not(.owner-dashboard-head) .head-actions {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        max-width: 56vw !important;
+        justify-content: flex-end !important;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    body[data-role="admin"] .page-head:not(.owner-dashboard-head) .head-actions .button {
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+    }
+
+    body[data-role="admin"] .page-head:not(.owner-dashboard-head) .head-actions>div:has(.admin-map-toolbar) {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 10px !important;
+        flex: 0 0 auto !important;
+        width: auto !important;
+        max-width: none !important;
+        flex-wrap: nowrap !important;
+    }
+
+    body[data-role="admin"] .page-head .head-actions::-webkit-scrollbar {
+        display: none;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-dashboard-head {
+        grid-template-columns: 1fr !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter {
+        flex: 0 0 auto !important;
+        justify-content: flex-end !important;
+    }
+
+    body[data-role="admin"] .admin-menu-toolbar,
+    body[data-role="admin"] .admin-order-filter-bar {
+        gap: 12px !important;
+    }
+
+    body[data-role="admin"] .admin-menu-search,
+    body[data-role="admin"] .admin-order-search {
+        flex-basis: 236px !important;
+        width: 236px !important;
+        max-width: 236px !important;
+    }
+
+    body[data-role="admin"] .owner-orders-page .admin-order-table,
+    body[data-role="admin"] .owner-menu-page .menu-admin-table,
+    body[data-role="employee"].pos-orders-page .staff-order-table {
+        table-layout: fixed !important;
+        min-width: 100% !important;
+    }
+
+    body[data-role="admin"] .owner-orders-page .admin-order-table th,
+    body[data-role="admin"] .owner-orders-page .admin-order-table td,
+    body[data-role="employee"].pos-orders-page .staff-order-table th,
+    body[data-role="employee"].pos-orders-page .staff-order-table td {
+        padding: 14px 12px !important;
+    }
+
+    body[data-role="admin"] .owner-orders-page .admin-order-table th:nth-child(1) {
+        width: 17%;
+    }
+
+    body[data-role="admin"] .owner-orders-page .admin-order-table th:nth-child(2) {
+        width: 15%;
+    }
+
+    body[data-role="admin"] .owner-orders-page .admin-order-table th:nth-child(3) {
+        width: 15%;
+    }
+
+    body[data-role="admin"] .owner-orders-page .admin-order-table th:nth-child(4) {
+        width: 20%;
+    }
+
+    body[data-role="admin"] .owner-orders-page .admin-order-table th:nth-child(5) {
+        width: 16%;
+    }
+
+    body[data-role="admin"] .owner-orders-page .admin-order-table th:nth-child(6) {
+        width: 17%;
+    }
+
+    body[data-role="admin"] .admin-map-pos-preview .pos-table-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    body[data-role="admin"] .admin-fishing-preview .fishing-lake-plan,
+    body[data-role="employee"].pos-fishing-page .fishing-lake-plan {
+        grid-template-columns: minmax(180px, 1fr) minmax(92px, .62fr) minmax(180px, 1fr) !important;
+        min-height: 760px !important;
+    }
+
+    .pos-order-modal {
+        width: min(760px, calc(100vw - 40px)) !important;
+        height: min(900px, calc(100dvh - 40px)) !important;
+        max-height: calc(100dvh - 40px) !important;
+    }
+
+    .pos-order-modal .modal-pos-layout {
+        grid-template-columns: minmax(0, 1.55fr) minmax(286px, .95fr) !important;
+    }
+
+    .pos-order-modal .pos-menu-section>.pos-product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    .page-content {
+        padding: 24px !important;
+    }
+
+    .page-content.paginated-page {
+        height: calc(100dvh - 78px) !important;
+    }
+
+    body[data-role="employee"].pos-coffee-page .page-content:not(.paginated-page) {
+        min-height: calc(100dvh - 78px);
+    }
+
+    .coffee-pos-layout {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 16px !important;
+        width: 100% !important;
+    }
+
+    body[data-role="employee"].pos-coffee-page .coffee-pos-main,
+    body[data-role="employee"].pos-coffee-page .pos-section {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    body[data-role="employee"].pos-coffee-page .pos-table-grid {
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
+    }
+
+    .pos-product-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    .product-art {
+        height: 112px !important;
+    }
+
+    .order-dock {
+        position: sticky !important;
+        inset: auto !important;
+        top: 16px !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        height: calc(100dvh - 110px) !important;
+        min-height: 0 !important;
+        transform: none !important;
+    }
+
+    .mobile-order-toggle,
+    .mobile-order-close {
+        display: none !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-dashboard-head {
+        grid-template-columns: 1fr !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
+        justify-self: stretch !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges {
+        flex: 1 1 auto !important;
+        justify-content: flex-start !important;
+        min-width: 0 !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter {
+        flex: 0 0 auto !important;
+        justify-content: flex-end !important;
+    }
+
+    body[data-role="admin"] .admin-menu-search,
+    body[data-role="admin"] .admin-order-search {
+        flex-basis: 300px !important;
+        width: 300px !important;
+        max-width: 300px !important;
+    }
+
+    body[data-role="admin"] .admin-map-pos-preview .pos-table-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    }
+
+    body[data-role="admin"] .admin-fishing-preview .fishing-lake-plan,
+    body[data-role="employee"].pos-fishing-page .fishing-lake-plan {
+        grid-template-columns: minmax(250px, 1fr) minmax(190px, .9fr) minmax(250px, 1fr) !important;
+        min-height: 820px !important;
+    }
+
+    .pos-order-modal {
+        width: min(1220px, calc(100vw - 64px)) !important;
+        height: min(880px, calc(100dvh - 52px)) !important;
+        max-height: calc(100dvh - 52px) !important;
+    }
+
+    .pos-order-modal .modal-pos-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(330px, 360px) !important;
+    }
+}
+
+@media (min-width: 1181px) and (max-width: 1366px) and (orientation: landscape) {
+    .coffee-pos-layout {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .pos-product-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    body[data-role="admin"] .admin-fishing-preview .fishing-lake-plan,
+    body[data-role="employee"].pos-fishing-page .fishing-lake-plan {
+        grid-template-columns: minmax(280px, 1fr) minmax(240px, .98fr) minmax(280px, 1fr) !important;
     }
 }

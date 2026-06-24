@@ -1,9 +1,22 @@
 export class Cart {
     constructor(lines = []) {
-        this.lines = new Map(lines.map(line => [
-            `${Number(line.menu_item_id)}-${Number(line.price)}`,
-            { ...line, quantity: Number(line.quantity), note: line.note || '' }
-        ]));
+        this.lines = new Map();
+        lines.forEach(line => {
+            const key = `${Number(line.menu_item_id)}-${Number(line.price)}`;
+            const current = this.lines.get(key);
+            const quantity = Number(line.quantity);
+            const note = line.note || '';
+            if (current) {
+                current.quantity = Math.min(99, current.quantity + quantity);
+                if (note && current.note !== note) {
+                    current.note = current.note
+                        ? [...new Set(`${current.note}, ${note}`.split(',').map(part => part.trim()).filter(Boolean))].join(', ')
+                        : note;
+                }
+                return;
+            }
+            this.lines.set(key, { ...line, quantity, note });
+        });
     }
     add(item, customPrice = null) {
         const price = customPrice !== null ? Number(customPrice) : Number(item.price);

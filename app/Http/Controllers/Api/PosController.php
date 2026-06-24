@@ -17,6 +17,7 @@ use App\Services\OrderPresenter;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class PosController extends Controller
@@ -24,28 +25,29 @@ class PosController extends Controller
     public function coffeeMap(): JsonResponse
     {
         $tables = CoffeeTable::orderBy('id')->get()->map(function ($table) {
-            $order = $table->orders()->whereNull('completed_at')->where('status', '!=', 'void')->latest()->first();
+            $order = $table->orders()->activeForPos()->latest('updated_at')->latest('id')->first();
 
             return ['id' => $table->id, 'label' => $table->label, 'position_x' => $table->position_x, 'position_y' => $table->position_y, 'is_enabled' => $table->is_enabled, 'state' => ! $table->is_enabled ? 'disabled' : ($order ? 'occupied' : 'available'), 'order' => $order ? OrderPresenter::make($order) : null];
         });
 
         $counterOrders = Order::query()
+            ->activeForPos()
             ->where('service_type', 'coffee')
             ->whereNull('coffee_table_id')
-            ->whereNull('completed_at')
-            ->where('status', '!=', 'void')
-            ->latest()
+            ->latest('updated_at')
+            ->latest('id')
             ->get()
             ->map(fn ($order) => OrderPresenter::make($order));
 
         return response()->json([
             'server_time' => now()->toIso8601String(),
+            'operational_day' => Order::posOperationalPayload(),
             'tables' => $tables,
             'counter_orders' => $counterOrders,
             'stats' => [
                 'active_tables' => $tables->where('state', 'occupied')->count(),
                 'counter_orders' => $counterOrders->count(),
-                'completed_today' => Order::where('service_type', 'coffee')->where('status', 'paid')->whereDate('completed_at', today())->count(),
+                'completed_today' => Order::query()->forCurrentPosOperationalDay()->where('service_type', 'coffee')->where('status', 'paid')->whereNotNull('completed_at')->count(),
             ],
             'menu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
             'payment_settings' => $this->paymentSettingsPayload(),
@@ -151,7 +153,7 @@ class PosController extends Controller
         $expirationNotifier->sync();
 
         $spots = FishingSpot::orderBy('id')->get()->map(function ($spot) {
-            $order = $spot->orders()->whereNull('completed_at')->where('status', '!=', 'void')->latest()->first();
+            $order = $spot->orders()->activeForPos()->latest('updated_at')->latest('id')->first();
             $session = $order?->fishingSession;
             $state = ! $spot->is_enabled ? 'disabled' : (! $order ? 'available' : (($session->ends_at->isPast() || $session->status === 'expired') ? 'expired' : 'occupied'));
 
@@ -160,14 +162,16 @@ class PosController extends Controller
 
         return response()->json([
             'server_time' => now()->toIso8601String(),
+            'operational_day' => Order::posOperationalPayload(),
             'spots' => $spots,
             'stats' => [
                 'active_spots' => $spots->where('state', 'occupied')->count(),
                 'expired_spots' => $spots->where('state', 'expired')->count(),
-                'completed_today' => Order::where('service_type', 'fishing')->where('status', 'paid')->whereDate('completed_at', today())->count(),
+                'completed_today' => Order::query()->forCurrentPosOperationalDay()->where('service_type', 'fishing')->where('status', 'paid')->whereNotNull('completed_at')->count(),
             ],
             'session_price' => number_format((float) config('fishing.session_price'), 2, '.', ''),
             'session_minutes' => config('fishing.session_minutes'),
+            'hourly_extension_price' => number_format((float) config('fishing.hourly_extension_price'), 2, '.', ''),
             'menu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
             'payment_settings' => $this->paymentSettingsPayload(),
         ]);
@@ -185,18 +189,25 @@ class PosController extends Controller
     {
         $data = $request->validate([
             'version' => ['required', 'integer'],
+            'mode' => ['sometimes', Rule::in(['session', 'hour'])],
             'blocks' => ['sometimes', 'integer', 'min:1', 'max:4'],
+            'hours' => ['sometimes', 'integer', 'min:1', 'max:3'],
         ]);
+        $mode = $data['mode'] ?? 'session';
         $blocks = (int) ($data['blocks'] ?? 1);
+        $hours = (int) ($data['hours'] ?? 1);
         $sessionMinutes = (int) config('fishing.session_minutes');
-        $durationMinutes = $sessionMinutes * $blocks;
+        $hourlyPrice = (float) config('fishing.hourly_extension_price');
+        $durationMinutes = $mode === 'hour' ? 60 * $hours : $sessionMinutes * $blocks;
         $durationText = $durationMinutes % 60 === 0 ? ($durationMinutes / 60).' giờ' : $durationMinutes.' phút';
-        $sessionText = $blocks.' phiên câu';
-        $order = $service->extend($order, $data['version'], $blocks);
+        $extensionText = $mode === 'hour' ? $hours.' giờ' : $blocks.' phiên câu';
+        $order = $mode === 'hour'
+            ? $service->extend($order, $data['version'], 1, $durationMinutes, $hourlyPrice * $hours, "Gia hạn {$hours} giờ")
+            : $service->extend($order, $data['version'], $blocks);
         $order->loadMissing('fishingSession');
-        $this->notifyOrderEvent('Gia hạn chòi câu', "{$this->resourceLabel($order)} vừa gia hạn thêm {$sessionText} ({$durationText}), kết thúc lúc {$order->fishingSession->ends_at->format('H:i')}.", $order, 'fishing_session_extended');
+        $this->notifyOrderEvent('Gia hạn chòi câu', "{$this->resourceLabel($order)} vừa gia hạn thêm {$extensionText} ({$durationText}), kết thúc lúc {$order->fishingSession->ends_at->format('H:i')}.", $order, 'fishing_session_extended');
 
-        return response()->json(['message' => "Đã gia hạn thêm {$sessionText}.", 'order' => OrderPresenter::make($order)]);
+        return response()->json(['message' => "Đã gia hạn thêm {$extensionText}.", 'order' => OrderPresenter::make($order)]);
     }
 
     public function updateFishing(Request $request, Order $order, FishingService $service): JsonResponse
@@ -305,8 +316,12 @@ class PosController extends Controller
         ]);
     }
 
-    public function order(Order $order): JsonResponse
+    public function order(Request $request, Order $order): JsonResponse
     {
+        if ($request->user()->role !== 'admin') {
+            abort_unless(Order::query()->whereKey($order->id)->forCurrentPosOperationalDay()->exists(), 404);
+        }
+
         return response()->json(['order' => OrderPresenter::make($order)]);
     }
 

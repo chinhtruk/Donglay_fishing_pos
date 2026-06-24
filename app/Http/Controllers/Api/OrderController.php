@@ -31,11 +31,17 @@ class OrderController extends Controller
                     ->orWhereHas('fishingSpot', fn ($spot) => $spot->where('label', 'like', "%{$term}%"));
             });
         }
-        if ($request->user()->role !== 'admin') {
-            $query->where('created_at', '>=', now()->subDays(30));
+        $isAdmin = $request->user()->role === 'admin';
+        if (! $isAdmin) {
+            $query->forCurrentPosOperationalDay();
         }
         $orders = $query->paginate(15);
 
-        return response()->json(['data' => collect($orders->items())->map(fn ($order) => OrderPresenter::make($order)), 'meta' => ['current_page' => $orders->currentPage(), 'last_page' => $orders->lastPage(), 'per_page' => $orders->perPage(), 'total' => $orders->total()]]);
+        return response()->json([
+            'server_time' => now()->toIso8601String(),
+            'operational_day' => $isAdmin ? null : Order::posOperationalPayload(),
+            'data' => collect($orders->items())->map(fn ($order) => OrderPresenter::make($order)),
+            'meta' => ['current_page' => $orders->currentPage(), 'last_page' => $orders->lastPage(), 'per_page' => $orders->perPage(), 'total' => $orders->total()]
+        ]);
     }
 }

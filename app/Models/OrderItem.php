@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderItem extends Model
 {
-    protected $fillable = ['order_id', 'menu_item_id', 'line_type', 'name_snapshot', 'unit_price', 'quantity', 'paid_quantity', 'note'];
+    protected $fillable = ['order_id', 'menu_item_id', 'line_type', 'name_snapshot', 'unit_price', 'quantity', 'paid_quantity', 'ordered_at', 'note'];
 
     protected function casts(): array
     {
-        return ['unit_price' => 'decimal:2'];
+        return [
+            'unit_price' => 'decimal:2',
+            'ordered_at' => 'datetime',
+        ];
     }
 
     public function order(): BelongsTo

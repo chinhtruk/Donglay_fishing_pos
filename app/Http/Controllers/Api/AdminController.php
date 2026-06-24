@@ -148,7 +148,7 @@ class AdminController extends Controller
             ->where('payments.status', 'completed')
             ->where('orders.service_type', 'fishing')
             ->whereBetween('payments.paid_at', [$from, $to]);
-        $fishingSessionRevenue = (float) (clone $fishingLines)->whereIn('order_items.line_type', ['fishing_session', 'merged_session'])->sum('payment_lines.amount');
+        $fishingSessionRevenue = (float) (clone $fishingLines)->whereIn('order_items.line_type', ['fishing_session', 'merged_session', 'hourly_extension'])->sum('payment_lines.amount');
         $fishingMenuRevenue = (float) (clone $fishingLines)->where('order_items.line_type', 'menu')->sum('payment_lines.amount');
         $periodFishingSessions = FishingSession::query()->whereBetween('started_at', [$from, $to])->get(['blocks_count']);
         $extensions = (int) $periodFishingSessions->sum(fn ($session) => max(0, $session->blocks_count - 1));

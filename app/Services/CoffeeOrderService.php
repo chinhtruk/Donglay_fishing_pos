@@ -111,6 +111,7 @@ class CoffeeOrderService
         if ($lines === []) {
             throw ValidationException::withMessages(['items' => 'Bạn chọn ít nhất một món để mở đơn nhé.']);
         }
+        $orderedAt = now();
         $requested = collect($lines)->map(function ($line) {
             $line['menu_item_id'] = (int) $line['menu_item_id'];
             $line['unit_price'] = (float) ($line['unit_price'] ?? 0);
@@ -128,20 +129,51 @@ class CoffeeOrderService
             return $line;
         })->keyBy(fn ($line) => $line['menu_item_id'] . '-' . $line['unit_price']);
 
-        $existing = $order->items()->get()->keyBy(fn ($item) => $item->menu_item_id . '-' . (float) $item->unit_price);
-        foreach ($existing as $key => $item) {
+        $existing = $order->items()->get()->groupBy(fn ($item) => $item->menu_item_id . '-' . (float) $item->unit_price);
+        foreach ($existing as $key => $items) {
             $lineData = $requested->get($key);
             $desired = $lineData ? (int) $lineData['quantity'] : 0;
-            if ($desired < $item->paid_quantity) {
+            $paidTotal = (int) $items->sum('paid_quantity');
+            $currentTotal = (int) $items->sum('quantity');
+            if ($desired < $paidTotal) {
                 throw ValidationException::withMessages(['items' => 'Món đã thanh toán sẽ được giữ nguyên; bạn có thể chỉnh phần chưa thanh toán nhé.']);
             }
             if ($desired === 0) {
-                $item->delete();
-            } else {
-                $item->update([
-                    'quantity' => $desired,
-                    'note' => $lineData['note'] ?? null,
+                $items->each->delete();
+                continue;
+            }
+
+            $items = $items->sortBy(fn ($item) => sprintf('%012d-%012d', $item->ordered_at?->timestamp ?? $item->created_at?->timestamp ?? 0, $item->id))->values();
+            $note = $lineData['note'] ?? null;
+
+            if ($desired > $currentTotal) {
+                $items->each(fn ($item) => $item->update(['note' => $note]));
+                $product = $menu->get($lineData['menu_item_id']);
+                $unitPrice = $product->price == 0 ? (float) $lineData['unit_price'] : $product->price;
+                $order->items()->create([
+                    'menu_item_id' => $product->id,
+                    'line_type' => 'menu',
+                    'name_snapshot' => $product->name,
+                    'unit_price' => $unitPrice,
+                    'quantity' => $desired - $currentTotal,
+                    'ordered_at' => $orderedAt,
+                    'note' => $note,
                 ]);
+                continue;
+            }
+
+            $remainingExtra = $desired - $paidTotal;
+            foreach ($items as $item) {
+                $paid = (int) $item->paid_quantity;
+                $extra = min((int) $item->quantity - $paid, $remainingExtra);
+                $quantity = $paid + $extra;
+                $remainingExtra -= $extra;
+
+                if ($quantity <= 0) {
+                    $item->delete();
+                } else {
+                    $item->update(['quantity' => $quantity, 'note' => $note]);
+                }
             }
         }
         foreach ($requested as $key => $lineData) {
@@ -154,6 +186,7 @@ class CoffeeOrderService
                     'name_snapshot' => $product->name,
                     'unit_price' => $unitPrice,
                     'quantity' => (int) $lineData['quantity'],
+                    'ordered_at' => $orderedAt,
                     'note' => $lineData['note'] ?? null,
                 ]);
             }
@@ -188,10 +221,10 @@ class CoffeeOrderService
             }
 
             $targetOrder = $targetTable->orders()
-                ->whereNull('completed_at')
-                ->where('status', '!=', 'void')
+                ->activeForPos()
                 ->lockForUpdate()
-                ->latest()
+                ->latest('updated_at')
+                ->latest('id')
                 ->first();
 
             if (! $targetOrder) {
@@ -300,7 +333,7 @@ class CoffeeOrderService
             throw ValidationException::withMessages(['table' => 'Bàn này đang tạm nghỉ. Mời bạn chọn một bàn khác nhé.']);
         }
 
-        $activeOrders = $table->orders()->whereNull('completed_at')->where('status', '!=', 'void');
+        $activeOrders = $table->orders()->activeForPos();
         if ($except) {
             $activeOrders->whereKeyNot($except->id);
         }

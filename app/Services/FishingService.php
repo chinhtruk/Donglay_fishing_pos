@@ -19,30 +19,64 @@ class FishingService
             if (! $spot->is_enabled) {
                 throw ValidationException::withMessages(['spot' => 'Vị trí này đang tạm nghỉ. Mời bạn chọn vị trí khác nhé.']);
             }
-            if ($spot->orders()->whereNull('completed_at')->where('status', '!=', 'void')->exists()) {
+            if ($spot->orders()->activeForPos()->exists()) {
                 throw ValidationException::withMessages(['spot' => 'Vị trí vừa được nhận. Mình sẽ cập nhật sơ đồ ngay nhé.']);
             }
             $price = (float) config('fishing.session_price');
+            $orderedAt = now();
             $order = Order::create(['order_number' => $this->number('FS'), 'service_type' => 'fishing', 'fishing_spot_id' => $spot->id, 'opened_by' => $user->id, 'status' => 'open', 'subtotal' => $price, 'total' => $price]);
-            $order->items()->create(['line_type' => 'fishing_session', 'name_snapshot' => 'Phiên câu 4 giờ', 'unit_price' => $price, 'quantity' => 1]);
+            $order->items()->create(['line_type' => 'fishing_session', 'name_snapshot' => 'Phiên câu 4 giờ', 'unit_price' => $price, 'quantity' => 1, 'ordered_at' => $orderedAt]);
             $order->fishingSession()->create(['fishing_spot_id' => $spot->id, 'started_at' => now(), 'ends_at' => now()->addMinutes((int) config('fishing.session_minutes')), 'blocks_count' => 1, 'status' => 'active']);
 
             return $order->fresh();
         });
     }
 
-    public function extend(Order $order, int $version, int $blocks = 1): Order
+    public function extend(Order $order, int $version, int $blocks = 1, ?int $minutes = null, ?float $price = null, ?string $label = null): Order
     {
         $blocks = max(1, min(4, $blocks));
+        $minutes ??= (int) config('fishing.session_minutes') * $blocks;
+        $minutes = max(1, $minutes);
+        $price ??= (float) config('fishing.session_price') * $blocks;
+        $label ??= $blocks === 1 ? 'Phiên câu 4 giờ' : "Phiên câu 4 giờ x{$blocks}";
 
-        return DB::transaction(function () use ($order, $version, $blocks) {
+        return DB::transaction(function () use ($order, $version, $blocks, $minutes, $price, $label) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
             $session = $order->fishingSession()->lockForUpdate()->firstOrFail();
             $extensionBase = $session->ends_at->isFuture() ? $session->ends_at : now();
-            $session->update(['ends_at' => $extensionBase->copy()->addMinutes((int) config('fishing.session_minutes') * $blocks), 'blocks_count' => $session->blocks_count + $blocks, 'status' => 'active', 'expired_notified_at' => null]);
-            $item = $order->items()->where('line_type', 'fishing_session')->firstOrFail();
-            $item->increment('quantity', $blocks);
+            $isFullSessionExtension = $minutes === (int) config('fishing.session_minutes') * $blocks && $price === (float) config('fishing.session_price') * $blocks;
+            $session->update([
+                'ends_at' => $extensionBase->copy()->addMinutes($minutes),
+                'blocks_count' => $session->blocks_count + ($isFullSessionExtension ? $blocks : 0),
+                'status' => 'active',
+                'expired_notified_at' => null,
+            ]);
+            $orderedAt = now();
+            if ($isFullSessionExtension) {
+                $item = $order->items()->where('line_type', 'fishing_session')->firstOrFail();
+                $item->increment('quantity', $blocks);
+                $item->update(['ordered_at' => $orderedAt]);
+            } else {
+                $item = $order->items()
+                    ->where('line_type', 'hourly_extension')
+                    ->where('unit_price', $price)
+                    ->where('name_snapshot', $label)
+                    ->first();
+
+                if ($item) {
+                    $item->increment('quantity');
+                    $item->update(['ordered_at' => $orderedAt]);
+                } else {
+                    $order->items()->create([
+                        'line_type' => 'hourly_extension',
+                        'name_snapshot' => $label,
+                        'unit_price' => $price,
+                        'quantity' => 1,
+                        'ordered_at' => $orderedAt,
+                    ]);
+                }
+            }
             $hasUnpaid = $order->items()->whereColumn('paid_quantity', '<', 'quantity')->exists();
             $hasPaid = $order->items()->where('paid_quantity', '>', 0)->exists();
             $newStatus = 'open';
@@ -64,6 +98,7 @@ class FishingService
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
 
+            $orderedAt = now();
             $requested = collect($lines)->map(function ($line) {
                 $line['menu_item_id'] = (int) $line['menu_item_id'];
                 $line['unit_price'] = (float) ($line['unit_price'] ?? 0);
@@ -79,21 +114,52 @@ class FishingService
                 $menu = collect();
             }
 
-            $existing = $order->items()->where('line_type', 'menu')->get()->keyBy(fn ($item) => $item->menu_item_id . '-' . (float) $item->unit_price);
+            $existing = $order->items()->where('line_type', 'menu')->get()->groupBy(fn ($item) => $item->menu_item_id . '-' . (float) $item->unit_price);
 
-            foreach ($existing as $key => $item) {
+            foreach ($existing as $key => $items) {
                 $lineData = $requested->get($key);
                 $desired = $lineData ? (int) $lineData['quantity'] : 0;
-                if ($desired < $item->paid_quantity) {
+                $paidTotal = (int) $items->sum('paid_quantity');
+                $currentTotal = (int) $items->sum('quantity');
+                if ($desired < $paidTotal) {
                     throw ValidationException::withMessages(['items' => 'Món đã thanh toán sẽ được giữ nguyên; bạn có thể chỉnh phần chưa thanh toán nhé.']);
                 }
                 if ($desired === 0) {
-                    $item->delete();
-                } else {
-                    $item->update([
-                        'quantity' => $desired,
-                        'note' => $lineData['note'] ?? null,
+                    $items->each->delete();
+                    continue;
+                }
+
+                $items = $items->sortBy(fn ($item) => sprintf('%012d-%012d', $item->ordered_at?->timestamp ?? $item->created_at?->timestamp ?? 0, $item->id))->values();
+                $note = $lineData['note'] ?? null;
+
+                if ($desired > $currentTotal) {
+                    $items->each(fn ($item) => $item->update(['note' => $note]));
+                    $product = $menu->get($lineData['menu_item_id']);
+                    $unitPrice = $product->price == 0 ? (float) $lineData['unit_price'] : $product->price;
+                    $order->items()->create([
+                        'menu_item_id' => $product->id,
+                        'line_type' => 'menu',
+                        'name_snapshot' => $product->name,
+                        'unit_price' => $unitPrice,
+                        'quantity' => $desired - $currentTotal,
+                        'ordered_at' => $orderedAt,
+                        'note' => $note,
                     ]);
+                    continue;
+                }
+
+                $remainingExtra = $desired - $paidTotal;
+                foreach ($items as $item) {
+                    $paid = (int) $item->paid_quantity;
+                    $extra = min((int) $item->quantity - $paid, $remainingExtra);
+                    $quantity = $paid + $extra;
+                    $remainingExtra -= $extra;
+
+                    if ($quantity <= 0) {
+                        $item->delete();
+                    } else {
+                        $item->update(['quantity' => $quantity, 'note' => $note]);
+                    }
                 }
             }
 
@@ -107,6 +173,7 @@ class FishingService
                         'name_snapshot' => $product->name,
                         'unit_price' => $unitPrice,
                         'quantity' => (int) $lineData['quantity'],
+                        'ordered_at' => $orderedAt,
                         'note' => $lineData['note'] ?? null,
                     ]);
                 }
@@ -204,7 +271,7 @@ class FishingService
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
 
-            $targetOrder = $targetSpot->orders()->whereNull('completed_at')->where('status', '!=', 'void')->latest()->first();
+            $targetOrder = $targetSpot->orders()->activeForPos()->latest('updated_at')->latest('id')->first();
             if (! $targetOrder) {
                 throw ValidationException::withMessages(['spot' => 'Chòi mục tiêu không có phiên câu đang hoạt động.']);
             }
@@ -212,10 +279,10 @@ class FishingService
             $sourceSpotLabel = $order->fishingSpot->label;
 
             foreach ($order->items as $item) {
-                if ($item->line_type === 'fishing_session') {
+                if (in_array($item->line_type, ['fishing_session', 'hourly_extension'], true)) {
                     $item->update([
                         'order_id' => $targetOrder->id,
-                        'line_type' => 'merged_session',
+                        'line_type' => $item->line_type === 'fishing_session' ? 'merged_session' : 'hourly_extension',
                         'name_snapshot' => "{$item->name_snapshot} ({$sourceSpotLabel})"
                     ]);
                 } else {
