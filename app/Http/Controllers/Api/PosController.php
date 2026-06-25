@@ -172,6 +172,8 @@ class PosController extends Controller
             'session_price' => number_format((float) config('fishing.session_price'), 2, '.', ''),
             'session_minutes' => config('fishing.session_minutes'),
             'hourly_extension_price' => number_format((float) config('fishing.hourly_extension_price'), 2, '.', ''),
+            'fish_takeaway_fee' => number_format((float) config('fishing.fish_takeaway_fee'), 2, '.', ''),
+            'fish_takeaway_label' => config('fishing.fish_takeaway_label'),
             'menu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
             'payment_settings' => $this->paymentSettingsPayload(),
         ]);
@@ -208,6 +210,30 @@ class PosController extends Controller
         $this->notifyOrderEvent('Gia hạn chòi câu', "{$this->resourceLabel($order)} vừa gia hạn thêm {$extensionText} ({$durationText}), kết thúc lúc {$order->fishingSession->ends_at->format('H:i')}.", $order, 'fishing_session_extended');
 
         return response()->json(['message' => "Đã gia hạn thêm {$extensionText}.", 'order' => OrderPresenter::make($order)]);
+    }
+
+    public function toggleFishTakeaway(Request $request, Order $order, FishingService $service): JsonResponse
+    {
+        $data = $request->validate([
+            'version' => ['required', 'integer'],
+            'enabled' => ['required', 'boolean'],
+        ]);
+
+        $order = $service->toggleFishTakeaway($order, $data['version'], (bool) $data['enabled']);
+        $message = $data['enabled']
+            ? 'Đã thêm phí lấy cá vào hóa đơn.'
+            : 'Đã bỏ phí lấy cá khỏi hóa đơn.';
+        $this->notifyOrderEvent(
+            'Cập nhật phí lấy cá',
+            "{$this->resourceLabel($order)} vừa cập nhật tùy chọn lấy cá mang về.",
+            $order,
+            'fishing_order_updated'
+        );
+
+        return response()->json([
+            'message' => $message,
+            'order' => OrderPresenter::make($order),
+        ]);
     }
 
     public function updateFishing(Request $request, Order $order, FishingService $service): JsonResponse

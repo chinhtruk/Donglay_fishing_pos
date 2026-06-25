@@ -16150,6 +16150,9 @@ body[data-role="admin"] .payment-method-modal .payment-method-footnote {
 }
 
 #modal-root .pos-order-modal .order-session-card {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
     padding: 12px 0 !important;
     border: 0 !important;
     border-bottom: 1px solid var(--pos-line, #e4d7ca) !important;
@@ -16163,13 +16166,160 @@ body[data-role="admin"] .payment-method-modal .payment-method-footnote {
 }
 
 #modal-root .pos-order-modal .order-session-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding-top: 0 !important;
+    border-top: 0 !important;
     border-top-color: var(--pos-line, #e4d7ca) !important;
 }
 
 #modal-root .pos-order-modal .order-session-metrics>span {
-    padding: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 3px !important;
+    padding: 9px 10px !important;
+    border: 1px solid rgba(154, 105, 60, .12) !important;
+    border-radius: 8px !important;
+    background: #fffdf8 !important;
+}
+
+#modal-root .pos-order-modal .order-session-metrics strong {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-toggle {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    margin-top: 2px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid var(--pos-line, #e4d7ca) !important;
+    color: var(--pos-ink, #2d211b) !important;
+    cursor: pointer !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-toggle input {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-switch {
+    position: relative !important;
+    width: 38px !important;
+    height: 22px !important;
+    border-radius: 999px !important;
+    background: #eadfd3 !important;
+    box-shadow: inset 0 0 0 1px rgba(103, 69, 35, .12) !important;
+    transition: background .18s ease, box-shadow .18s ease !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-switch::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 3px !important;
+    left: 3px !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 999px !important;
+    background: #fffdf9 !important;
+    box-shadow: 0 2px 5px rgba(64, 41, 28, .2) !important;
+    transition: transform .18s ease !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-toggle input:checked+.fish-takeaway-switch {
+    background: var(--pos-brand, #5b3a2c) !important;
+    box-shadow: inset 0 0 0 1px rgba(64, 41, 28, .18) !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-toggle input:checked+.fish-takeaway-switch::after {
+    transform: translateX(16px) !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-copy {
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 2px !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-copy strong {
+    overflow: hidden !important;
+    font-size: 11px !important;
+    font-weight: 850 !important;
+    line-height: 1.15 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-copy small {
+    overflow: hidden !important;
+    color: var(--pos-muted, #7f6b5d) !important;
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-toggle>b {
+    color: var(--pos-brand, #5b3a2c) !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+}
+
+#modal-root .pos-order-modal .fish-takeaway-toggle.is-locked {
+    cursor: default !important;
+    opacity: .76 !important;
+}
+
+#modal-root .pos-order-modal .order-total-breakdown {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+}
+
+#modal-root .pos-order-modal .order-total-breakdown span {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-height: 24px !important;
+    padding: 4px 8px !important;
+    border: 1px solid var(--pos-line, #e4d7ca) !important;
+    border-radius: 999px !important;
+    background: #fffaf2 !important;
+    color: var(--pos-muted, #7f6b5d) !important;
+    font-size: 9px !important;
+    font-weight: 750 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+#modal-root .pos-order-modal .order-total-breakdown b {
+    color: var(--pos-brand, #5b3a2c) !important;
+    font-size: 9.5px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+}
+
+body[data-role="employee"] #modal-root .pos-order-modal .order-session-card {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    padding: 12px !important;
+}
+
+body[data-role="employee"] #modal-root .pos-order-modal .order-session-metrics {
+    padding-top: 0 !important;
+    border-top: 0 !important;
 }
 
 /* Admin menu batch modal: flatten add-item flow to avoid nested card layers. */

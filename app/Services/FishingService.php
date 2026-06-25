@@ -12,6 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 class FishingService
 {
+    public const FISH_TAKEAWAY_LINE_TYPE = 'fish_takeaway_fee';
+
     public function start(FishingSpot $spot, User $user): Order
     {
         return DB::transaction(function () use ($spot, $user) {
@@ -194,6 +196,67 @@ class FishingService
                 'subtotal' => $total,
                 'total' => $total,
                 'version' => $order->version + 1
+            ]);
+
+            return $order->fresh();
+        });
+    }
+
+    public function toggleFishTakeaway(Order $order, int $version, bool $enabled): Order
+    {
+        return DB::transaction(function () use ($order, $version, $enabled) {
+            $order = Order::lockForUpdate()->findOrFail($order->id);
+            $this->assertMutable($order, $version);
+
+            $fee = (float) config('fishing.fish_takeaway_fee', 200000);
+            $label = (string) config('fishing.fish_takeaway_label', 'Phí lấy cá');
+            $item = $order->items()
+                ->where('line_type', self::FISH_TAKEAWAY_LINE_TYPE)
+                ->lockForUpdate()
+                ->first();
+
+            if ($enabled) {
+                if ($item) {
+                    if ((int) $item->paid_quantity === 0) {
+                        $item->update([
+                            'name_snapshot' => $label,
+                            'unit_price' => $fee,
+                            'quantity' => max(1, (int) $item->quantity),
+                            'ordered_at' => now(),
+                        ]);
+                    }
+                } else {
+                    $order->items()->create([
+                        'line_type' => self::FISH_TAKEAWAY_LINE_TYPE,
+                        'name_snapshot' => $label,
+                        'unit_price' => $fee,
+                        'quantity' => 1,
+                        'ordered_at' => now(),
+                    ]);
+                }
+            } elseif ($item) {
+                if ((int) $item->paid_quantity > 0) {
+                    throw ValidationException::withMessages(['fish_takeaway' => 'Phí lấy cá đã thanh toán nên không thể bỏ khỏi hóa đơn.']);
+                }
+                $item->delete();
+            }
+
+            $hasUnpaid = $order->items()->whereColumn('paid_quantity', '<', 'quantity')->exists();
+            $hasPaid = $order->items()->where('paid_quantity', '>', 0)->exists();
+            $newStatus = 'open';
+            if (! $hasUnpaid) {
+                $newStatus = 'paid';
+            } elseif ($hasPaid) {
+                $newStatus = 'partially_paid';
+            }
+
+            $total = (float) $order->items()->sum(DB::raw('unit_price * quantity'));
+            $order->update([
+                'status' => $newStatus,
+                'subtotal' => $total,
+                'total' => $total,
+                'version' => $order->version + 1,
+                'completed_at' => null,
             ]);
 
             return $order->fresh();

@@ -1126,16 +1126,10 @@ async function renderCoffee() {
                             ${linesHtml}
                         </div>
                         <div class="order-dock-footer" style="padding: 13px 14px 14px; border-top: 1px solid var(--line); background: #fff;">
-                            <div class="summary-row" style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 10px;">
-                                <span>Tạm tính</span>
-                                <strong>${money(cart.total())}</strong>
+                            <div class="order-total-breakdown" aria-label="Chi tiết tạm tính">
+                                <span>Tạm tính <b>${money(cart.total())}</b></span>
+                                ${totalPaid > 0 ? `<span>Đã trả <b>${money(totalPaid)}</b></span>` : ''}
                             </div>
-                            ${totalPaid > 0 ? `
-                            <div class="summary-row" style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 10px; color: var(--moss);">
-                                <span>Đã trả trước</span>
-                                <strong>${money(totalPaid)}</strong>
-                            </div>
-                            ` : ''}
                             <div class="summary-row total" style="display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; font-family: Georgia, serif; font-size: 16px; font-weight: 700;">
                                 <span>${totalPaid > 0 ? 'Còn lại cần trả' : 'Khách cần trả'} <small class="order-total-count">${paymentCountLabel}</small></span>
                                 <strong>${money(remainingDue)}</strong>
@@ -1496,7 +1490,7 @@ function openCheckout(order, type, paymentSettings = {}) {
                 <p class="eyebrow" style="font-size: 8px; margin: 0 0 6px; font-weight: 700; color: var(--moss-2); text-transform: uppercase; letter-spacing: 0.05em;">CHI TIẾT THANH TOÁN</p>
                 
                 ${unpaid.length ? `
-                    <div style="font-weight: 700; font-size: 10px; margin-bottom: 6px; color: var(--muted); letter-spacing:0.04em; text-transform: uppercase;">Món cần thanh toán:</div>
+                    <div style="font-weight: 700; font-size: 10px; margin-bottom: 6px; color: var(--muted); letter-spacing:0.04em; text-transform: uppercase;">Khoản cần thanh toán:</div>
                     <div class="bill-list" style="display: flex; flex-direction: column; max-height: 180px; overflow-y: auto; margin-bottom: 12px;">
                         ${unpaid.map(item => `
                             <div class="bill-line" data-bill-row="${item.id}" style="display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: center;">
@@ -1924,6 +1918,9 @@ async function openFishing(spot, menu, fishingConfig = {}) {
     const sessionDefaults = currentOrder.items.find(item => item.line_type === 'fishing_session');
     const configuredSessionMinutes = Number(fishingConfig.session_minutes || 240);
     const configuredSessionPrice = Number(fishingConfig.session_price || sessionDefaults?.unit_price || 200000);
+    const fishTakeawayLineType = 'fish_takeaway_fee';
+    const fishTakeawayPrice = Number(fishingConfig.fish_takeaway_fee || 200000);
+    const fishTakeawayLabel = fishingConfig.fish_takeaway_label || 'Phí lấy cá';
     const paymentSettings = fishingConfig.payment_settings || {};
     const availableSpots = Array.isArray(fishingConfig.spots) ? fishingConfig.spots : [];
     let cart = new Cart(currentOrder.items.filter(item => item.menu_item_id).map(item => ({ menu_item_id:item.menu_item_id, name:item.name, price:Number(item.unit_price), quantity:item.quantity, note:item.note || '' })));
@@ -1986,9 +1983,17 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                 const mergedSessionsTotal = mergedSessionItems.reduce((sum, item) => sum + Number(item.unit_price) * Number(item.quantity), 0);
                 const hourlyExtensionItems = currentOrder.items.filter(item => item.line_type === 'hourly_extension');
                 const hourlyExtensionTotal = hourlyExtensionItems.reduce((sum, item) => sum + Number(item.unit_price) * Number(item.quantity), 0);
+                const fishTakeawayItem = currentOrder.items.find(item => item.line_type === fishTakeawayLineType);
+                const fishTakeawayQty = fishTakeawayItem ? Number(fishTakeawayItem.quantity) || 0 : 0;
+                const fishTakeawayPaidQty = fishTakeawayItem ? Number(fishTakeawayItem.paid_quantity) || 0 : 0;
+                const fishTakeawayUnpaidQty = Math.max(0, fishTakeawayQty - fishTakeawayPaidQty);
+                const fishTakeawayUnitPrice = fishTakeawayItem ? Number(fishTakeawayItem.unit_price) : fishTakeawayPrice;
+                const fishTakeawayTotal = fishTakeawayItem ? fishTakeawayUnitPrice * fishTakeawayQty : 0;
+                const fishTakeawayChecked = !!fishTakeawayItem;
+                const fishTakeawayLocked = fishTakeawayPaidQty > 0;
 
                 const sessionTotal = mainSessionTotal + mergedSessionsTotal + hourlyExtensionTotal;
-                const totalBill = sessionTotal + cart.total();
+                const totalBill = sessionTotal + fishTakeawayTotal + cart.total();
                 const totalPaid = orderCompletedPaymentTotal(currentOrder);
                 let unpaidItemCount = Math.max(0, mainSessionUnpaid);
                 let totalItemCount = sessionQty;
@@ -2083,6 +2088,35 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                     }
                 });
 
+                if (fishTakeawayItem) {
+                    totalItemCount += fishTakeawayQty;
+                    unpaidItemCount += fishTakeawayUnpaidQty;
+                    if (fishTakeawayUnpaidQty > 0) {
+                        unpaidHtmls.push(`
+                            <div class="order-line unpaid-item session-item fish-takeaway-line" style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line);">
+                                <div>
+                                    <strong style="font-family: Georgia, serif; font-size: 13px;">${escapeHtml(fishTakeawayItem.name || fishTakeawayLabel)}</strong>
+                                    <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">Dịch vụ lấy cá mang về</small>
+                                </div>
+                                <div class="quantity session-quantity"><b>× ${fishTakeawayUnpaidQty}</b></div>
+                                <b style="align-self: center; font-size: 10px; color: #785943; text-align:right;">${money(fishTakeawayUnitPrice * fishTakeawayUnpaidQty)}</b>
+                            </div>
+                        `);
+                    }
+                    if (fishTakeawayPaidQty > 0) {
+                        paidHtmls.push(`
+                            <div class="order-line paid-item session-item fish-takeaway-line" style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); background: #f4faf6; border-left: 3px solid #28a745; padding-left: 8px; border-radius: 4px;">
+                                <div>
+                                    <strong style="font-family: Georgia, serif; font-size: 13px; color: #1e4620;">${escapeHtml(fishTakeawayItem.name || fishTakeawayLabel)} <span style="font-size:9px; background:#d4edda; color:#155724; padding:2px 6px; border-radius:4px; margin-left:4px; font-family:var(--font-sans); font-weight:600;">✓ Đã trả</span></strong>
+                                    <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">Dịch vụ lấy cá mang về</small>
+                                </div>
+                                <div class="quantity session-quantity"><b>× ${fishTakeawayPaidQty}</b></div>
+                                <b style="align-self: center; font-size: 10px; color: #2e5a32; text-align:right;">${money(fishTakeawayUnitPrice * fishTakeawayPaidQty)}</b>
+                            </div>
+                        `);
+                    }
+                }
+
                 lines.forEach(line => {
                     const paidQty = paidQuantityForLine(currentOrder, line.menu_item_id, line.price);
                     const unpaidQty = line.quantity - paidQty;
@@ -2163,14 +2197,20 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                             </div>
                         </div>
                         <div class="order-session-card" aria-label="Thông tin phiên câu">
-                            <span class="order-session-icon">${orderStackIcon()}</span>
-                            <span class="order-session-title"><small>Phiên câu</small><strong>${escapeHtml(spot.label)}</strong></span>
-                            <span class="order-session-state ${session.status === 'expired' ? 'is-expired' : ''}">${session.status === 'expired' ? 'Hết giờ' : 'Đang câu'}</span>
                             <span class="order-session-metrics">
                                 <span><small>Bắt đầu</small><strong>${dateTime(session.started_at)}</strong></span>
                                 <span><small>Kết thúc</small><strong>${dateTime(session.ends_at)}</strong></span>
                                 <span><small>Số phiên</small><strong>${number(sessionQty)} phiên</strong></span>
                             </span>
+                            <label class="fish-takeaway-toggle ${fishTakeawayLocked ? 'is-locked' : ''}" for="fish-takeaway-toggle">
+                                <input id="fish-takeaway-toggle" type="checkbox" ${fishTakeawayChecked ? 'checked' : ''} ${fishTakeawayLocked ? 'disabled' : ''}>
+                                <span class="fish-takeaway-switch" aria-hidden="true"></span>
+                                <span class="fish-takeaway-copy">
+                                    <strong>Khách lấy cá mang về</strong>
+                                    <small>${fishTakeawayLocked ? 'Đã thanh toán nên không thể bỏ khỏi hóa đơn' : 'Cộng phí đóng/lấy cá sau khi câu'}</small>
+                                </span>
+                                <b>${money(fishTakeawayUnitPrice)}</b>
+                            </label>
                         </div>
                     </div>
 
@@ -2179,17 +2219,10 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                     </div>
                     
                     <div class="order-dock-footer" style="padding: 13px 14px 14px; border-top: 1px solid var(--line); background: #fff;">
-                        <div class="summary-row" style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 10px;">
-                            <span>Tạm tính nước</span>
-                            <strong>${money(cart.total())}</strong>
-                        </div>
-                        <div class="summary-row" style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 10px;">
-                            <span>Tiền giờ câu</span>
-                            <strong>${money(sessionTotal)}</strong>
-                        </div>
-                        <div class="summary-row" style="display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 4px; padding: 6px 0 2px; font-size: 10px; font-weight: 600;">
-                            <span>Tổng cộng</span>
-                            <strong>${money(totalBill)}</strong>
+                        <div class="order-total-breakdown" aria-label="Chi tiết tạm tính">
+                            <span>Nước <b>${money(cart.total())}</b></span>
+                            <span>Giờ câu <b>${money(sessionTotal)}</b></span>
+                            ${fishTakeawayItem ? `<span>Lấy cá <b>${money(fishTakeawayTotal)}</b></span>` : ''}
                         </div>
                         ${totalPaid > 0 ? `
                         <div class="summary-row" style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 10px; color: var(--moss);">
@@ -2226,6 +2259,33 @@ async function openFishing(spot, menu, fishingConfig = {}) {
 
                 modal.querySelectorAll('[data-modal-minus]').forEach(button => button.onclick = () => changeQuantity(Number(button.dataset.modalMinus), Number(button.dataset.modalPrice), -1));
                 modal.querySelectorAll('[data-modal-plus]').forEach(button => button.onclick = () => changeQuantity(Number(button.dataset.modalPlus), Number(button.dataset.modalPrice), 1));
+
+                const fishTakeawayToggle = modal.querySelector('#fish-takeaway-toggle');
+                if (fishTakeawayToggle) {
+                    fishTakeawayToggle.onchange = async () => {
+                        fishTakeawayToggle.disabled = true;
+                        try {
+                            const result = await api(`/api/v1/fishing/orders/${currentOrder.id}/fish-takeaway`, {
+                                method: 'POST',
+                                body: {
+                                    version: currentOrder.version,
+                                    enabled: fishTakeawayToggle.checked,
+                                },
+                            });
+                            currentOrder = result.order;
+                            toast(result.message);
+                            renderModalBill();
+                        } catch (error) {
+                            toast(error.message, 'error');
+                            if (error.status === 409) {
+                                closeModal();
+                                await renderFishing();
+                            } else {
+                                renderModalBill();
+                            }
+                        }
+                    };
+                }
 
                 const saveBtn = modal.querySelector('#modal-save-order');
                 if (saveBtn) {

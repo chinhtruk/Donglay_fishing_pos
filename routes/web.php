@@ -42,6 +42,7 @@ Route::prefix('api/v1')->group(function () {
             Route::get('/fishing/map', [PosController::class, 'fishingMap']);
             Route::post('/fishing/spots/{fishingSpot}/start', [PosController::class, 'startFishing']);
             Route::post('/fishing/orders/{order}/extend', [PosController::class, 'extendFishing']);
+            Route::post('/fishing/orders/{order}/fish-takeaway', [PosController::class, 'toggleFishTakeaway']);
             Route::put('/fishing/orders/{order}', [PosController::class, 'updateFishing']);
             Route::post('/fishing/orders/{order}/merge', [PosController::class, 'mergeFishing']);
             Route::post('/fishing/orders/{order}/checkout', [PosController::class, 'fishingCheckout']);
