@@ -1,10 +1,11 @@
-export function openModal({ title, body, footer = '', wide = false, onReady }) {
+export function openModal({ title, body, footer = '', wide = false, className = '', onReady }) {
     const root = document.querySelector('#modal-root');
     document.body.classList.add('modal-open');
     root.innerHTML = `<div class="modal-backdrop"><section class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${title}"><header class="modal-head"><h2>${title}</h2><button class="modal-close" aria-label="Đóng"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></header><div class="modal-body">${body}</div>${footer ? `<footer class="modal-foot">${footer}</footer>` : ''}</section></div>`;
     const modal = root.querySelector('.modal');
     const backdrop = root.querySelector('.modal-backdrop');
     if (modal.querySelector('.modal-pos-layout')) modal.classList.add('pos-order-modal');
+    if (className) modal.classList.add(...className.split(/\s+/).filter(Boolean));
     const removeKeyboardGuard = setupModalKeyboardGuard(backdrop);
     const close = () => {
         removeKeyboardGuard();

@@ -79,7 +79,9 @@
 - Topbar dùng chung gồm đồng hồ, ngày và menu tài khoản; sự kiện vận hành được đẩy bằng toast polling ở góc trên bên phải.
 - Icon được dựng bằng SVG nội tuyến.
 - Modal gọi món tách vùng cuộn menu và phiếu bán hàng; vùng tổng tiền/thanh toán được giữ cố định.
+- Modal thanh toán dùng bố cục phiếu hai cột giống modal gọi món, gồm side phương thức thanh toán và side phiếu thanh toán; ở iPad dọc hai modal dùng cùng chiều cao để thao tác nhất quán.
 - Phiếu bán hàng dùng layout compact thống nhất cho món chưa trả, món đã trả và phí phiên câu.
+- Card phiên câu tách tên phiên, giá phiên và chip lấy cá thành các dòng meta riêng; mốc bắt đầu/kết thúc trong card phiên ưu tiên hiển thị đủ thời gian và ngày tháng.
 - Tab đơn hàng nhân viên ưu tiên thao tác cảm ứng: chạm trực tiếp vào hàng để mở chi tiết, ẩn bớt tổng tiền/thanh toán và tập trung vào danh sách món.
 - Bảng đơn hàng dùng header sticky, vùng cuộn độc lập và phân trang tròn đồng bộ giữa POS/admin.
 - Tiền hiển thị theo định dạng Việt Nam, không hiển thị số thập phân; ô tiền khách đưa tự chèn dấu phân cách hàng nghìn.
@@ -216,6 +218,7 @@ Admin chỉ tập trung vào quản lý, không hiển thị các mục vận h�
 - Mặc định có tiền mặt; có thể thêm nhiều phương thức QR/chuyển khoản.
 - Bật/tắt từng phương thức; POS chỉ hiển thị phương thức đang bật và đủ cấu hình.
 - Với QR/chuyển khoản, lưu ảnh QR, ngân hàng/ví điện tử, tên chủ tài khoản, số tài khoản, nội dung chuyển khoản và ghi chú hướng dẫn.
+- POS hiển thị mã QR theo phương thức được chọn, với thông tin chủ tài khoản và số tài khoản được rút gọn dưới mã để nhân viên dễ đối chiếu.
 - Ảnh QR hỗ trợ JPG, PNG hoặc WebP tối đa 30 MB.
 - Các thay đổi phương thức thanh toán được ghi audit log.
 

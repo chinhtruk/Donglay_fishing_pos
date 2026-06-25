@@ -450,12 +450,35 @@ function orderLineTotalHtml(line, quantity, menuItems) {
     return `<b style="align-self: center; font-size: 10px; color: #785943; text-align:right;">${text}</b>`;
 }
 
-function fishingSessionNameHtml(name, hasFishTakeaway, paid = false) {
+function fishingSessionNameHtml(name) {
+    return escapeHtml(name);
+}
+
+function fishingSessionMetaHtml(unitPrice, hasFishTakeaway, paid = false) {
     const fishLabel = hasFishTakeaway ? 'Có lấy cá' : 'Không lấy cá';
     const fishClass = hasFishTakeaway ? 'has-fish' : 'no-fish';
-    const paidChip = paid ? ' <span class="paid-status-chip">✓ Đã trả</span>' : '';
+    const paidChip = paid ? '<span class="paid-status-chip">✓ Đã trả</span>' : '';
 
-    return `${escapeHtml(name)} <span class="session-fish-note ${fishClass}">${fishLabel}</span>${paidChip}`;
+    return `<small class="session-line-meta"><span>${money(unitPrice)} / phiên</span><span class="session-fish-note ${fishClass}">${fishLabel}</span>${paidChip}</small>`;
+}
+
+function fishingSessionMetricDateTime(value) {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+
+    const time = new Intl.DateTimeFormat('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    }).format(date);
+    const day = new Intl.DateTimeFormat('vi-VN', {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+    }).format(date);
+
+    return `${time} ${day}`;
 }
 
 function fishingSessionLineTotalHtml(unitPrice, quantity, hasFishTakeaway, standardPrice, color = '#785943') {
@@ -1530,12 +1553,12 @@ function openCheckout(order, type, paymentSettings = {}) {
     const initialPaymentMethod = paymentMethods[0]?.code || 'cash';
     const methodByCode = new Map(paymentMethods.map(method => [method.code, method]));
     const transferMethods = paymentMethods.filter(method => method.type !== 'cash');
-    const paymentQrInfoRows = method => [
-        ['Ngân hàng', method.bank_name],
-        ['Tên chủ TK', method.account_name],
-        ['Số tài khoản', method.account_number],
-        ['Nội dung CK', method.transfer_note],
-    ].filter(([, value]) => value);
+    const paymentAccountInfo = method => `
+        <div class="checkout-qr-account">
+            ${method.account_name ? `<strong>${escapeHtml(method.account_name)}</strong>` : ''}
+            ${method.account_number ? `<b>${escapeHtml(method.account_number)}</b>` : ''}
+        </div>
+    `;
     const paymentMethodHint = method => method === 'cash'
         ? 'Thanh toán tiền mặt'
         : `Thanh toán ${methodByCode.get(method)?.name || 'chuyển khoản'}`;
@@ -1547,73 +1570,29 @@ function openCheckout(order, type, paymentSettings = {}) {
             </label>
         </div>
     ` : '';
+    const checkoutItemQuantity = item => Number(item.quantity ?? (Number(item.paid_quantity || 0) + Number(item.unpaid_quantity || 0)) || 0);
+    const checkoutBillTotal = order.items.reduce((sum, item) => sum + Number(item.unit_price) * checkoutItemQuantity(item), 0) || Number(order.total || 0);
+    const checkoutPaidTotal = paid.reduce((sum, item) => sum + Number(item.unit_price) * Number(item.paid_quantity || 0), 0);
+    const checkoutTotalQuantity = order.items.reduce((sum, item) => sum + checkoutItemQuantity(item), 0);
+    const checkoutUnpaidQuantity = unpaid.reduce((sum, item) => sum + Number(item.unpaid_quantity || 0), 0);
+    const resourceLabel = order.resource?.label || (type === 'coffee' ? 'Đơn tại quầy' : 'Phiên câu');
 
     const body = `
-        <div class="checkout-modal-layout" style="display: flex; flex-direction: column; gap: 16px; margin: -23px -23px 0; padding: 24px; background: var(--paper); border-radius: 22px 22px 0 0;">
-            <!-- Bill Header/Notice -->
-            <div class="checkout-detail-section" style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                <p class="eyebrow" style="font-size: 8px; margin: 0 0 6px; font-weight: 700; color: var(--moss-2); text-transform: uppercase; letter-spacing: 0.05em;">CHI TIẾT THANH TOÁN</p>
-                
-                ${unpaid.length ? `
-                    <div style="font-weight: 700; font-size: 10px; margin-bottom: 6px; color: var(--muted); letter-spacing:0.04em; text-transform: uppercase;">Khoản cần thanh toán:</div>
-                    <div class="bill-list" style="display: flex; flex-direction: column; max-height: 180px; overflow-y: auto; margin-bottom: 12px;">
-                        ${unpaid.map(item => `
-                            <div class="bill-line" data-bill-row="${item.id}" style="display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: center;">
-                                <div style="display: flex; align-items: center;">
-                                    <input type="checkbox" data-pay-check="${item.id}" checked style="width: 18px; height: 18px; margin: 0; cursor: pointer; display: inline-block;">
-                                </div>
-                                <div style="min-width: 0; text-align: left;">
-                                    <strong style="font-family: Georgia, serif; font-size: 13px; color: var(--ink);">${escapeHtml(item.name)}</strong>
-                                    <small style="color: var(--muted); font-size: 10px; display: block; margin-top: 3px;">
-                                        ${money(item.unit_price)} · còn ${item.unpaid_quantity}
-                                    </small>
-                                    ${item.note ? `<div style="font-size: 10px; color: #a6534e; margin-top: 2px; font-style: italic;">* ${escapeHtml(item.note)}</div>` : ''}
-                                </div>
-                                <div class="quantity" style="display: flex; align-items: center; gap: 4px;">
-                                    <button type="button" data-pay-minus="${item.id}" style="width: 28px; height: 28px; border: 0; border-radius: 7px; background: var(--paper); cursor: pointer; display: grid; place-items: center; padding:0; outline: none; transition: all 0.2s;">
-                                        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    </button>
-                                    <span id="pay-qty-val-${item.id}" style="font-size: 12px; font-weight: 600; min-width: 20px; text-align: center; user-select: none;">${item.unpaid_quantity}</span>
-                                    <input type="hidden" data-pay-qty="${item.id}" value="${item.unpaid_quantity}">
-                                    <button type="button" data-pay-plus="${item.id}" style="width: 28px; height: 28px; border: 0; border-radius: 7px; background: var(--paper); cursor: pointer; display: grid; place-items: center; padding:0; outline: none; transition: all 0.2s;">
-                                        <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    </button>
-                                </div>
-                                <b id="pay-line-total-${item.id}" style="font-size: 11px; color: #785943; text-align: right; min-width: 70px;">${money(item.unit_price * item.unpaid_quantity)}</b>
-                            </div>
-                        `).join('')}
+        <div class="checkout-modal-layout">
+            <section class="checkout-payment-section checkout-left-column">
+                <div class="checkout-payment-heading">
+                    <p class="eyebrow">THANH TOÁN</p>
+                    <div class="checkout-heading-row">
+                        <h3>Phương thức thanh toán</h3>
+                        <small id="checkout-method-hint" class="checkout-method-chip">${escapeHtml(paymentMethodHint(initialPaymentMethod))}</small>
                     </div>
-                ` : ''}
-                
-                ${paid.length ? `
-                    <div style="font-weight: 700; font-size: 10px; margin-top: 14px; margin-bottom: 6px; color: var(--moss-2); letter-spacing:0.04em; text-transform: uppercase;">Món đã thanh toán trước đó:</div>
-                    <div class="bill-list" style="display: flex; flex-direction: column; max-height: 150px; overflow-y: auto;">
-                        ${paid.map(item => `
-                            <div class="bill-line paid-item" style="display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; background:#f4faf6; padding-left: 8px; border-radius: 4px; margin-bottom: 4px; border-left: 3px solid #28a745;">
-                                <div style="min-width: 0; text-align: left;">
-                                    <strong style="font-family: Georgia, serif; font-size: 12px; color: #1e4620;">${escapeHtml(item.name)} <span style="font-size:8px; background:#d4edda; color:#155724; padding:1px 4px; border-radius:3px; font-weight:600; font-family:var(--font-sans);">Đã trả</span></strong>
-                                    <small style="color: var(--muted); font-size: 9px; display: block; margin-top: 2px;">
-                                        ${money(item.unit_price)} · đã trả ${item.paid_quantity}
-                                    </small>
-                                </div>
-                                <div style="font-size: 12px; color: #155724; font-weight:600; text-align: center; min-width: 40px;">
-                                    × ${item.paid_quantity}
-                                </div>
-                                <b style="font-size: 11px; color: #2e5a32; text-align: right; min-width: 70px; padding-right:8px;">${money(item.unit_price * item.paid_quantity)}</b>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
-            </div>
-
-            <!-- Payment section -->
-            <div class="checkout-payment-section" style="background: #fffdf9; border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                </div>
                 ${paymentMethods.length > 1 || transferMethods.length ? `
                     <div class="checkout-method-tabs" role="tablist" aria-label="Chọn phương thức thanh toán">
                         ${paymentMethods.map((method, index) => `<button type="button" class="${index === 0 ? 'active' : ''}" data-payment-method="${escapeHtml(method.code)}" aria-pressed="${index === 0 ? 'true' : 'false'}">${escapeHtml(method.name)}</button>`).join('')}
                     </div>
                 ` : ''}
-                <div class="checkout-cash-panel" data-payment-panel="cash">
+                <div class="checkout-cash-panel checkout-payment-panel" data-payment-panel="cash">
                     <label style="display: flex; flex-direction: column; gap: 6px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">
                         Tiền khách đưa
                         <input id="cash-received" inputmode="numeric" type="text" autocomplete="off" placeholder="Nhập số tiền..." aria-label="Số tiền khách đưa" style="font-size: 16px; font-weight: 600; height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--white); outline: none; padding: 0 14px; margin-top: 4px; width: 100%; box-sizing: border-box;">
@@ -1626,41 +1605,97 @@ function openCheckout(order, type, paymentSettings = {}) {
                     </div>
                 </div>
                 ${transferMethods.map(method => `
-                    <section class="checkout-qr-panel hidden" data-payment-panel="${escapeHtml(method.code)}">
-	                        <div class="checkout-qr-image"><img src="${escapeHtml(method.qr_image_url)}" alt="Mã QR thanh toán"></div>
-	                        <div class="checkout-qr-copy">
-	                            <strong>${escapeHtml(method.name)}</strong>
-	                            ${paymentQrInfoRows(method).length ? `<dl>${paymentQrInfoRows(method).map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl>` : ''}
-                            ${method.extra_info ? `<p class="checkout-qr-note">${escapeHtml(method.extra_info)}</p>` : ''}
-                        </div>
+                    <section class="checkout-qr-panel checkout-payment-panel hidden" data-payment-panel="${escapeHtml(method.code)}">
+                        <div class="checkout-qr-image"><img src="${escapeHtml(method.qr_image_url)}" alt="Mã QR thanh toán"></div>
+                        ${paymentAccountInfo(method)}
                     </section>
                 `).join('')}
-                
-                <div class="summary-row total" style="display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 14px; padding-top: 12px; font-family: Georgia, serif; font-size: 18px; font-weight: 700;">
-                    <span>Cần thanh toán</span>
-                    <span id="checkout-total" style="color: #785943;">0</span>
-                </div>
-                
-                <div class="summary-row" style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; font-weight: 600;">
+                <div class="summary-row checkout-change-row" style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; font-weight: 600;">
                     <span style="color: var(--muted);">Tiền thừa trả khách</span>
                     <span id="change-due" style="font-weight: 700; color: var(--moss);">0</span>
                 </div>
                 
                 ${releaseHtml}
-            </div>
+            </section>
+            <aside class="modal-order-dock-aside checkout-receipt-aside">
+                <div class="checkout-order-panel">
+                    <div class="order-dock-head">
+                        <div class="order-head-main">
+                            <div class="order-title-block">
+                                <p class="eyebrow">PHIẾU THANH TOÁN</p>
+                                <h2>Đơn hiện tại - ${escapeHtml(resourceLabel)}</h2>
+                            </div>
+                            <div class="order-head-actions">
+                                ${orderBadgeHtml(order)}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-lines checkout-order-lines">
+                        ${unpaid.length ? `
+                            <div class="modal-lines-section-header unpaid-header">MÓN CẦN THANH TOÁN</div>
+                            ${unpaid.map(item => `
+                                <div class="order-line unpaid-item checkout-pay-line" data-bill-row="${item.id}">
+                                    <label class="checkout-pay-check" aria-label="Chọn ${escapeHtml(item.name)} để thanh toán">
+                                        <input type="checkbox" data-pay-check="${item.id}" checked>
+                                        <span aria-hidden="true"></span>
+                                    </label>
+                                    <div class="order-line-title">
+                                        <strong>${escapeHtml(item.name)}</strong>
+                                        <small>${money(item.unit_price)} / món · còn ${number(item.unpaid_quantity)}</small>
+                                        ${item.note ? `<em class="checkout-line-note">${escapeHtml(item.note)}</em>` : ''}
+                                    </div>
+                                    <input type="hidden" data-pay-qty="${item.id}" value="${item.unpaid_quantity}">
+                                    <b id="pay-line-total-${item.id}">${money(item.unit_price * item.unpaid_quantity)}</b>
+                                </div>
+                            `).join('')}
+                        ` : ''}
+                        ${paid.length ? `
+                            <div class="modal-lines-section-header paid-header">MÓN ĐÃ THANH TOÁN</div>
+                            ${paid.map(item => `
+                                <div class="order-line paid-item checkout-paid-line">
+                                    <div class="order-line-title">
+                                        <strong>${escapeHtml(item.name)}</strong>
+                                        <small>${money(item.unit_price)} / món</small>
+                                    </div>
+                                    <div class="order-line-paid-row">
+                                        <span class="order-line-paid-note ${item.note ? '' : 'is-empty'}">${item.note ? escapeHtml(item.note) : ''}</span>
+                                        <div class="quantity"><b>× ${number(item.paid_quantity)}</b></div>
+                                        <b>${money(item.unit_price * item.paid_quantity)}</b>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        ` : ''}
+                    </div>
+                    <div class="order-dock-footer">
+                        <div class="order-total-breakdown" aria-label="Chi tiết thanh toán">
+                            <span>Tạm tính <b>${money(checkoutBillTotal)}</b></span>
+                            ${checkoutPaidTotal > 0 ? `<span class="is-paid">Đã trả <b>${money(checkoutPaidTotal)}</b></span>` : ''}
+                        </div>
+                        <div class="summary-row total" style="display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; font-family: Georgia, serif; font-size: 16px; font-weight: 700;">
+                            <span>Cần thanh toán <small class="order-total-count" id="checkout-selected-count">${orderPaymentItemCountLabel(checkoutUnpaidQuantity, checkoutTotalQuantity)}</small></span>
+                            <strong id="checkout-total">0</strong>
+                        </div>
+                        <div class="order-actions checkout-actions" style="grid-template-columns: 1fr; margin-top: 10px;">
+                            <button class="button primary" id="confirm-checkout">Hoàn tất thanh toán</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
     `;
 
-    openModal({ title:`Thanh toán · ${order.order_number}`, body, footer:`<span class="muted" id="checkout-method-hint">${escapeHtml(paymentMethodHint(initialPaymentMethod))}</span><div><button class="button primary" id="confirm-checkout">Hoàn tất thanh toán</button></div>`, onReady(modal, close) {
+    openModal({ title:`Thanh toán · ${order.order_number}`, body, wide: true, className: 'pos-checkout-modal pos-order-modal', onReady(modal, close) {
         let paymentMethod = initialPaymentMethod;
         const calculate = () => {
             let total = 0;
+            let selectedQuantity = 0;
             let isFullPayment = true;
             unpaid.forEach(item => {
                 const isChecked = $(`[data-pay-check="${item.id}"]`, modal).checked;
                 const qtyVal = Number($(`input[data-pay-qty="${item.id}"]`, modal).value || 0);
                 if (isChecked) {
                     total += Number(item.unit_price) * qtyVal;
+                    selectedQuantity += qtyVal;
                     if (qtyVal < item.unpaid_quantity) {
                         isFullPayment = false;
                     }
@@ -1670,6 +1705,8 @@ function openCheckout(order, type, paymentSettings = {}) {
             });
             $('#checkout-total', modal).textContent = money(total);
             $('#change-due', modal).textContent = paymentMethod !== 'cash' ? money(0) : money(Math.max(0, parseMoneyInput($('#cash-received', modal).value) - total));
+            const selectedCountEl = $('#checkout-selected-count', modal);
+            if (selectedCountEl) selectedCountEl.textContent = orderPaymentItemCountLabel(selectedQuantity, checkoutTotalQuantity);
             
             const releaseEl = $('#checkout-release', modal);
             if (releaseEl) {
@@ -1691,35 +1728,15 @@ function openCheckout(order, type, paymentSettings = {}) {
             return total;
         };
 
-        const updateLineTotal = (itemId, qty) => {
-            const item = unpaid.find(x => x.id === itemId);
-            if (item) {
-                const total = Number(item.unit_price) * qty;
-                $(`#pay-line-total-${itemId}`, modal).textContent = money(total);
-            }
-        };
-
         const handleCheckboxChange = (itemId, isChecked) => {
-            const row = $(`input[data-pay-check="${itemId}"]`, modal).closest('.bill-line');
-            const minusBtn = $(`[data-pay-minus="${itemId}"]`, row);
-            const plusBtn = $(`[data-pay-plus="${itemId}"]`, row);
-            const qtyVal = $(`#pay-qty-val-${itemId}`, row);
+            const row = $(`input[data-pay-check="${itemId}"]`, modal).closest('[data-bill-row]');
             const lineTotal = $(`#pay-line-total-${itemId}`, row);
+            row.classList.toggle('is-unselected', !isChecked);
             
             if (isChecked) {
-                minusBtn.disabled = false;
-                plusBtn.disabled = false;
-                qtyVal.style.opacity = '1';
                 lineTotal.style.opacity = '1';
-                minusBtn.style.opacity = '1';
-                plusBtn.style.opacity = '1';
             } else {
-                minusBtn.disabled = true;
-                plusBtn.disabled = true;
-                qtyVal.style.opacity = '0.4';
                 lineTotal.style.opacity = '0.4';
-                minusBtn.style.opacity = '0.4';
-                plusBtn.style.opacity = '0.4';
             }
         };
 
@@ -1728,39 +1745,6 @@ function openCheckout(order, type, paymentSettings = {}) {
                 const itemId = Number(cb.dataset.payCheck);
                 handleCheckboxChange(itemId, cb.checked);
                 calculate();
-            };
-        });
-
-        modal.querySelectorAll('[data-pay-minus]').forEach(btn => {
-            btn.onclick = () => {
-                const itemId = Number(btn.dataset.payMinus);
-                const input = $(`input[data-pay-qty="${itemId}"]`, modal);
-                const span = $(`#pay-qty-val-${itemId}`, modal);
-                const currentVal = Number(input.value);
-                if (currentVal > 1) {
-                    const newVal = currentVal - 1;
-                    input.value = newVal;
-                    span.textContent = newVal;
-                    updateLineTotal(itemId, newVal);
-                    calculate();
-                }
-            };
-        });
-
-        modal.querySelectorAll('[data-pay-plus]').forEach(btn => {
-            btn.onclick = () => {
-                const itemId = Number(btn.dataset.payPlus);
-                const item = unpaid.find(x => x.id === itemId);
-                const input = $(`input[data-pay-qty="${itemId}"]`, modal);
-                const span = $(`#pay-qty-val-${itemId}`, modal);
-                const currentVal = Number(input.value);
-                if (currentVal < item.unpaid_quantity) {
-                    const newVal = currentVal + 1;
-                    input.value = newVal;
-                    span.textContent = newVal;
-                    updateLineTotal(itemId, newVal);
-                    calculate();
-                }
             };
         });
 
@@ -2081,8 +2065,8 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                     unpaidHtmls.push(`
                         <div class="order-line unpaid-item session-item" style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line);">
                             <div>
-                                <strong style="font-family: Georgia, serif; font-size: 13px;">${fishingSessionNameHtml(sessionItem?.name || 'Phiên câu 4 giờ', fishTakeawayChecked)}</strong>
-                                <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">${money(sessionPrice)} / phiên</small>
+                                <strong style="font-family: Georgia, serif; font-size: 13px;">${fishingSessionNameHtml(sessionItem?.name || 'Phiên câu 4 giờ')}</strong>
+                                ${fishingSessionMetaHtml(sessionPrice, fishTakeawayChecked)}
                             </div>
                             <div class="quantity session-quantity"><b>× ${mainSessionUnpaid}</b></div>
                             ${fishingSessionLineTotalHtml(sessionPrice, mainSessionUnpaid, fishTakeawayChecked, takeawaySessionPrice)}
@@ -2093,8 +2077,8 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                     paidHtmls.push(`
                         <div class="order-line paid-item session-item" style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); background: #f4faf6; border-left: 3px solid #28a745; padding-left: 8px; border-radius: 4px;">
                             <div>
-                                <strong style="font-family: Georgia, serif; font-size: 13px; color: #1e4620;">${fishingSessionNameHtml(sessionItem?.name || 'Phiên câu 4 giờ', fishTakeawayChecked, true)}</strong>
-                                <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">${money(sessionPrice)} / phiên</small>
+                                <strong style="font-family: Georgia, serif; font-size: 13px; color: #1e4620;">${fishingSessionNameHtml(sessionItem?.name || 'Phiên câu 4 giờ')}</strong>
+                                ${fishingSessionMetaHtml(sessionPrice, fishTakeawayChecked, true)}
                             </div>
                             <div class="quantity session-quantity"><b>× ${mainSessionPaid}</b></div>
                             ${fishingSessionLineTotalHtml(sessionPrice, mainSessionPaid, fishTakeawayChecked, takeawaySessionPrice, '#2e5a32')}
@@ -2245,8 +2229,8 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                         </div>
                         <div class="order-session-card" aria-label="Thông tin phiên câu">
                             <span class="order-session-metrics">
-                                <span><small>Bắt đầu</small><strong>${dateTime(session.started_at)}</strong></span>
-                                <span><small>Kết thúc</small><strong>${dateTime(session.ends_at)}</strong></span>
+                                <span><small>Bắt đầu</small><strong>${fishingSessionMetricDateTime(session.started_at)}</strong></span>
+                                <span><small>Kết thúc</small><strong>${fishingSessionMetricDateTime(session.ends_at)}</strong></span>
                                 <span><small>Số phiên</small><strong>${number(sessionQty)} phiên</strong></span>
                             </span>
                             <label class="fish-takeaway-toggle ${fishTakeawayLocked ? 'is-locked' : ''}" for="fish-takeaway-toggle">
