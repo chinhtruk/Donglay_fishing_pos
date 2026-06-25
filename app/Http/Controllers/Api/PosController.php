@@ -170,10 +170,9 @@ class PosController extends Controller
                 'completed_today' => Order::query()->forCurrentPosOperationalDay()->where('service_type', 'fishing')->where('status', 'paid')->whereNotNull('completed_at')->count(),
             ],
             'session_price' => number_format((float) config('fishing.session_price'), 2, '.', ''),
+            'session_without_fish_price' => number_format((float) config('fishing.session_without_fish_price'), 2, '.', ''),
             'session_minutes' => config('fishing.session_minutes'),
             'hourly_extension_price' => number_format((float) config('fishing.hourly_extension_price'), 2, '.', ''),
-            'fish_takeaway_fee' => number_format((float) config('fishing.fish_takeaway_fee'), 2, '.', ''),
-            'fish_takeaway_label' => config('fishing.fish_takeaway_label'),
             'menu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
             'payment_settings' => $this->paymentSettingsPayload(),
         ]);
@@ -221,10 +220,10 @@ class PosController extends Controller
 
         $order = $service->toggleFishTakeaway($order, $data['version'], (bool) $data['enabled']);
         $message = $data['enabled']
-            ? 'Đã thêm phí lấy cá vào hóa đơn.'
-            : 'Đã bỏ phí lấy cá khỏi hóa đơn.';
+            ? 'Đã áp dụng giá phiên câu có lấy cá.'
+            : 'Đã áp dụng giá phiên câu không lấy cá.';
         $this->notifyOrderEvent(
-            'Cập nhật phí lấy cá',
+            'Cập nhật giá phiên câu',
             "{$this->resourceLabel($order)} vừa cập nhật tùy chọn lấy cá mang về.",
             $order,
             'fishing_order_updated'

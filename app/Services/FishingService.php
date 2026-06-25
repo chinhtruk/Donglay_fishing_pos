@@ -208,38 +208,34 @@ class FishingService
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
 
-            $fee = (float) config('fishing.fish_takeaway_fee', 200000);
-            $label = (string) config('fishing.fish_takeaway_label', 'Phí lấy cá');
-            $item = $order->items()
+            $takeawayPrice = (float) config('fishing.session_price', 200000);
+            $withoutFishPrice = (float) config('fishing.session_without_fish_price', 150000);
+            $sessionPrice = $enabled ? $takeawayPrice : $withoutFishPrice;
+
+            $sessionItem = $order->items()
+                ->where('line_type', 'fishing_session')
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ((int) $sessionItem->paid_quantity > 0 && (float) $sessionItem->unit_price !== $sessionPrice) {
+                throw ValidationException::withMessages(['fish_takeaway' => 'Phiên câu đã thanh toán nên không thể đổi tùy chọn lấy cá.']);
+            }
+
+            $legacyFeeItems = $order->items()
                 ->where('line_type', self::FISH_TAKEAWAY_LINE_TYPE)
                 ->lockForUpdate()
-                ->first();
-
-            if ($enabled) {
-                if ($item) {
-                    if ((int) $item->paid_quantity === 0) {
-                        $item->update([
-                            'name_snapshot' => $label,
-                            'unit_price' => $fee,
-                            'quantity' => max(1, (int) $item->quantity),
-                            'ordered_at' => now(),
-                        ]);
-                    }
-                } else {
-                    $order->items()->create([
-                        'line_type' => self::FISH_TAKEAWAY_LINE_TYPE,
-                        'name_snapshot' => $label,
-                        'unit_price' => $fee,
-                        'quantity' => 1,
-                        'ordered_at' => now(),
-                    ]);
+                ->get();
+            foreach ($legacyFeeItems as $legacyFeeItem) {
+                if ((int) $legacyFeeItem->paid_quantity > 0) {
+                    throw ValidationException::withMessages(['fish_takeaway' => 'Hóa đơn đã có phí lấy cá được thanh toán, không thể đổi tùy chọn này.']);
                 }
-            } elseif ($item) {
-                if ((int) $item->paid_quantity > 0) {
-                    throw ValidationException::withMessages(['fish_takeaway' => 'Phí lấy cá đã thanh toán nên không thể bỏ khỏi hóa đơn.']);
-                }
-                $item->delete();
+                $legacyFeeItem->delete();
             }
+
+            $sessionItem->update([
+                'unit_price' => $sessionPrice,
+                'ordered_at' => now(),
+            ]);
 
             $hasUnpaid = $order->items()->whereColumn('paid_quantity', '<', 'quantity')->exists();
             $hasPaid = $order->items()->where('paid_quantity', '>', 0)->exists();

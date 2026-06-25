@@ -450,6 +450,30 @@ function orderLineTotalHtml(line, quantity, menuItems) {
     return `<b style="align-self: center; font-size: 10px; color: #785943; text-align:right;">${text}</b>`;
 }
 
+function fishingSessionNameHtml(name, hasFishTakeaway, paid = false) {
+    const fishLabel = hasFishTakeaway ? 'có lấy cá' : 'không lấy cá';
+    const paidChip = paid ? ' <span class="paid-status-chip">✓ Đã trả</span>' : '';
+
+    return `${escapeHtml(name)} <span class="session-fish-note">(${fishLabel})</span>${paidChip}`;
+}
+
+function fishingSessionLineTotalHtml(unitPrice, quantity, hasFishTakeaway, standardPrice, color = '#785943') {
+    const qty = Number(quantity || 0);
+    const currentTotal = Number(unitPrice) * qty;
+    const standardTotal = Number(standardPrice || unitPrice) * qty;
+
+    if (!hasFishTakeaway && standardTotal > currentTotal) {
+        return `<b class="session-price-stack is-adjusted" style="align-self: center; color: ${color}; text-align:right;">
+            <span class="session-price-original">${money(standardTotal)}</span>
+            <span class="session-price-current">${money(currentTotal)}</span>
+        </b>`;
+    }
+
+    return `<b class="session-price-stack" style="align-self: center; color: ${color}; text-align:right;">
+        <span class="session-price-current">${money(currentTotal)}</span>
+    </b>`;
+}
+
 function orderShortCode(order) {
     return order ? `#${escapeHtml(order.order_number.split('-').slice(-1)[0])}` : 'Đơn mới';
 }
@@ -985,7 +1009,15 @@ async function renderCoffee() {
     const openOrderModal = (tableId, order) => {
         let currentOrder = order;
         let selectedTableId = order ? (order.resource?.id || null) : tableId;
-        let cart = order ? new Cart(order.items.filter(item => item.menu_item_id).map(item => ({ menu_item_id:item.menu_item_id, name:item.name, price:Number(item.unit_price), quantity:item.quantity, note:item.note || '' }))) : new Cart();
+        const makeCoffeeCartFromOrder = order => new Cart(order.items.filter(item => item.menu_item_id).map(item => ({ menu_item_id:item.menu_item_id, name:item.name, price:Number(item.unit_price), quantity:item.quantity, note:item.note || '' })));
+        let cart = order ? makeCoffeeCartFromOrder(order) : new Cart();
+        const refreshCurrentCoffeeOrder = async ({ syncCart = false } = {}) => {
+            if (!currentOrder) return null;
+            const result = await api(`/api/v1/orders/${currentOrder.id}`);
+            currentOrder = result.order;
+            if (syncCart) cart = makeCoffeeCartFromOrder(currentOrder);
+            return currentOrder;
+        };
         let activeCategory = 'Tất cả';
 
         const modalBody = `
@@ -1192,10 +1224,17 @@ async function renderCoffee() {
                     if (releaseBtn) {
                         releaseBtn.onclick = async () => {
                             try {
-                                await api(`/api/v1/coffee/orders/${currentOrder.id}/release`, {
+                                const releaseTable = () => api(`/api/v1/coffee/orders/${currentOrder.id}/release`, {
                                     method: 'POST',
                                     body: { version: currentOrder.version }
                                 });
+                                try {
+                                    await releaseTable();
+                                } catch (error) {
+                                    if (error.status !== 409) throw error;
+                                    await refreshCurrentCoffeeOrder();
+                                    await releaseTable();
+                                }
                                 toast('Đã giải phóng bàn thành công.');
                                 closeModal();
                                 await renderCoffee();
@@ -1221,16 +1260,28 @@ async function renderCoffee() {
                 const persistOrder = async () => {
                     if (!cart.values().length) throw new Error('Bạn chọn ít nhất một món để mở đơn nhé.');
                     if (hasMissingVariablePrice(cart, data.menu)) throw new Error('Bạn nhập giá cho món giá biến động trước khi lưu đơn nhé.');
-                    let orderObj = currentOrder;
-                    if (!orderObj) {
-                        const path = selectedTableId ? `/api/v1/coffee/tables/${selectedTableId}/orders` : '/api/v1/coffee/orders';
-                        return (await api(path, { method:'POST', body:{ items:cart.payload() } })).order;
+                    const submit = async () => {
+                        let orderObj = currentOrder;
+                        if (!orderObj) {
+                            const path = selectedTableId ? `/api/v1/coffee/tables/${selectedTableId}/orders` : '/api/v1/coffee/orders';
+                            currentOrder = (await api(path, { method:'POST', body:{ items:cart.payload() } })).order;
+                            return currentOrder;
+                        }
+                        const assignedId = orderObj.resource?.id || null;
+                        if (assignedId !== selectedTableId) {
+                            orderObj = (await api(`/api/v1/coffee/orders/${orderObj.id}/table`, { method:'PUT', body:{ version:orderObj.version, coffee_table_id:selectedTableId } })).order;
+                        }
+                        currentOrder = (await api(`/api/v1/coffee/orders/${orderObj.id}`, { method:'PUT', body:{ version:orderObj.version, items:cart.payload() } })).order;
+                        return currentOrder;
+                    };
+
+                    try {
+                        return await submit();
+                    } catch (error) {
+                        if (error.status !== 409 || !currentOrder) throw error;
+                        await refreshCurrentCoffeeOrder();
+                        return submit();
                     }
-                    const assignedId = orderObj.resource?.id || null;
-                    if (assignedId !== selectedTableId) {
-                        orderObj = (await api(`/api/v1/coffee/orders/${orderObj.id}/table`, { method:'PUT', body:{ version:orderObj.version, coffee_table_id:selectedTableId } })).order;
-                    }
-                    return (await api(`/api/v1/coffee/orders/${orderObj.id}`, { method:'PUT', body:{ version:orderObj.version, items:cart.payload() } })).order;
                 };
 
                 modal.querySelectorAll('[data-modal-product]').forEach(button => button.onclick = async () => {
@@ -1367,11 +1418,24 @@ async function renderCoffee() {
                     subModal.querySelector('#btn-bulk-merge-confirm').textContent = 'Đang gộp…';
 
                     try {
-                        for (const sourceOrder of sourceOrders) {
-                            await api(`/api/v1/coffee/orders/${sourceOrder.id}/merge`, {
+                        const mergeSourceOrder = async sourceOrder => {
+                            const fetchLatestOrder = async () => (await api(`/api/v1/orders/${sourceOrder.id}`)).order;
+                            const mergeOrder = orderToMerge => api(`/api/v1/coffee/orders/${orderToMerge.id}/merge`, {
                                 method: 'POST',
-                                body: { version: sourceOrder.version, target_table_id: targetTableId }
+                                body: { version: orderToMerge.version, target_table_id: targetTableId }
                             });
+                            let latestOrder = await fetchLatestOrder();
+                            try {
+                                await mergeOrder(latestOrder);
+                            } catch (error) {
+                                if (error.status !== 409) throw error;
+                                latestOrder = await fetchLatestOrder();
+                                await mergeOrder(latestOrder);
+                            }
+                        };
+
+                        for (const sourceOrder of sourceOrders) {
+                            await mergeSourceOrder(sourceOrder);
                         }
                         toast('Đã gộp hóa đơn thành công.');
                         subClose();
@@ -1753,11 +1817,20 @@ function openCheckout(order, type, paymentSettings = {}) {
                 close();
                 renderPage(type);
             } catch(error) {
-                toast(error.message, 'error');
                 if (error.status === 409) {
-                    close();
-                    renderPage(type);
+                    try {
+                        const latestOrder = (await api(`/api/v1/orders/${order.id}`)).order;
+                        toast('Hóa đơn vừa được làm mới. Bạn kiểm tra lại rồi xác nhận thanh toán nhé.', 'info');
+                        close();
+                        openCheckout(latestOrder, type, paymentSettings);
+                    } catch {
+                        toast(error.message, 'error');
+                        close();
+                        renderPage(type);
+                    }
+                    return;
                 }
+                toast(error.message, 'error');
             }
         };
     }});
@@ -1907,23 +1980,30 @@ async function renderFishing() {
 }
 
 async function openFishing(spot, menu, fishingConfig = {}) {
+    const takeawaySessionPrice = Number(fishingConfig.session_price || 200000);
+    const withoutFishSessionPrice = Number(fishingConfig.session_without_fish_price || 150000);
+
     if (!spot.order) {
-        if (!await confirmModal(`Bắt đầu · ${escapeHtml(spot.label)}`, `Mở phiên câu 4 giờ với giá ${money(200000)}? Đồng hồ sẽ bắt đầu ngay sau khi xác nhận.`, 'Bắt đầu phiên')) return;
+        if (!await confirmModal(`Bắt đầu · ${escapeHtml(spot.label)}`, `Mở phiên câu 4 giờ với giá ${money(takeawaySessionPrice)}? Đồng hồ sẽ bắt đầu ngay sau khi xác nhận.`, 'Bắt đầu phiên')) return;
         try { const result = await api(`/api/v1/fishing/spots/${spot.id}/start`, { method:'POST' }); toast(result.message); renderFishing(); } catch(error) { toast(error.message, 'error'); }
         return;
     }
 
     let currentOrder = spot.order;
-    const session = currentOrder.fishing_session;
+    const initialSession = currentOrder.fishing_session;
     const sessionDefaults = currentOrder.items.find(item => item.line_type === 'fishing_session');
     const configuredSessionMinutes = Number(fishingConfig.session_minutes || 240);
-    const configuredSessionPrice = Number(fishingConfig.session_price || sessionDefaults?.unit_price || 200000);
-    const fishTakeawayLineType = 'fish_takeaway_fee';
-    const fishTakeawayPrice = Number(fishingConfig.fish_takeaway_fee || 200000);
-    const fishTakeawayLabel = fishingConfig.fish_takeaway_label || 'Phí lấy cá';
+    const configuredSessionPrice = Number(fishingConfig.session_price || sessionDefaults?.unit_price || takeawaySessionPrice);
     const paymentSettings = fishingConfig.payment_settings || {};
     const availableSpots = Array.isArray(fishingConfig.spots) ? fishingConfig.spots : [];
-    let cart = new Cart(currentOrder.items.filter(item => item.menu_item_id).map(item => ({ menu_item_id:item.menu_item_id, name:item.name, price:Number(item.unit_price), quantity:item.quantity, note:item.note || '' })));
+    const makeFishingCartFromOrder = order => new Cart(order.items.filter(item => item.menu_item_id).map(item => ({ menu_item_id:item.menu_item_id, name:item.name, price:Number(item.unit_price), quantity:item.quantity, note:item.note || '' })));
+    let cart = makeFishingCartFromOrder(currentOrder);
+    const refreshCurrentFishingOrder = async ({ syncCart = false } = {}) => {
+        const result = await api(`/api/v1/orders/${currentOrder.id}`);
+        currentOrder = result.order;
+        if (syncCart) cart = makeFishingCartFromOrder(currentOrder);
+        return currentOrder;
+    };
     let activeCategory = 'Tất cả';
     const orderedMenu = orderedPosMenu(menu);
     const categories = posMenuCategories(orderedMenu);
@@ -1964,36 +2044,31 @@ async function openFishing(spot, menu, fishingConfig = {}) {
     `;
 
     openModal({
-        title: `${escapeHtml(spot.label)} · ${session.status === 'expired' ? 'Đã hết giờ' : 'Đang câu'}`,
+        title: `${escapeHtml(spot.label)} · ${initialSession.status === 'expired' ? 'Đã hết giờ' : 'Đang câu'}`,
         body: modalBody,
         wide: true,
         onReady(modal, closeModal) {
             const renderModalBill = () => {
                 const panel = modal.querySelector('#modal-order-panel');
                 const lines = cart.values();
+                const session = currentOrder.fishing_session;
                 
                 const sessionItem = currentOrder.items.find(item => item.line_type === 'fishing_session');
-                const sessionPrice = sessionItem ? Number(sessionItem.unit_price) : 200000;
+                const sessionPrice = sessionItem ? Number(sessionItem.unit_price) : takeawaySessionPrice;
                 const sessionQty = sessionItem ? Number(sessionItem.quantity) : Number(session.blocks_count);
                 const mainSessionTotal = sessionPrice * sessionQty;
                 const mainSessionPaid = sessionItem ? Number(sessionItem.paid_quantity) : 0;
                 const mainSessionUnpaid = sessionQty - mainSessionPaid;
+                const fishTakeawayChecked = sessionPrice !== withoutFishSessionPrice;
+                const fishTakeawayLocked = mainSessionPaid > 0;
 
                 const mergedSessionItems = currentOrder.items.filter(item => item.line_type === 'merged_session');
                 const mergedSessionsTotal = mergedSessionItems.reduce((sum, item) => sum + Number(item.unit_price) * Number(item.quantity), 0);
                 const hourlyExtensionItems = currentOrder.items.filter(item => item.line_type === 'hourly_extension');
                 const hourlyExtensionTotal = hourlyExtensionItems.reduce((sum, item) => sum + Number(item.unit_price) * Number(item.quantity), 0);
-                const fishTakeawayItem = currentOrder.items.find(item => item.line_type === fishTakeawayLineType);
-                const fishTakeawayQty = fishTakeawayItem ? Number(fishTakeawayItem.quantity) || 0 : 0;
-                const fishTakeawayPaidQty = fishTakeawayItem ? Number(fishTakeawayItem.paid_quantity) || 0 : 0;
-                const fishTakeawayUnpaidQty = Math.max(0, fishTakeawayQty - fishTakeawayPaidQty);
-                const fishTakeawayUnitPrice = fishTakeawayItem ? Number(fishTakeawayItem.unit_price) : fishTakeawayPrice;
-                const fishTakeawayTotal = fishTakeawayItem ? fishTakeawayUnitPrice * fishTakeawayQty : 0;
-                const fishTakeawayChecked = !!fishTakeawayItem;
-                const fishTakeawayLocked = fishTakeawayPaidQty > 0;
 
                 const sessionTotal = mainSessionTotal + mergedSessionsTotal + hourlyExtensionTotal;
-                const totalBill = sessionTotal + fishTakeawayTotal + cart.total();
+                const totalBill = sessionTotal + cart.total();
                 const totalPaid = orderCompletedPaymentTotal(currentOrder);
                 let unpaidItemCount = Math.max(0, mainSessionUnpaid);
                 let totalItemCount = sessionQty;
@@ -2005,11 +2080,11 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                     unpaidHtmls.push(`
                         <div class="order-line unpaid-item session-item" style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line);">
                             <div>
-                                <strong style="font-family: Georgia, serif; font-size: 13px;">${escapeHtml(sessionItem?.name || 'Phiên câu 4 giờ')}</strong>
+                                <strong style="font-family: Georgia, serif; font-size: 13px;">${fishingSessionNameHtml(sessionItem?.name || 'Phiên câu 4 giờ', fishTakeawayChecked)}</strong>
                                 <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">${money(sessionPrice)} / phiên</small>
                             </div>
                             <div class="quantity session-quantity"><b>× ${mainSessionUnpaid}</b></div>
-                            <b style="align-self: center; font-size: 10px; color: #785943; text-align:right;">${money(sessionPrice * mainSessionUnpaid)}</b>
+                            ${fishingSessionLineTotalHtml(sessionPrice, mainSessionUnpaid, fishTakeawayChecked, takeawaySessionPrice)}
                         </div>
                     `);
                 }
@@ -2017,11 +2092,11 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                     paidHtmls.push(`
                         <div class="order-line paid-item session-item" style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); background: #f4faf6; border-left: 3px solid #28a745; padding-left: 8px; border-radius: 4px;">
                             <div>
-                                <strong style="font-family: Georgia, serif; font-size: 13px; color: #1e4620;">${escapeHtml(sessionItem?.name || 'Phiên câu 4 giờ')} <span style="font-size:9px; background:#d4edda; color:#155724; padding:2px 6px; border-radius:4px; margin-left:4px; font-family:var(--font-sans); font-weight:600;">✓ Đã trả</span></strong>
+                                <strong style="font-family: Georgia, serif; font-size: 13px; color: #1e4620;">${fishingSessionNameHtml(sessionItem?.name || 'Phiên câu 4 giờ', fishTakeawayChecked, true)}</strong>
                                 <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">${money(sessionPrice)} / phiên</small>
                             </div>
                             <div class="quantity session-quantity"><b>× ${mainSessionPaid}</b></div>
-                            <b style="align-self: center; font-size: 10px; color: #2e5a32; text-align:right;">${money(sessionPrice * mainSessionPaid)}</b>
+                            ${fishingSessionLineTotalHtml(sessionPrice, mainSessionPaid, fishTakeawayChecked, takeawaySessionPrice, '#2e5a32')}
                         </div>
                     `);
                 }
@@ -2087,35 +2162,6 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                         `);
                     }
                 });
-
-                if (fishTakeawayItem) {
-                    totalItemCount += fishTakeawayQty;
-                    unpaidItemCount += fishTakeawayUnpaidQty;
-                    if (fishTakeawayUnpaidQty > 0) {
-                        unpaidHtmls.push(`
-                            <div class="order-line unpaid-item session-item fish-takeaway-line" style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line);">
-                                <div>
-                                    <strong style="font-family: Georgia, serif; font-size: 13px;">${escapeHtml(fishTakeawayItem.name || fishTakeawayLabel)}</strong>
-                                    <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">Dịch vụ lấy cá mang về</small>
-                                </div>
-                                <div class="quantity session-quantity"><b>× ${fishTakeawayUnpaidQty}</b></div>
-                                <b style="align-self: center; font-size: 10px; color: #785943; text-align:right;">${money(fishTakeawayUnitPrice * fishTakeawayUnpaidQty)}</b>
-                            </div>
-                        `);
-                    }
-                    if (fishTakeawayPaidQty > 0) {
-                        paidHtmls.push(`
-                            <div class="order-line paid-item session-item fish-takeaway-line" style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); background: #f4faf6; border-left: 3px solid #28a745; padding-left: 8px; border-radius: 4px;">
-                                <div>
-                                    <strong style="font-family: Georgia, serif; font-size: 13px; color: #1e4620;">${escapeHtml(fishTakeawayItem.name || fishTakeawayLabel)} <span style="font-size:9px; background:#d4edda; color:#155724; padding:2px 6px; border-radius:4px; margin-left:4px; font-family:var(--font-sans); font-weight:600;">✓ Đã trả</span></strong>
-                                    <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">Dịch vụ lấy cá mang về</small>
-                                </div>
-                                <div class="quantity session-quantity"><b>× ${fishTakeawayPaidQty}</b></div>
-                                <b style="align-self: center; font-size: 10px; color: #2e5a32; text-align:right;">${money(fishTakeawayUnitPrice * fishTakeawayPaidQty)}</b>
-                            </div>
-                        `);
-                    }
-                }
 
                 lines.forEach(line => {
                     const paidQty = paidQuantityForLine(currentOrder, line.menu_item_id, line.price);
@@ -2207,9 +2253,9 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                                 <span class="fish-takeaway-switch" aria-hidden="true"></span>
                                 <span class="fish-takeaway-copy">
                                     <strong>Khách lấy cá mang về</strong>
-                                    <small>${fishTakeawayLocked ? 'Đã thanh toán nên không thể bỏ khỏi hóa đơn' : 'Cộng phí đóng/lấy cá sau khi câu'}</small>
+                                    <small>${fishTakeawayLocked ? 'Phiên câu đã thanh toán nên không thể đổi' : fishTakeawayChecked ? `Giữ giá phiên câu ${money(takeawaySessionPrice)}` : `Không lấy cá, phiên câu còn ${money(withoutFishSessionPrice)}`}</small>
                                 </span>
-                                <b>${money(fishTakeawayUnitPrice)}</b>
+                                <b>${money(sessionPrice)}</b>
                             </label>
                         </div>
                     </div>
@@ -2222,7 +2268,6 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                         <div class="order-total-breakdown" aria-label="Chi tiết tạm tính">
                             <span>Nước <b>${money(cart.total())}</b></span>
                             <span>Giờ câu <b>${money(sessionTotal)}</b></span>
-                            ${fishTakeawayItem ? `<span>Lấy cá <b>${money(fishTakeawayTotal)}</b></span>` : ''}
                         </div>
                         ${totalPaid > 0 ? `
                         <div class="summary-row" style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 10px; color: var(--moss);">
@@ -2263,15 +2308,21 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                 const fishTakeawayToggle = modal.querySelector('#fish-takeaway-toggle');
                 if (fishTakeawayToggle) {
                     fishTakeawayToggle.onchange = async () => {
+                        const enabled = fishTakeawayToggle.checked;
                         fishTakeawayToggle.disabled = true;
                         try {
-                            const result = await api(`/api/v1/fishing/orders/${currentOrder.id}/fish-takeaway`, {
+                            const updateTakeaway = () => api(`/api/v1/fishing/orders/${currentOrder.id}/fish-takeaway`, {
                                 method: 'POST',
-                                body: {
-                                    version: currentOrder.version,
-                                    enabled: fishTakeawayToggle.checked,
-                                },
+                                body: { version: currentOrder.version, enabled },
                             });
+                            let result;
+                            try {
+                                result = await updateTakeaway();
+                            } catch (error) {
+                                if (error.status !== 409) throw error;
+                                await refreshCurrentFishingOrder();
+                                result = await updateTakeaway();
+                            }
                             currentOrder = result.order;
                             toast(result.message);
                             renderModalBill();

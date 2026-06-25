@@ -16748,6 +16748,15 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
     line-height: 1.1 !important;
 }
 
+#modal-root .pos-order-modal .order-line.session-item .session-fish-note {
+    display: inline !important;
+    color: var(--muted) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+
 #modal-root .pos-order-modal .order-line.session-item>div:first-child small {
     margin-top: 3px !important;
     font-size: 10px !important;
@@ -16771,7 +16780,30 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
     font-size: 12.5px !important;
 }
 
-#modal-root .pos-order-modal .order-line.paid-item.session-item>div:first-child strong span {
+#modal-root .pos-order-modal .order-line.session-item>.session-price-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    line-height: 1.05 !important;
+}
+
+#modal-root .pos-order-modal .order-line.session-item>.session-price-stack .session-price-original {
+    color: var(--muted) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-decoration: line-through !important;
+    text-decoration-thickness: 1.5px !important;
+}
+
+#modal-root .pos-order-modal .order-line.session-item>.session-price-stack .session-price-current {
+    color: inherit !important;
+    font-size: 12.5px !important;
+    font-weight: 850 !important;
+}
+
+#modal-root .pos-order-modal .order-line.paid-item.session-item>div:first-child strong .paid-status-chip {
     display: none !important;
 }
 
