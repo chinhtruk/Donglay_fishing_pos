@@ -451,10 +451,11 @@ function orderLineTotalHtml(line, quantity, menuItems) {
 }
 
 function fishingSessionNameHtml(name, hasFishTakeaway, paid = false) {
-    const fishLabel = hasFishTakeaway ? 'có lấy cá' : 'không lấy cá';
+    const fishLabel = hasFishTakeaway ? 'Có lấy cá' : 'Không lấy cá';
+    const fishClass = hasFishTakeaway ? 'has-fish' : 'no-fish';
     const paidChip = paid ? ' <span class="paid-status-chip">✓ Đã trả</span>' : '';
 
-    return `${escapeHtml(name)} <span class="session-fish-note">(${fishLabel})</span>${paidChip}`;
+    return `${escapeHtml(name)} <span class="session-fish-note ${fishClass}">${fishLabel}</span>${paidChip}`;
 }
 
 function fishingSessionLineTotalHtml(unitPrice, quantity, hasFishTakeaway, standardPrice, color = '#785943') {
@@ -1158,10 +1159,10 @@ async function renderCoffee() {
                             ${linesHtml}
                         </div>
                         <div class="order-dock-footer" style="padding: 13px 14px 14px; border-top: 1px solid var(--line); background: #fff;">
-                            <div class="order-total-breakdown" aria-label="Chi tiết tạm tính">
-                                <span>Tạm tính <b>${money(cart.total())}</b></span>
-                                ${totalPaid > 0 ? `<span>Đã trả <b>${money(totalPaid)}</b></span>` : ''}
-                            </div>
+	                            <div class="order-total-breakdown" aria-label="Chi tiết tạm tính">
+	                                <span>Tạm tính <b>${money(cart.total())}</b></span>
+	                                ${totalPaid > 0 ? `<span class="is-paid">Đã trả <b>${money(totalPaid)}</b></span>` : ''}
+	                            </div>
                             <div class="summary-row total" style="display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; font-family: Georgia, serif; font-size: 16px; font-weight: 700;">
                                 <span>${totalPaid > 0 ? 'Còn lại cần trả' : 'Khách cần trả'} <small class="order-total-count">${paymentCountLabel}</small></span>
                                 <strong>${money(remainingDue)}</strong>
@@ -2265,17 +2266,12 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                     </div>
                     
                     <div class="order-dock-footer" style="padding: 13px 14px 14px; border-top: 1px solid var(--line); background: #fff;">
-                        <div class="order-total-breakdown" aria-label="Chi tiết tạm tính">
-                            <span>Nước <b>${money(cart.total())}</b></span>
-                            <span>Giờ câu <b>${money(sessionTotal)}</b></span>
-                        </div>
-                        ${totalPaid > 0 ? `
-                        <div class="summary-row" style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 10px; color: var(--moss);">
-                            <span>Đã trả trước</span>
-                            <strong>${money(totalPaid)}</strong>
-                        </div>
-                        ` : ''}
-                        <div class="summary-row total" style="display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; font-family: Georgia, serif; font-size: 16px; font-weight: 700;">
+	                        <div class="order-total-breakdown" aria-label="Chi tiết tạm tính">
+	                            <span>Nước <b>${money(cart.total())}</b></span>
+	                            <span>Giờ câu <b>${money(sessionTotal)}</b></span>
+	                            ${totalPaid > 0 ? `<span class="is-paid">Đã trả <b>${money(totalPaid)}</b></span>` : ''}
+	                        </div>
+	                        <div class="summary-row total" style="display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; font-family: Georgia, serif; font-size: 16px; font-weight: 700;">
                             <span>${totalPaid > 0 ? 'Còn lại cần trả' : 'Khách cần trả'} <small class="order-total-count">${paymentCountLabel}</small></span>
                             <strong>${money(Math.max(0, totalBill - totalPaid))}</strong>
                         </div>
