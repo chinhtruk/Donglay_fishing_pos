@@ -3,6 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Pos\AssignCoffeeTableRequest;
+use App\Http\Requests\Api\Pos\CheckoutOrderRequest;
+use App\Http\Requests\Api\Pos\CreateCoffeeOrderRequest;
+use App\Http\Requests\Api\Pos\ExtendFishingSessionRequest;
+use App\Http\Requests\Api\Pos\MergeCoffeeOrderRequest;
+use App\Http\Requests\Api\Pos\MergeFishingOrderRequest;
+use App\Http\Requests\Api\Pos\ReleaseOrderRequest;
+use App\Http\Requests\Api\Pos\StartFishingSessionRequest;
+use App\Http\Requests\Api\Pos\ToggleFishTakeawayRequest;
+use App\Http\Requests\Api\Pos\UpdateCoffeeOrderRequest;
+use App\Http\Requests\Api\Pos\UpdateFishingOrderRequest;
 use App\Models\CoffeeTable;
 use App\Models\FishingSpot;
 use App\Models\MenuItem;
@@ -14,14 +25,18 @@ use App\Services\CoffeeOrderService;
 use App\Services\FishingSessionExpirationNotifier;
 use App\Services\FishingService;
 use App\Services\OrderPresenter;
+use App\Services\PosNotificationMessageFactory;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class PosController extends Controller
 {
+    public function __construct(private readonly PosNotificationMessageFactory $notificationMessages)
+    {
+    }
+
     public function coffeeMap(): JsonResponse
     {
         $tables = CoffeeTable::orderBy('id')->get()->map(function ($table) {
@@ -54,51 +69,31 @@ class PosController extends Controller
         ]);
     }
 
-    public function createCoffee(Request $request, CoffeeTable $coffeeTable, CoffeeOrderService $service): JsonResponse
+    public function createCoffee(CreateCoffeeOrderRequest $request, CoffeeTable $coffeeTable, CoffeeOrderService $service): JsonResponse
     {
-        $data = $request->validate([
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.menu_item_id' => ['required', 'integer'],
-            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
-            'items.*.unit_price' => ['sometimes', 'numeric', 'min:0'],
-            'items.*.note' => ['nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validated();
         $order = $service->create($coffeeTable, $request->user(), $data['items']);
-        $this->notifyOrderEvent('Đơn cà phê mới', "{$coffeeTable->label} vừa gọi {$this->itemCountText($order)}.", $order, 'coffee_order_created');
+        $this->notifyOrderEvent($this->notificationMessages->coffeeCreated($order, $coffeeTable), $order);
 
         return response()->json(['message' => 'Đơn đã được gửi thật gọn gàng.', 'order' => OrderPresenter::make($order)], 201);
     }
 
-    public function createCounterCoffee(Request $request, CoffeeOrderService $service): JsonResponse
+    public function createCounterCoffee(CreateCoffeeOrderRequest $request, CoffeeOrderService $service): JsonResponse
     {
-        $data = $request->validate([
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.menu_item_id' => ['required', 'integer'],
-            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
-            'items.*.unit_price' => ['sometimes', 'numeric', 'min:0'],
-            'items.*.note' => ['nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validated();
         $order = $service->create(null, $request->user(), $data['items']);
-        $this->notifyOrderEvent('Đơn tại quầy mới', "Một đơn chưa xác định bàn vừa gọi {$this->itemCountText($order)}.", $order, 'counter_order_created');
+        $this->notifyOrderEvent($this->notificationMessages->counterCoffeeCreated($order), $order);
 
         return response()->json(['message' => 'Đơn tại quầy đã được tạo. Bạn có thể chọn bàn sau nhé.', 'order' => OrderPresenter::make($order)], 201);
     }
 
-    public function assignCoffeeTable(Request $request, Order $order, CoffeeOrderService $service): JsonResponse
+    public function assignCoffeeTable(AssignCoffeeTableRequest $request, Order $order, CoffeeOrderService $service): JsonResponse
     {
-        $data = $request->validate([
-            'version' => ['required', 'integer'],
-            'coffee_table_id' => ['nullable', 'integer', 'exists:coffee_tables,id'],
-        ]);
+        $data = $request->validated();
         $table = isset($data['coffee_table_id']) ? CoffeeTable::findOrFail($data['coffee_table_id']) : null;
 
         $order = $service->assignTable($order, $data['version'], $table);
-        $this->notifyOrderEvent(
-            'Cập nhật vị trí đơn',
-            $table ? "Đơn {$order->order_number} đã được chuyển vào {$table->label}." : "Đơn {$order->order_number} đang để ở trạng thái chưa xác định bàn.",
-            $order,
-            'coffee_order_assigned'
-        );
+        $this->notifyOrderEvent($this->notificationMessages->coffeeAssigned($order, $table), $order);
 
         return response()->json([
             'message' => $table ? "Đã chuyển đơn vào {$table->label}." : 'Đơn đang được để ở trạng thái chưa xác định bàn.',
@@ -106,46 +101,31 @@ class PosController extends Controller
         ]);
     }
 
-    public function updateCoffee(Request $request, Order $order, CoffeeOrderService $service): JsonResponse
+    public function updateCoffee(UpdateCoffeeOrderRequest $request, Order $order, CoffeeOrderService $service): JsonResponse
     {
-        $data = $request->validate([
-            'version' => ['required', 'integer'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.menu_item_id' => ['required', 'integer'],
-            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
-            'items.*.unit_price' => ['sometimes', 'numeric', 'min:0'],
-            'items.*.note' => ['nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validated();
         $order = $service->update($order, $data['version'], $data['items']);
-        $this->notifyOrderEvent('Cập nhật món cà phê', "{$this->resourceLabel($order)} vừa cập nhật món gọi thêm, hiện có {$this->itemCountText($order)}.", $order, 'coffee_order_updated');
+        $this->notifyOrderEvent($this->notificationMessages->coffeeUpdated($order), $order);
 
         return response()->json(['message' => 'Hóa đơn đã được cập nhật.', 'order' => OrderPresenter::make($order)]);
     }
 
-    public function coffeeCheckout(Request $request, Order $order, CoffeeOrderService $service): JsonResponse
+    public function coffeeCheckout(CheckoutOrderRequest $request, Order $order, CoffeeOrderService $service): JsonResponse
     {
-        $method = (string) $request->input('payment_method', PaymentQrSetting::TYPE_CASH);
+        $data = $request->validated();
+        $method = $data['payment_method'] ?? PaymentQrSetting::TYPE_CASH;
         $this->assertPaymentMethodAvailable($method);
 
-        $data = $request->validate([
-            'version' => ['required', 'integer'],
-            'payment_method' => ['sometimes', 'string', 'max:20'],
-            'cash_received' => [$method === PaymentQrSetting::TYPE_CASH ? 'required' : 'nullable', 'numeric', 'min:0'],
-            'items' => ['sometimes', 'array'],
-            'items.*.order_item_id' => ['required', 'integer'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'release' => ['sometimes', 'boolean']
-        ]);
-        $method = $data['payment_method'] ?? PaymentQrSetting::TYPE_CASH;
         $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) ($data['cash_received'] ?? 0), $method);
 
         $freshOrder = $order->fresh();
         if (!empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
             $service->release($freshOrder, $freshOrder->version);
         }
-        $this->notifyOrderEvent('Thanh toán cà phê', "{$this->resourceLabel($order->fresh())} vừa thanh toán {$this->moneyText((float) $payment->amount)}.", $order->fresh(), 'coffee_payment_completed', ['payment_id' => $payment->id]);
+        $freshOrder = $order->fresh();
+        $this->notifyOrderEvent($this->notificationMessages->coffeePaymentCompleted($freshOrder, (float) $payment->amount, $payment->id), $freshOrder);
 
-        return response()->json(['message' => 'Thanh toán hoàn tất. Cảm ơn bạn!', 'payment' => $payment, 'order' => OrderPresenter::make($order->fresh())]);
+        return response()->json(['message' => 'Thanh toán hoàn tất. Cảm ơn bạn!', 'payment' => $payment, 'order' => OrderPresenter::make($freshOrder)]);
     }
 
     public function fishingMap(FishingSessionExpirationNotifier $expirationNotifier): JsonResponse
@@ -178,22 +158,17 @@ class PosController extends Controller
         ]);
     }
 
-    public function startFishing(Request $request, FishingSpot $fishingSpot, FishingService $service): JsonResponse
+    public function startFishing(StartFishingSessionRequest $request, FishingSpot $fishingSpot, FishingService $service): JsonResponse
     {
         $order = $service->start($fishingSpot, $request->user());
-        $this->notifyOrderEvent('Phiên câu mới', "{$fishingSpot->label} vừa bắt đầu phiên câu 4 giờ.", $order, 'fishing_session_started');
+        $this->notifyOrderEvent($this->notificationMessages->fishingStarted($order, $fishingSpot), $order);
 
         return response()->json(['message' => 'Phiên câu đã bắt đầu. Chúc khách có một buổi thật thư thái!', 'order' => OrderPresenter::make($order)], 201);
     }
 
-    public function extendFishing(Request $request, Order $order, FishingService $service): JsonResponse
+    public function extendFishing(ExtendFishingSessionRequest $request, Order $order, FishingService $service): JsonResponse
     {
-        $data = $request->validate([
-            'version' => ['required', 'integer'],
-            'mode' => ['sometimes', Rule::in(['session', 'hour'])],
-            'blocks' => ['sometimes', 'integer', 'min:1', 'max:4'],
-            'hours' => ['sometimes', 'integer', 'min:1', 'max:3'],
-        ]);
+        $data = $request->validated();
         $mode = $data['mode'] ?? 'session';
         $blocks = (int) ($data['blocks'] ?? 1);
         $hours = (int) ($data['hours'] ?? 1);
@@ -206,28 +181,20 @@ class PosController extends Controller
             ? $service->extend($order, $data['version'], 1, $durationMinutes, $hourlyPrice * $hours, "Gia hạn {$hours} giờ")
             : $service->extend($order, $data['version'], $blocks);
         $order->loadMissing('fishingSession');
-        $this->notifyOrderEvent('Gia hạn chòi câu', "{$this->resourceLabel($order)} vừa gia hạn thêm {$extensionText} ({$durationText}), kết thúc lúc {$order->fishingSession->ends_at->format('H:i')}.", $order, 'fishing_session_extended');
+        $this->notifyOrderEvent($this->notificationMessages->fishingExtended($order, $extensionText, $durationText), $order);
 
         return response()->json(['message' => "Đã gia hạn thêm {$extensionText}.", 'order' => OrderPresenter::make($order)]);
     }
 
-    public function toggleFishTakeaway(Request $request, Order $order, FishingService $service): JsonResponse
+    public function toggleFishTakeaway(ToggleFishTakeawayRequest $request, Order $order, FishingService $service): JsonResponse
     {
-        $data = $request->validate([
-            'version' => ['required', 'integer'],
-            'enabled' => ['required', 'boolean'],
-        ]);
+        $data = $request->validated();
 
         $order = $service->toggleFishTakeaway($order, $data['version'], (bool) $data['enabled']);
         $message = $data['enabled']
             ? 'Đã áp dụng giá phiên câu có lấy cá.'
             : 'Đã áp dụng giá phiên câu không lấy cá.';
-        $this->notifyOrderEvent(
-            'Cập nhật giá phiên câu',
-            "{$this->resourceLabel($order)} vừa cập nhật tùy chọn lấy cá mang về.",
-            $order,
-            'fishing_order_updated'
-        );
+        $this->notifyOrderEvent($this->notificationMessages->fishTakeawayUpdated($order), $order);
 
         return response()->json([
             'message' => $message,
@@ -235,19 +202,12 @@ class PosController extends Controller
         ]);
     }
 
-    public function updateFishing(Request $request, Order $order, FishingService $service): JsonResponse
+    public function updateFishing(UpdateFishingOrderRequest $request, Order $order, FishingService $service): JsonResponse
     {
-        $data = $request->validate([
-            'version' => ['required', 'integer'],
-            'items' => ['present', 'array'],
-            'items.*.menu_item_id' => ['required', 'integer'],
-            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:99'],
-            'items.*.unit_price' => ['sometimes', 'numeric', 'min:0'],
-            'items.*.note' => ['nullable', 'string', 'max:255'],
-        ]);
+        $data = $request->validated();
 
         $order = $service->update($order, $data['version'], $data['items']);
-        $this->notifyOrderEvent('Cập nhật món ở chòi', "{$this->resourceLabel($order)} vừa gọi thêm/cập nhật món, hiện có {$this->itemCountText($order)}.", $order, 'fishing_order_updated');
+        $this->notifyOrderEvent($this->notificationMessages->fishingUpdated($order), $order);
 
         return response()->json([
             'message' => 'Hóa đơn đã được cập nhật.',
@@ -255,42 +215,31 @@ class PosController extends Controller
         ]);
     }
 
-    public function fishingCheckout(Request $request, Order $order, FishingService $service): JsonResponse
+    public function fishingCheckout(CheckoutOrderRequest $request, Order $order, FishingService $service): JsonResponse
     {
-        $method = (string) $request->input('payment_method', PaymentQrSetting::TYPE_CASH);
+        $data = $request->validated();
+        $method = $data['payment_method'] ?? PaymentQrSetting::TYPE_CASH;
         $this->assertPaymentMethodAvailable($method);
 
-        $data = $request->validate([
-            'version' => ['required', 'integer'],
-            'payment_method' => ['sometimes', 'string', 'max:20'],
-            'cash_received' => [$method === PaymentQrSetting::TYPE_CASH ? 'required' : 'nullable', 'numeric', 'min:0'],
-            'items' => ['sometimes', 'array'],
-            'items.*.order_item_id' => ['required', 'integer'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'release' => ['sometimes', 'boolean']
-        ]);
-        $method = $data['payment_method'] ?? PaymentQrSetting::TYPE_CASH;
         $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) ($data['cash_received'] ?? 0), $method);
 
         $freshOrder = $order->fresh();
         if (!empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
             $service->release($freshOrder, $freshOrder->version);
         }
-        $this->notifyOrderEvent('Thanh toán chòi câu', "{$this->resourceLabel($order->fresh())} vừa thanh toán {$this->moneyText((float) $payment->amount)}.", $order->fresh(), 'fishing_payment_completed', ['payment_id' => $payment->id]);
+        $freshOrder = $order->fresh();
+        $this->notifyOrderEvent($this->notificationMessages->fishingPaymentCompleted($freshOrder, (float) $payment->amount, $payment->id), $freshOrder);
 
-        return response()->json(['message' => 'Phiên câu đã thanh toán xong. Hẹn gặp lại!', 'payment' => $payment, 'order' => OrderPresenter::make($order->fresh())]);
+        return response()->json(['message' => 'Phiên câu đã thanh toán xong. Hẹn gặp lại!', 'payment' => $payment, 'order' => OrderPresenter::make($freshOrder)]);
     }
 
-    public function mergeCoffee(Request $request, Order $order, CoffeeOrderService $service): JsonResponse
+    public function mergeCoffee(MergeCoffeeOrderRequest $request, Order $order, CoffeeOrderService $service): JsonResponse
     {
-        $data = $request->validate([
-            'version' => ['required', 'integer'],
-            'target_table_id' => ['required', 'integer', 'exists:coffee_tables,id']
-        ]);
+        $data = $request->validated();
         $targetTable = CoffeeTable::findOrFail($data['target_table_id']);
-        $sourceLabel = $this->resourceLabel($order);
+        $sourceLabel = $this->notificationMessages->resourceLabel($order);
         $order = $service->merge($order, $data['version'], $targetTable);
-        $this->notifyOrderEvent('Gộp hóa đơn cà phê', "{$sourceLabel} đã được gộp vào {$targetTable->label}.", $order, 'coffee_order_merged');
+        $this->notifyOrderEvent($this->notificationMessages->coffeeMerged($order, $sourceLabel, $targetTable), $order);
 
         return response()->json([
             'message' => 'Đã gộp hóa đơn thành công.',
@@ -298,42 +247,35 @@ class PosController extends Controller
         ]);
     }
 
-    public function releaseCoffee(Request $request, Order $order, CoffeeOrderService $service): JsonResponse
+    public function releaseCoffee(ReleaseOrderRequest $request, Order $order, CoffeeOrderService $service): JsonResponse
     {
-        $data = $request->validate([
-            'version' => ['required', 'integer']
-        ]);
+        $data = $request->validated();
         $order = $service->release($order, $data['version']);
-        $this->notifyOrderEvent('Giải phóng bàn', "{$this->resourceLabel($order)} đã được giải phóng sau thanh toán.", $order, 'coffee_order_released');
+        $this->notifyOrderEvent($this->notificationMessages->coffeeReleased($order), $order);
         return response()->json([
             'message' => 'Đã giải phóng bàn thành công.',
             'order' => OrderPresenter::make($order)
         ]);
     }
 
-    public function releaseFishing(Request $request, Order $order, FishingService $service): JsonResponse
+    public function releaseFishing(ReleaseOrderRequest $request, Order $order, FishingService $service): JsonResponse
     {
-        $data = $request->validate([
-            'version' => ['required', 'integer']
-        ]);
+        $data = $request->validated();
         $order = $service->release($order, $data['version']);
-        $this->notifyOrderEvent('Giải phóng chòi', "{$this->resourceLabel($order)} đã được giải phóng sau thanh toán.", $order, 'fishing_order_released');
+        $this->notifyOrderEvent($this->notificationMessages->fishingReleased($order), $order);
         return response()->json([
             'message' => 'Đã giải phóng vị trí chòi thành công.',
             'order' => OrderPresenter::make($order)
         ]);
     }
 
-    public function mergeFishing(Request $request, Order $order, FishingService $service): JsonResponse
+    public function mergeFishing(MergeFishingOrderRequest $request, Order $order, FishingService $service): JsonResponse
     {
-        $data = $request->validate([
-            'version' => ['required', 'integer'],
-            'target_spot_id' => ['required', 'integer', 'exists:fishing_spots,id']
-        ]);
+        $data = $request->validated();
         $targetSpot = FishingSpot::findOrFail($data['target_spot_id']);
-        $sourceLabel = $this->resourceLabel($order);
+        $sourceLabel = $this->notificationMessages->resourceLabel($order);
         $order = $service->merge($order, $data['version'], $targetSpot);
-        $this->notifyOrderEvent('Gộp hóa đơn chòi', "{$sourceLabel} đã được gộp vào {$targetSpot->label}.", $order, 'fishing_order_merged');
+        $this->notifyOrderEvent($this->notificationMessages->fishingMerged($order, $sourceLabel, $targetSpot), $order);
 
         return response()->json([
             'message' => 'Đã gộp hóa đơn thành công.',
@@ -350,43 +292,18 @@ class PosController extends Controller
         return response()->json(['order' => OrderPresenter::make($order)]);
     }
 
-    private function notifyOrderEvent(string $title, string $message, Order $order, string $type, array $meta = []): void
+    private function notifyOrderEvent(array $event, Order $order): void
     {
         $order->loadMissing(['coffeeTable', 'fishingSpot']);
         Notification::send(
             User::where('is_active', true)->get(),
-            new PosEventNotification($title, $message, $this->orderUrl($order), $type, [
+            new PosEventNotification($event['title'], $event['message'], $event['url'], $event['type'], [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
                 'service_type' => $order->service_type,
-                ...$meta,
+                ...($event['meta'] ?? []),
             ])
         );
-    }
-
-    private function resourceLabel(Order $order): string
-    {
-        $order->loadMissing(['coffeeTable', 'fishingSpot']);
-
-        return $order->service_type === 'coffee'
-            ? ($order->coffeeTable?->label ?? 'Đơn tại quầy')
-            : ($order->fishingSpot?->label ?? 'Chòi câu');
-    }
-
-    private function itemCountText(Order $order): string
-    {
-        $query = $order->items();
-        if ($order->service_type === 'fishing') {
-            $query->where('line_type', 'menu');
-        }
-        $count = (int) $query->sum('quantity');
-
-        return $count.' món';
-    }
-
-    private function moneyText(float $amount): string
-    {
-        return number_format($amount, 0, ',', '.').' đ';
     }
 
     private function paymentSettingsPayload(): array
@@ -404,14 +321,4 @@ class PosController extends Controller
         }
     }
 
-    private function orderUrl(Order $order): string
-    {
-        $order->loadMissing(['coffeeTable', 'fishingSpot']);
-
-        if ($order->service_type === 'coffee') {
-            return $order->coffee_table_id ? "/pos/coffee?table={$order->coffee_table_id}" : "/pos/coffee?order={$order->id}";
-        }
-
-        return $order->fishing_spot_id ? "/pos/fishing?spot={$order->fishing_spot_id}" : "/pos/fishing?order={$order->id}";
-    }
 }

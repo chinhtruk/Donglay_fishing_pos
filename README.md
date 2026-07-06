@@ -260,11 +260,12 @@ flowchart LR
 ```text
 app/
 ├── Http/Controllers/          # Auth, POS, orders, notifications, admin API
+├── Http/Requests/             # FormRequest xác thực dữ liệu API
 ├── Http/Middleware/           # Phân quyền theo role
 ├── Mail/                      # Email OTP
 ├── Models/                    # Eloquent models
 ├── Notifications/            # Hết giờ câu và sự kiện POS
-└── Services/                  # Transaction và nghiệp vụ cà phê/câu cá
+└── Services/                  # Dashboard, nghiệp vụ đơn, thanh toán và presenter
 bootstrap/                     # Bootstrap Laravel
 config/                        # Cấu hình ứng dụng, database, mail, fishing
 database/
@@ -272,9 +273,15 @@ database/
 └── seeders/                   # Admin, nhân viên, 20 bàn/chòi, menu mẫu
 public/                        # Entry point và asset public
 resources/
-├── css/app.css               # Design system và responsive UI
-├── js/app.js                 # UI/application orchestration
+├── css/app.css               # Entry CSS của Vite, chỉ import layer
+├── css/components/           # Table, modal shell, receipt, checkout, notifications
+├── css/layout/               # Layout shell ứng dụng
+├── css/pages/                # Admin, POS, POS orders, admin users
+├── css/responsive/           # Layer responsive cuối cho mobile và iPad
+├── js/app.js                 # Router UI, state, polling và điều phối
 ├── js/modules/               # API, cart, format, modal, timers
+├── js/pages/                 # Helper render đã tách cho admin/POS
+├── js/templates/             # DOM/template helpers
 └── views/                    # Login và Blade shell
 routes/
 ├── web.php                   # Trang + API v1

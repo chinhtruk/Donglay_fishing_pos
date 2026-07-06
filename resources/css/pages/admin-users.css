@@ -1,0 +1,461 @@
+/* Admin users page and account modal.
+   Moved from legacy-overrides.css during Phase 3 cleanup. */
+
+/* Compact, role-aware user account form. */
+.user-account-modal {
+    width: min(760px, 100%)
+}
+
+.user-account-modal .modal-head {
+    padding: 19px 22px
+}
+
+.user-account-modal .modal-head h2 {
+    font-size: 21px
+}
+
+.user-account-modal .modal-body {
+    padding: 20px 22px
+}
+
+.user-account-modal .modal-foot {
+    padding: 15px 22px
+}
+
+.user-account-form {
+    display: grid;
+    gap: 18px
+}
+
+.user-form-identity {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid #e5d9cd;
+    border-radius: 16px;
+    background: #fffaf5
+}
+
+.user-form-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: #ead9c7;
+    color: #563d2d;
+    font-size: 19px;
+    font-weight: 700
+}
+
+.user-form-identity small,
+.user-form-identity strong {
+    display: block
+}
+
+.user-form-identity small {
+    margin-bottom: 3px;
+    color: var(--moss-2);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .13em
+}
+
+.user-form-identity strong {
+    font-size: 16px
+}
+
+.user-form-identity p {
+    margin: 3px 0 0;
+    color: var(--muted);
+    font-size: 11px
+}
+
+.user-form-field {
+    gap: 7px;
+    font-size: 12px
+}
+
+.user-form-field input {
+    height: 48px;
+    background: #fff;
+    font-size: 13px
+}
+
+.user-role-fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0
+}
+
+.user-role-fieldset legend {
+    margin-bottom: 8px;
+    color: #5c534c;
+    font-size: 12px;
+    font-weight: 600
+}
+
+.user-role-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px
+}
+
+.user-role-tab {
+    min-height: 68px;
+    border: 1px solid #ded3c8;
+    border-radius: 14px;
+    background: #fff;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 11px 13px;
+    text-align: left;
+    cursor: pointer;
+    color: var(--ink)
+}
+
+.user-role-tab>span {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    background: #f6eee6;
+    color: #765845
+}
+
+.user-role-tab svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round
+}
+
+.user-role-tab strong,
+.user-role-tab small {
+    display: block
+}
+
+.user-role-tab strong {
+    font-size: 13px
+}
+
+.user-role-tab small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 9px
+}
+
+.user-role-tab:hover {
+    border-color: #b99e88;
+    background: #fffdfb
+}
+
+.user-role-tab.active {
+    border-color: #765541;
+    background: #fbf4ed;
+    box-shadow: 0 0 0 1px #765541
+}
+
+.user-role-tab.active>span {
+    background: #765541;
+    color: #fff
+}
+
+.user-credential-section {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid #e5d9cd;
+    border-radius: 16px;
+    background: #fcfaf7
+}
+
+.user-section-heading strong,
+.user-section-heading small {
+    display: block
+}
+
+.user-section-heading strong {
+    font-size: 13px
+}
+
+.user-section-heading small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 10px
+}
+
+.user-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px
+}
+
+.user-toggle-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 13px 14px;
+    border: 1px solid #e2d7cc;
+    border-radius: 14px;
+    background: #fff;
+    cursor: pointer
+}
+
+.user-toggle-card>span {
+    min-width: 0
+}
+
+.user-toggle-card strong,
+.user-toggle-card small {
+    display: block
+}
+
+.user-toggle-card strong {
+    font-size: 12px
+}
+
+.user-toggle-card small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 400
+}
+
+.user-toggle-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none
+}
+
+.user-toggle-card>i {
+    position: relative;
+    flex: 0 0 46px;
+    width: 46px;
+    height: 27px;
+    border-radius: 99px;
+    background: #c9c3bc;
+    transition: .2s
+}
+
+.user-toggle-card>i:after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(44, 30, 21, .2);
+    transition: .2s
+}
+
+.user-toggle-card input:checked+i {
+    background: #5d4434
+}
+
+.user-toggle-card input:checked+i:after {
+    transform: translateX(19px)
+}
+
+.user-toggle-card input:focus-visible+i {
+    outline: 3px solid rgba(140, 98, 70, .22);
+    outline-offset: 2px
+}
+
+.user-toggle-card.account-status {
+    background: #fffaf5
+}
+
+.user-form-footnote {
+    font-size: 10px
+}
+
+/* Admin users: row-click editing and a flatter account modal. */
+body[data-role="admin"] .owner-users-page .user-admin-table {
+    table-layout: fixed;
+}
+
+body[data-role="admin"] .owner-users-page .user-admin-table .user-row-clickable {
+    cursor: pointer;
+    transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+body[data-role="admin"] .owner-users-page .user-admin-table .user-row-clickable:hover,
+body[data-role="admin"] .owner-users-page .user-admin-table .user-row-clickable:focus-visible {
+    box-shadow: inset 3px 0 0 var(--pos-brand);
+    outline: none;
+}
+
+body[data-role="admin"] .owner-users-page .user-admin-table .user-row-clickable:hover td,
+body[data-role="admin"] .owner-users-page .user-admin-table .user-row-clickable:focus-visible td {
+    background: #fffaf4 !important;
+}
+
+body[data-role="admin"] .owner-users-page .user-admin-table .user-row-clickable:active {
+    transform: scale(.998);
+}
+
+body[data-role="admin"] .user-account-modal {
+    width: min(720px, calc(100vw - 44px)) !important;
+}
+
+body[data-role="admin"] .user-account-modal .modal-body {
+    padding: 18px 22px !important;
+}
+
+body[data-role="admin"] .user-account-form {
+    gap: 14px;
+}
+
+body[data-role="admin"] .user-form-intro {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--pos-line);
+}
+
+body[data-role="admin"] .user-form-avatar {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 10px !important;
+    background: var(--pos-soft) !important;
+    color: var(--pos-brand) !important;
+    font-size: 18px !important;
+    font-weight: 850 !important;
+}
+
+body[data-role="admin"] .user-form-intro small,
+body[data-role="admin"] .user-form-intro strong {
+    display: block;
+}
+
+body[data-role="admin"] .user-form-intro small {
+    color: var(--pos-brand-2);
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .08em;
+}
+
+body[data-role="admin"] .user-form-intro strong {
+    margin-top: 3px;
+    color: var(--pos-ink);
+    font-size: 18px;
+    font-weight: 850;
+    line-height: 1.2;
+}
+
+body[data-role="admin"] .user-role-fieldset legend {
+    margin-bottom: 8px;
+    color: var(--pos-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+body[data-role="admin"] .user-role-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 4px;
+    border: 1px solid var(--pos-line);
+    border-radius: 8px;
+    background: var(--pos-soft);
+}
+
+body[data-role="admin"] .user-role-tab {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    box-shadow: none;
+    color: var(--pos-muted);
+    font-size: 12px;
+    font-weight: 850;
+}
+
+body[data-role="admin"] .user-role-tab>span {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: transparent;
+    color: currentColor;
+}
+
+body[data-role="admin"] .user-role-tab svg {
+    width: 16px;
+    height: 16px;
+}
+
+body[data-role="admin"] .user-role-tab.active {
+    border: 0;
+    background: #fffefa;
+    color: var(--pos-brand);
+    box-shadow: 0 6px 14px rgba(74, 48, 32, .09);
+}
+
+body[data-role="admin"] .user-role-tab.active>span {
+    background: var(--pos-soft);
+    color: var(--pos-brand);
+}
+
+body[data-role="admin"] .user-credential-section {
+    gap: 12px;
+    padding: 0 0 14px;
+    border: 0 !important;
+    border-bottom: 1px solid var(--pos-line) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body[data-role="admin"] .user-section-heading strong {
+    color: var(--pos-ink);
+    font-size: 14px;
+    font-weight: 850;
+}
+
+body[data-role="admin"] .user-section-heading small {
+    color: var(--pos-muted);
+    font-size: 10px;
+}
+
+body[data-role="admin"] .user-toggle-card {
+    min-height: 48px;
+    padding: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body[data-role="admin"] .user-toggle-card.account-status {
+    padding-top: 0;
+}
+
+body[data-role="admin"] .user-toggle-card strong {
+    color: var(--pos-ink);
+    font-size: 12.5px;
+    font-weight: 850;
+}
+
+body[data-role="admin"] .user-toggle-card small {
+    color: var(--pos-muted);
+    font-size: 10px;
+}

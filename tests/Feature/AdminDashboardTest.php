@@ -77,6 +77,21 @@ class AdminDashboardTest extends TestCase
             ->assertDontSee('/pos/fishing', false);
     }
 
+    public function test_employee_navigation_contains_pos_operations_but_not_admin_management(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+
+        $this->actingAs($employee)
+            ->get('/pos/coffee')
+            ->assertOk()
+            ->assertSee('/pos/coffee', false)
+            ->assertSee('/pos/fishing', false)
+            ->assertSee('/pos/orders', false)
+            ->assertSee('VẬN HÀNH')
+            ->assertDontSee('QUẢN LÝ')
+            ->assertDontSee('/admin/dashboard', false);
+    }
+
     public function test_admin_order_index_can_filter_by_service_type_and_status(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'username' => 'manager']);

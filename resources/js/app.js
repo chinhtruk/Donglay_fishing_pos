@@ -4,25 +4,67 @@ import { dateTime, escapeHtml, formatMoneyInput, formatStoredMoneyInput, money, 
 import { setupKeyboardViewportGuard } from './modules/keyboard.js';
 import { confirmModal, openModal } from './modules/modal.js';
 import { duration, remaining, ServerClock } from './modules/timers.js';
+import { renderDashboard } from './pages/admin/dashboard.js';
+import { configureAdminUsers, renderUsers } from './pages/admin/users.js';
+import {
+    paymentMethodFormFooter,
+    paymentMethodFormTitle,
+    renderPaymentMethodForm,
+} from './pages/admin/forms.js';
+import { configurePosOperationalReset, schedulePosOperationalReset } from './pages/pos/operational-day.js';
+import {
+    renderCoffeeOrderLines,
+    renderCoffeeOrderPanel,
+    renderEditableOrderLine,
+    renderLineSectionHeader,
+    renderOrderEmpty,
+    renderOrderModalBody,
+    renderPaidOrderLine,
+} from './pages/pos/order-modal.js';
+import {
+    fishingMergeTargetChipHtml,
+    fishingSessionLineTotalHtml,
+    fishingSessionMetaHtml,
+    fishingSessionMetricDateTime,
+    fishingSessionNameHtml,
+    formatDisplayPrice,
+    hasMissingVariablePrice,
+    orderBadgeHtml,
+    orderCompletedPaymentTotal,
+    orderedPosMenu,
+    orderPaymentItemCountLabel,
+    orderRemainingDue,
+    orderStackIcon,
+    paidQuantityForLine,
+    posMenuCategories,
+    requestVariablePrice,
+    slotLegend,
+} from './pages/pos/shared.js';
+import { setupLiveClock } from './shell/page-head.js';
+import { setupProfileMenu } from './shell/profile-menu.js';
+import { createLifecycleScope } from './shell/lifecycle.js';
+import { pageFromPath, renderRoutedPage } from './shell/router.js';
+import { setupSidebar } from './shell/sidebar.js';
+import { $, $$, cloneTemplate, emptyState, pageHead, setLoading } from './templates/dom.js';
 
 setupKeyboardViewportGuard();
-
-const $ = (selector, root = document) => root.querySelector(selector);
-const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-let activeTimer = null;
-let notificationPollingTimer = null;
+configurePosOperationalReset({ closeOpenModal, renderPage, toast });
+const appLifecycle = createLifecycleScope();
+const pageLifecycle = createLifecycleScope();
 let notificationToastBootstrapped = false;
 let notificationToastSeen = new Set();
 let notificationDrawerOpen = false;
 let notificationDrawerPage = 1;
 let notificationDrawerMeta = null;
 let notificationDrawerItems = [];
-let notificationDrawerRefreshTimer = null;
+const notificationDrawerLifecycle = createLifecycleScope();
 let notificationDrawerFilters = { read: 'all', category: '' };
 let orderPollingTimer = null;
+let orderPollingCleanup = null;
 let orderPollSignature = '';
 let isPollingOrders = false;
 let adminMapPollingTimer = null;
+let adminMapPollingCleanup = null;
 let adminMapPollSignature = '';
 let isPollingAdminMap = false;
 let adminMapUpdateHandler = null;
@@ -33,8 +75,6 @@ let adminOrderFilters = { service_type: '', status: '', q: '' };
 let adminMenuFilters = { category: '', q: '' };
 let adminOrderSearchTimer = null;
 let adminMenuSearchTimer = null;
-let posOperationalResetTimer = null;
-let isResettingPosOperationalUi = false;
 
 function toastIcon(type) {
     return {
@@ -56,17 +96,27 @@ function toast(message, type = 'success', options = {}) {
     const toastId = options.id || payload.id || '';
     if (toastId && [...root.children].some(child => child.dataset.toastId === String(toastId))) return;
 
-    const node = document.createElement('div');
+    const node = cloneTemplate('tpl-toast') || document.createElement('div');
     node.className = `toast ${type}${options.sticky ? ' is-sticky' : ''}`;
     if (toastId) node.dataset.toastId = String(toastId);
-    node.innerHTML = `
-        <span class="toast-icon" aria-hidden="true">${escapeHtml(payload.icon || toastIcon(type))}</span>
-        <span class="toast-copy">
-            ${payload.title ? `<strong>${escapeHtml(payload.title)}</strong>` : ''}
-            <span>${escapeHtml(payload.message || '')}</span>
-        </span>
-        ${options.dismissible ? '<button class="toast-close" type="button" aria-label="Tắt thông báo">×</button>' : ''}
-    `;
+    if (node.querySelector('[data-toast-icon]')) {
+        const title = $('[data-toast-title]', node);
+        const closeButton = $('.toast-close', node);
+        $('[data-toast-icon]', node).textContent = payload.icon || toastIcon(type);
+        $('[data-toast-message]', node).textContent = payload.message || '';
+        if (payload.title) title.textContent = payload.title;
+        else title.remove();
+        if (!options.dismissible) closeButton.remove();
+    } else {
+        node.innerHTML = `
+            <span class="toast-icon" aria-hidden="true">${escapeHtml(payload.icon || toastIcon(type))}</span>
+            <span class="toast-copy">
+                ${payload.title ? `<strong>${escapeHtml(payload.title)}</strong>` : ''}
+                <span>${escapeHtml(payload.message || '')}</span>
+            </span>
+            ${options.dismissible ? '<button class="toast-close" type="button" aria-label="Tắt thông báo">×</button>' : ''}
+        `;
+    }
 
     let closed = false;
     const close = () => {
@@ -84,6 +134,8 @@ function toast(message, type = 'success', options = {}) {
     root.append(node);
     setTimeout(close, options.duration || 5200);
 }
+
+configureAdminUsers({ toast });
 
 function notificationToastOptions(notification) {
     const type = notification.data?.type || '';
@@ -214,8 +266,7 @@ function closeNotificationDrawer() {
     drawer.setAttribute('aria-hidden', 'true');
     $('#notification-drawer-scrim')?.classList.add('hidden');
     $('#notification-bell')?.setAttribute('aria-expanded', 'false');
-    if (notificationDrawerRefreshTimer) window.clearInterval(notificationDrawerRefreshTimer);
-    notificationDrawerRefreshTimer = null;
+    notificationDrawerLifecycle.unmount();
 }
 
 async function openNotificationDrawer() {
@@ -227,8 +278,8 @@ async function openNotificationDrawer() {
     $('#notification-drawer-scrim')?.classList.remove('hidden');
     $('#notification-bell')?.setAttribute('aria-expanded', 'true');
     await loadNotificationDrawer(1);
-    if (notificationDrawerRefreshTimer) window.clearInterval(notificationDrawerRefreshTimer);
-    notificationDrawerRefreshTimer = window.setInterval(() => {
+    notificationDrawerLifecycle.unmount();
+    notificationDrawerLifecycle.interval(() => {
         if (notificationDrawerOpen) loadNotificationDrawer(1).catch(() => {});
     }, 8000);
 }
@@ -352,32 +403,6 @@ function setupNotificationDrawer() {
     });
 }
 
-function setLoading() {
-    const page = $('#page-content');
-    page.className = 'page-content';
-    page.innerHTML = '<div class="loading-state"><span></span><p>Đang sắp xếp không gian…</p></div>';
-}
-
-function pageHead(eyebrow, title, description, actions = '') {
-    const eyebrowHtml = eyebrow ? `<p class="eyebrow">${eyebrow}</p>` : '';
-    const titleHtml = title ? `<h1>${title}</h1>` : '';
-    const descHtml = description ? `<p>${description}</p>` : '';
-    return `<header class="page-head"><div>${eyebrowHtml}${titleHtml}${descHtml}</div>${actions ? `<div class="head-actions">${actions}</div>` : ''}</header>`;
-}
-
-function formatDisplayPrice(displayPrice) {
-    if (!displayPrice) return '';
-    const parts = displayPrice.split('-').map(x => x.trim());
-    if (parts.length === 2) {
-        const fromVal = Number(parts[0]);
-        const toVal = Number(parts[1]);
-        if (!isNaN(fromVal) && !isNaN(toVal) && fromVal > 0 && toVal > 0) {
-            return `${number(fromVal)} - ${money(toVal)}`;
-        }
-    }
-    return displayPrice;
-}
-
 function paymentMethodIcon(type = 'qr') {
     if (type === 'cash') {
         return '<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle><path d="M6 9h1.5M16.5 15H18"></path></svg>';
@@ -393,243 +418,6 @@ function paymentMethodDisplayLabel(method = 'cash') {
     if (method === 'cash') return 'Tiền mặt';
     if (String(method).startsWith('qr')) return 'QR / chuyển khoản';
     return method || 'Khác';
-}
-
-function normalizedCategoryName(category = '') {
-    return String(category).trim().toLowerCase();
-}
-
-function isTrailingPosMenuCategory(category = '') {
-    return ['ăn vặt', 'đồ ăn'].includes(normalizedCategoryName(category));
-}
-
-function orderedPosMenu(menu = []) {
-    const categoryIndexes = new Map();
-    menu.forEach(item => {
-        if (!categoryIndexes.has(item.category)) categoryIndexes.set(item.category, categoryIndexes.size);
-    });
-
-    return [...menu].sort((a, b) => {
-        const trailingDiff = Number(isTrailingPosMenuCategory(a.category)) - Number(isTrailingPosMenuCategory(b.category));
-        if (trailingDiff !== 0) return trailingDiff;
-
-        const categoryDiff = (categoryIndexes.get(a.category) ?? 0) - (categoryIndexes.get(b.category) ?? 0);
-        if (categoryDiff !== 0) return categoryDiff;
-
-        return String(a.name || '').localeCompare(String(b.name || ''), 'vi');
-    });
-}
-
-function posMenuCategories(menu = []) {
-    return ['Tất cả', ...new Set(menu.map(item => item.category))];
-}
-
-function isVariablePriceItem(menuItems, menuItemId) {
-    const item = menuItems.find(item => item.id === Number(menuItemId));
-    return Boolean(item) && Number(item.price) === 0;
-}
-
-function hasMissingVariablePrice(cart, menuItems) {
-    return cart.values().some(line => isVariablePriceItem(menuItems, line.menu_item_id) && Number(line.price) <= 0);
-}
-
-function orderLineUnitPriceHtml(line, menuItems) {
-    if (!isVariablePriceItem(menuItems, line.menu_item_id)) {
-        return `<small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">${money(line.price)} / món</small>`;
-    }
-
-    return Number(line.price) > 0
-        ? `<small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">${money(line.price)} / món</small>`
-        : '<small style="color: #b95e55; font-size: 8px; display: block; margin-top: 4px;">Chưa nhập giá</small>';
-}
-
-function orderLineTotalHtml(line, quantity, menuItems) {
-    const total = Number(line.price) * Number(quantity || 0);
-    const text = total > 0 || !isVariablePriceItem(menuItems, line.menu_item_id) ? money(total) : 'Chưa có giá';
-
-    return `<b style="align-self: center; font-size: 10px; color: #785943; text-align:right;">${text}</b>`;
-}
-
-function fishingSessionNameHtml(name) {
-    return escapeHtml(name);
-}
-
-function fishingSessionMetaHtml(unitPrice, hasFishTakeaway, paid = false) {
-    const fishLabel = hasFishTakeaway ? 'Có lấy cá' : 'Không lấy cá';
-    const fishClass = hasFishTakeaway ? 'has-fish' : 'no-fish';
-    const paidChip = paid ? '<span class="paid-status-chip">✓ Đã trả</span>' : '';
-
-    return `<small class="session-line-meta"><span>${money(unitPrice)} / phiên</span><span class="session-fish-note ${fishClass}">${fishLabel}</span>${paidChip}</small>`;
-}
-
-function fishingSessionMetricDateTime(value) {
-    if (!value) return '—';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '—';
-
-    const time = new Intl.DateTimeFormat('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-    }).format(date);
-    const day = new Intl.DateTimeFormat('vi-VN', {
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-    }).format(date);
-
-    return `${time} ${day}`;
-}
-
-function fishingSessionLineTotalHtml(unitPrice, quantity, hasFishTakeaway, standardPrice, color = '#785943') {
-    const qty = Number(quantity || 0);
-    const currentTotal = Number(unitPrice) * qty;
-    const standardTotal = Number(standardPrice || unitPrice) * qty;
-
-    if (!hasFishTakeaway && standardTotal > currentTotal) {
-        return `<b class="session-price-stack is-adjusted" style="align-self: center; color: ${color}; text-align:right;">
-            <span class="session-price-original">${money(standardTotal)}</span>
-            <span class="session-price-current">${money(currentTotal)}</span>
-        </b>`;
-    }
-
-    return `<b class="session-price-stack" style="align-self: center; color: ${color}; text-align:right;">
-        <span class="session-price-current">${money(currentTotal)}</span>
-    </b>`;
-}
-
-function orderShortCode(order) {
-    return order ? `#${escapeHtml(order.order_number.split('-').slice(-1)[0])}` : 'Đơn mới';
-}
-
-function orderBadgeHtml(order) {
-    return `<span class="order-number-chip">${orderShortCode(order)}</span>`;
-}
-
-function orderStackIcon() {
-    return '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 16 9 5 9-5"></path></svg>';
-}
-
-function orderCompletedPaymentTotal(order) {
-    return order?.payments
-        ?.filter(payment => payment.status === 'completed')
-        .reduce((sum, payment) => sum + Number(payment.amount || 0), 0) || 0;
-}
-
-function orderRemainingDue(order, total = null) {
-    const billTotal = Number(total ?? order?.total ?? 0);
-
-    return Math.max(0, billTotal - orderCompletedPaymentTotal(order));
-}
-
-function fishingMergeTargetChipHtml(spot, isSelected = false) {
-    const isPaid = spot.order && spot.order.status === 'paid';
-    const stateText = isPaid
-        ? 'Đã trả'
-        : (spot.state === 'expired' ? 'Hết giờ' : 'Đang câu');
-    const stateClass = isPaid ? 'is-paid' : (spot.state === 'expired' ? 'is-expired' : 'is-occupied');
-    const totalText = spot.order ? money(spot.order.total) : 'Chưa có hóa đơn';
-
-    return `<button type="button" class="merge-target-chip ${stateClass} ${isSelected ? 'is-selected' : ''}" data-merge-target="${spot.id}" aria-pressed="${isSelected ? 'true' : 'false'}">
-        <span class="merge-target-main"><strong>${escapeHtml(spot.label)}</strong><em>${stateText}</em></span>
-        <small>${totalText}</small>
-    </button>`;
-}
-
-function suggestedVariablePrice(item) {
-    const firstPrice = String(item.display_price || '').split('-')[0]?.trim() || '';
-    const price = parseMoneyInput(firstPrice);
-
-    return price > 0 ? price : 0;
-}
-
-function requestVariablePrice(modal, item) {
-    const host = modal.closest('.modal-backdrop') || modal;
-    host.querySelector('.variable-price-dialog-layer')?.remove();
-
-    return new Promise(resolve => {
-        const suggestion = suggestedVariablePrice(item);
-        const displayPrice = formatDisplayPrice(item.display_price);
-        const layer = document.createElement('div');
-        layer.className = 'variable-price-dialog-layer';
-        layer.innerHTML = `
-            <form class="variable-price-dialog" role="dialog" aria-modal="true" aria-labelledby="variable-price-title">
-                <div class="variable-price-dialog-head">
-                    <span class="variable-price-dialog-icon" aria-hidden="true">₫</span>
-                    <div>
-                        <h3 id="variable-price-title">Nhập giá món</h3>
-                        <p>${escapeHtml(item.name)}</p>
-                    </div>
-                </div>
-                ${displayPrice ? `<div class="variable-price-range">Khoảng giá: <strong>${escapeHtml(displayPrice)}</strong></div>` : ''}
-                <label class="variable-price-input-label">
-                    <span>Giá bán thực tế</span>
-                    <div class="variable-price-input-wrap">
-                        <input type="text" inputmode="numeric" autocomplete="off" data-variable-price-input value="${suggestion ? escapeHtml(formatMoneyInput(String(suggestion))) : ''}" placeholder="Nhập giá">
-                        <em>₫</em>
-                    </div>
-                </label>
-                <p class="variable-price-error" data-variable-price-error aria-live="polite"></p>
-                <div class="variable-price-dialog-actions">
-                    <button type="button" class="button ghost" data-variable-price-cancel>Hủy</button>
-                    <button type="submit" class="button primary">Thêm món</button>
-                </div>
-            </form>
-        `;
-
-        host.append(layer);
-
-        const input = layer.querySelector('[data-variable-price-input]');
-        const error = layer.querySelector('[data-variable-price-error]');
-        let settled = false;
-        const close = value => {
-            if (settled) return;
-            settled = true;
-            layer.remove();
-            resolve(value);
-        };
-        const submit = () => {
-            const price = parseMoneyInput(input.value);
-            if (price <= 0) {
-                error.textContent = 'Bạn nhập giá hợp lệ trước khi thêm món nhé.';
-                input.focus();
-                return;
-            }
-            close(price);
-        };
-
-        input.addEventListener('input', () => {
-            input.value = formatMoneyInput(input.value);
-            error.textContent = '';
-        });
-        layer.querySelector('[data-variable-price-cancel]').addEventListener('click', () => close(null));
-        layer.addEventListener('click', event => {
-            if (event.target === layer) close(null);
-        });
-        layer.addEventListener('keydown', event => {
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                close(null);
-            }
-        });
-        layer.querySelector('form').addEventListener('submit', event => {
-            event.preventDefault();
-            submit();
-        });
-
-        window.setTimeout(() => {
-            input.focus();
-            input.select();
-        }, 30);
-    });
-}
-
-function productMedia(item, index = 0) {
-    if (item.image_url) {
-        return `<span class="product-art has-image"><img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}" loading="lazy"></span>`;
-    }
-
-    return `<span class="product-art art-${index % 4}"><i><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="12" y="15" width="34" height="34" rx="7"></rect><path d="m17 42 9-10 7 7 5-5 8 8"></path><circle cx="37" cy="25" r="4"></circle></svg></i></span>`;
 }
 
 function setupLogin() {
@@ -805,77 +593,14 @@ function setupLogin() {
 }
 
 function setupShell() {
-    updateClock(); setInterval(updateClock, 1000);
-    const page = location.pathname.split('/').filter(Boolean).pop() || 'coffee';
-    $$('[data-nav]').forEach(link => link.classList.toggle('active', link.dataset.nav === page));
-    const closeSidebar = () => { $('#sidebar').classList.remove('open'); document.body.classList.remove('sidebar-open'); $('#menu-toggle').setAttribute('aria-expanded', 'false'); };
-    const toggleSidebar = () => { const opening = !$('#sidebar').classList.contains('open'); $('#sidebar').classList.toggle('open', opening); document.body.classList.toggle('sidebar-open', opening); $('#menu-toggle').setAttribute('aria-expanded', String(opening)); };
-    const collapseButton = $('#sidebar-collapse-toggle');
-    const syncCollapseButton = () => {
-        const collapsed = document.documentElement.classList.contains('sidebar-collapsed');
-        collapseButton.setAttribute('aria-expanded', String(!collapsed));
-        collapseButton.setAttribute('aria-label', collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng');
-        collapseButton.title = collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng';
-    };
-    collapseButton.onclick = () => {
-        const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
-        try { localStorage.setItem('donglay.sidebar', collapsed ? 'collapsed' : 'expanded'); } catch (_) {}
-        syncCollapseButton();
-    };
-    syncCollapseButton();
-    $('#menu-toggle').setAttribute('aria-expanded', 'false');
-    $('#menu-toggle').onclick = toggleSidebar;
-    $('#sidebar-scrim').onclick = closeSidebar;
-    $$('#sidebar nav a').forEach(link => link.addEventListener('click', closeSidebar));
-    window.addEventListener('resize', () => { if (window.innerWidth > 820) closeSidebar(); });
+    setupLiveClock();
+    const page = pageFromPath(location.pathname);
+    setupSidebar({ page });
     setupNotificationDrawer();
-    const closeProfileMenu = () => {
-        $('#profile-menu')?.classList.add('hidden');
-        $('#profile-menu-button')?.setAttribute('aria-expanded', 'false');
-    };
-    $('#profile-menu-button')?.addEventListener('click', event => {
-        event.stopPropagation();
-        const menu = $('#profile-menu');
-        const opening = menu.classList.contains('hidden');
-        menu.classList.toggle('hidden', !opening);
-        $('#profile-menu-button').setAttribute('aria-expanded', String(opening));
-    });
-    $('#logout-button')?.addEventListener('click', async () => {
-        closeProfileMenu();
-        const confirmed = await confirmModal(
-            'Đăng xuất khỏi ca làm?',
-            'Bạn có chắc muốn đăng xuất tài khoản hiện tại không? Các đơn đang mở vẫn được giữ nguyên trong hệ thống.',
-            'Đăng xuất'
-        );
-        if (! confirmed) return;
-        const result = await api('/api/v1/logout', { method:'POST' });
-        window.location.href = result.redirect;
-    });
-    document.addEventListener('click', event => {
-        if (!event.target.closest('.profile-menu-wrap')) closeProfileMenu();
-    });
-    document.addEventListener('keydown', event => {
-        if (event.key === 'Escape') {
-            closeProfileMenu();
-            closeNotificationDrawer();
-        }
-    });
+    setupProfileMenu({ api, confirmModal, closeNotificationDrawer });
     pollNotificationToasts();
-    notificationPollingTimer = window.setInterval(pollNotificationToasts, 3000);
+    appLifecycle.interval(pollNotificationToasts, 3000);
     renderPage(page);
-}
-
-function updateClock() {
-    const now = new Date(); if (!$('#live-time')) return;
-    $('#live-time').textContent = now.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-    $('#live-date').textContent = now.toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
-}
-
-function currentPosPage() {
-    if (!location.pathname.startsWith('/pos/')) return null;
-    const section = location.pathname.split('/').filter(Boolean).pop() || 'coffee';
-
-    return ['coffee', 'fishing', 'orders'].includes(section) ? section : null;
 }
 
 function closeOpenModal() {
@@ -888,33 +613,6 @@ function closeOpenModal() {
     }
     root.innerHTML = '';
     document.body.classList.remove('modal-open');
-}
-
-function schedulePosOperationalReset(payload = {}) {
-    const page = currentPosPage();
-    if (!page) return;
-
-    const serverTime = payload.server_time;
-    const resetAt = payload.operational_day?.resets_at;
-    if (!serverTime || !resetAt) return;
-
-    const delay = new Date(resetAt).getTime() - new Date(serverTime).getTime();
-    if (!Number.isFinite(delay)) return;
-
-    if (posOperationalResetTimer) window.clearTimeout(posOperationalResetTimer);
-    posOperationalResetTimer = window.setTimeout(async () => {
-        const activePage = currentPosPage();
-        if (!activePage) return;
-        if (isResettingPosOperationalUi) return;
-        isResettingPosOperationalUi = true;
-        try {
-            closeOpenModal();
-            toast('POS đã sang ngày vận hành mới. Màn hình đã được làm mới.', 'info');
-            await renderPage(activePage);
-        } finally {
-            isResettingPosOperationalUi = false;
-        }
-    }, Math.max(0, delay + 250));
 }
 
 async function pollNotificationToasts() {
@@ -956,27 +654,26 @@ async function pollNotificationToasts() {
 }
 
 async function renderPage(page) {
-    clearInterval(activeTimer); setLoading();
-    stopOrderPolling();
-    stopAdminMapPolling();
-    const isPOSPage = ['coffee', 'fishing'].includes(page) || (page === 'orders' && document.body.dataset.role !== 'admin');
-    document.body.classList.toggle('pos-coffee-page', isPOSPage);
-    document.body.classList.toggle('pos-fishing-page', isPOSPage && page === 'fishing');
-    document.body.classList.toggle('pos-orders-page', isPOSPage && page === 'orders');
-    try {
-        if (page === 'coffee') await renderCoffee();
-        else if (page === 'fishing') await renderFishing();
-        else if (page === 'orders') await renderOrders();
-        else if (page === 'dashboard') await renderDashboard();
-        else if (page === 'menu') await renderMenuAdmin();
-        else if (page === 'map') await renderMapAdmin();
-        else if (page === 'settings') await renderSettingsAdmin();
-        else if (page === 'users') await renderUsers();
-    } catch (error) { $('#page-content').innerHTML = `<div class="empty-state"><strong>Mình chưa tải được khu vực này</strong>${escapeHtml(error.message)}</div>`; }
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    await renderRoutedPage(page, {
+        renderers: {
+            coffee: renderCoffee,
+            fishing: renderFishing,
+            orders: renderOrders,
+            dashboard: renderDashboard,
+            menu: renderMenuAdmin,
+            map: renderMapAdmin,
+            settings: renderSettingsAdmin,
+            users: renderUsers,
+        },
+        beforeRender() {
+            pageLifecycle.unmount();
+            setLoading();
+        },
+        onError(error) {
+            $('#page-content').innerHTML = emptyState('Mình chưa tải được khu vực này', error.message);
+        },
+    });
 }
-
-function slotLegend(fishing = false) { return `<div class="legend"><span><i></i>Trống</span><span><i class="occupied"></i>Đang ${fishing ? 'câu' : 'phục vụ'}</span>${fishing ? '<span><i class="expired"></i>Hết giờ</span>' : ''}<span><i class="disabled"></i>Tạm nghỉ</span></div>`; }
 
 async function renderCoffee() {
     const data = await api('/api/v1/coffee/map');
@@ -1044,40 +741,7 @@ async function renderCoffee() {
         };
         let activeCategory = 'Tất cả';
 
-        const modalBody = `
-            <div class="modal-pos-layout" style="display:grid; grid-template-columns: 1.25fr 0.75fr; gap: 16px; margin: -23px; height: 80vh; min-height: 550px; background: var(--paper);">
-                <main class="pos-menu-section" style="padding: 20px; overflow-y: auto; background: var(--white); border-radius: 22px 0 0 22px; display: flex; flex-direction: column; height: 100%;">
-                    <div class="pos-section-head" style="margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;">
-                        <div class="category-tabs" style="margin-bottom: 0; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; flex: 1; min-width: 0;">
-                            ${categories.map(category => `<button class="${category === activeCategory ? 'active' : ''}" data-modal-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join('')}
-                        </div>
-                        <label class="pos-search" style="width: 240px; position: relative; flex-shrink: 0;">
-                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); z-index: 1; display: flex; align-items: center;">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            </span>
-                            <input id="modal-product-search" type="search" placeholder="Tìm tên món…" style="height: 38px; padding: 8px 12px 8px 34px; border-radius: 10px; font-size: 11px; width: 100%; border: 1px solid var(--line); outline: none;">
-                        </label>
-                    </div>
-                    <div class="pos-product-grid" style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-content: start;">
-                        ${orderedMenu.map((item, index) => `
-                            <article class="pos-product-card" data-modal-product-card data-name="${escapeHtml(item.name.toLowerCase())}" data-category="${escapeHtml(item.category)}">
-                                <button class="product-main" data-modal-product="${item.id}">
-                                    ${productMedia(item, index)}
-                                    <small>${escapeHtml(item.category)}</small>
-                                    <strong>${escapeHtml(item.name)}</strong>
-                                    <b>${escapeHtml(formatDisplayPrice(item.display_price) || money(item.price))}</b>
-                                    <em>
-                                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: white;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    </em>
-                                </button>
-                            </article>`).join('')}
-                    </div>
-                  </main>
-                <aside class="modal-order-dock-aside" style="border: 0; border-radius: 0 22px 22px 0; height: 100%; box-shadow: none; background: #fffdf9; display: flex; flex-direction: column;">
-                    <div id="modal-order-panel" style="height: 100%; display: flex; flex-direction: column;"></div>
-                </aside>
-            </div>
-        `;
+        const modalBody = renderOrderModalBody({ categories, menu: orderedMenu, activeCategory });
 
         openModal({
             title: selectedTableId ? `Đặt món · ${(() => {
@@ -1110,101 +774,17 @@ async function renderCoffee() {
                     const unpaidItemCount = unpaidLines.reduce((sum, line) => sum + Number(line.unpaidQty || 0), 0);
                     const paymentCountLabel = orderPaymentItemCountLabel(unpaidItemCount, totalItemCount);
 
-                    let linesHtml = '';
-                    if (unpaidLines.length) {
-                        linesHtml += `<div class="modal-lines-section-header unpaid-header" style="font-size: 9px; font-weight: 750; color: #856404; background: #fff3cd; padding: 4px 8px; border-radius: 6px; margin: 4px 0 8px; letter-spacing: 0.05em;">MÓN CHƯA THANH TOÁN</div>`;
-                        linesHtml += unpaidLines.map(line => `
-                            <div class="order-line unpaid-item" style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line);">
-                                <div class="order-line-title" style="grid-column: 1 / -1;">
-                                    <strong style="font-family: Georgia, serif; font-size: 13px;">${escapeHtml(line.name)}</strong>
-                                    ${orderLineUnitPriceHtml(line, data.menu)}
-                                </div>
-                                <div class="order-line-note-row">
-                                    <input type="text" data-modal-note="${line.menu_item_id}" data-modal-price="${line.price}" value="${escapeHtml(line.note || '')}" placeholder="Ghi chú (ít đá, ngọt vừa...)" style="height: 28px; padding: 4px 8px; border-radius: 8px; font-size: 10px; border: 1px solid var(--line); background: #fafaf9; width: 100%; outline: none; margin-top: 2px;">
-                                    <div class="quantity" style="display: flex; align-items: center; gap: 4px;">
-                                        <button data-modal-minus="${line.menu_item_id}" data-modal-price="${line.price}" style="width: 30px; height: 30px; border: 0; border-radius: 7px; background: var(--paper); cursor: pointer; display: grid; place-items: center; padding:0;">
-                                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                        </button>
-                                        <b style="font-size: 12px; min-width: 16px; text-align: center;">${line.unpaidQty}</b>
-                                        <button data-modal-plus="${line.menu_item_id}" data-modal-price="${line.price}" style="width: 30px; height: 30px; border: 0; border-radius: 7px; background: var(--paper); cursor: pointer; display: grid; place-items: center; padding:0;">
-                                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                        </button>
-                                    </div>
-                                    ${orderLineTotalHtml(line, line.unpaidQty, data.menu)}
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-
-                    if (paidLines.length) {
-                        linesHtml += `<div class="modal-lines-section-header paid-header" style="font-size: 9px; font-weight: 750; color: #155724; background: #d4edda; padding: 4px 8px; border-radius: 6px; margin: 12px 0 8px; letter-spacing: 0.05em;">MÓN ĐÃ THANH TOÁN</div>`;
-                        linesHtml += paidLines.map(line => `
-                            <div class="order-line paid-item" style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); background: #f4faf6; border-left: 3px solid #28a745; padding-left: 8px; border-radius: 4px;">
-                                <div class="order-line-title" style="grid-column: 1 / -1;">
-                                    <strong style="font-family: Georgia, serif; font-size: 13px; color: #1e4620;">${escapeHtml(line.name)} <span style="font-size:9px; background:#d4edda; color:#155724; padding:2px 6px; border-radius:4px; margin-left:4px; font-family:var(--font-sans); font-weight:600;">✓ Đã trả</span></strong>
-                                    <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">${money(line.price)} / món</small>
-                                </div>
-                                <div class="order-line-paid-row">
-                                    <span class="order-line-paid-note ${line.note ? '' : 'is-empty'}">${line.note ? escapeHtml(line.note) : ''}</span>
-                                    <div class="quantity" style="display: flex; align-items: center; gap: 4px;">
-                                        <b style="font-size: 12px; min-width: 16px; text-align: center; color: #155724;">× ${line.paidQty}</b>
-                                    </div>
-                                    <b style="align-self: center; font-size: 10px; color: #2e5a32; text-align:right;">${money(line.price * line.paidQty)}</b>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-
-                    if (!unpaidLines.length && !paidLines.length) {
-                        linesHtml = `
-                            <div class="order-empty" style="height: 100%; min-height: 240px; display: grid; place-content: center; text-align: center; color: var(--muted);">
-                                <span style="font-size: 28px; display: block; margin-bottom: 8px;">
-                                    <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 10px; opacity: 0.6;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-                                </span>
-                                <strong style="color: var(--ink); font-family: Georgia, serif; font-size: 15px; display: block; margin-top: 8px;">Đơn hàng đang trống</strong>
-                                <p style="font-size: 9px; margin: 4px 0;">Chạm vào món ở bên trái để bắt đầu.</p>
-                            </div>`;
-                    }
-
-                    panel.innerHTML = `
-                        <div class="order-dock-head">
-                            <div class="order-head-main">
-                                <div class="order-title-block">
-                                    <p class="eyebrow">PHIẾU BÁN HÀNG</p>
-                                    <h2>Đơn hiện tại</h2>
-                                </div>
-                                <div class="order-head-actions">
-                                    ${orderBadgeHtml(currentOrder)}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="order-lines" style="flex: 1; min-height: 160px; max-height: none !important; overflow-y: auto; padding: 6px 14px;">
-                            ${linesHtml}
-                        </div>
-                        <div class="order-dock-footer" style="padding: 13px 14px 14px; border-top: 1px solid var(--line); background: #fff;">
-	                            <div class="order-total-breakdown" aria-label="Chi tiết tạm tính">
-	                                <span>Tạm tính <b>${money(cart.total())}</b></span>
-	                                ${totalPaid > 0 ? `<span class="is-paid">Đã trả <b>${money(totalPaid)}</b></span>` : ''}
-	                            </div>
-                            <div class="summary-row total" style="display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; font-family: Georgia, serif; font-size: 16px; font-weight: 700;">
-                                <span>${totalPaid > 0 ? 'Còn lại cần trả' : 'Khách cần trả'} <small class="order-total-count">${paymentCountLabel}</small></span>
-                                <strong>${money(remainingDue)}</strong>
-                            </div>
-                            <div class="order-actions" style="display: grid; ${canReleaseOnly ? 'grid-template-columns: 1fr;' : 'grid-template-columns: 1fr 1.35fr;'} gap: 7px; margin-top: 10px;">
-                                ${canReleaseOnly ? `
-                                    <button class="button primary" id="modal-release-table" style="grid-column: 1 / -1; padding: 11px 8px; font-size: 10px; border-radius: 10px; min-height: auto;">
-                                        Giải phóng bàn (Khách rời đi)
-                                    </button>
-                                ` : `
-                                    <button class="button secondary" id="modal-save-order" ${lines.length ? '' : 'disabled'} style="padding: 11px 8px; font-size: 10px; border-radius: 10px; min-height: auto;">
-                                        ${currentOrder ? 'Lưu thay đổi' : 'Lưu đơn'}
-                                    </button>
-                                    <button class="button primary" id="modal-checkout-order" ${lines.length ? '' : 'disabled'} style="padding: 11px 8px; font-size: 10px; border-radius: 10px; min-height: auto;">
-                                        Thanh toán
-                                    </button>
-                                `}
-                            </div>
-                        </div>`;
+                    const linesHtml = renderCoffeeOrderLines({ unpaidLines, paidLines, menuItems: data.menu });
+                    panel.innerHTML = renderCoffeeOrderPanel({
+                        currentOrder,
+                        linesHtml,
+                        cartTotal: cart.total(),
+                        totalPaid,
+                        remainingDue,
+                        paymentCountLabel,
+                        canReleaseOnly,
+                        hasLines: Boolean(lines.length),
+                    });
 
                     modal.querySelectorAll('[data-modal-minus]').forEach(button => button.onclick = () => changeQuantity(Number(button.dataset.modalMinus), Number(button.dataset.modalPrice), -1));
                     modal.querySelectorAll('[data-modal-plus]').forEach(button => button.onclick = () => changeQuantity(Number(button.dataset.modalPlus), Number(button.dataset.modalPrice), 1));
@@ -1570,7 +1150,7 @@ function openCheckout(order, type, paymentSettings = {}) {
             </label>
         </div>
     ` : '';
-    const checkoutItemQuantity = item => Number(item.quantity ?? (Number(item.paid_quantity || 0) + Number(item.unpaid_quantity || 0)) || 0);
+    const checkoutItemQuantity = item => Number((item.quantity ?? (Number(item.paid_quantity || 0) + Number(item.unpaid_quantity || 0))) || 0);
     const checkoutBillTotal = order.items.reduce((sum, item) => sum + Number(item.unit_price) * checkoutItemQuantity(item), 0) || Number(order.total || 0);
     const checkoutPaidTotal = paid.reduce((sum, item) => sum + Number(item.unit_price) * Number(item.paid_quantity || 0), 0);
     const checkoutTotalQuantity = order.items.reduce((sum, item) => sum + checkoutItemQuantity(item), 0);
@@ -1935,7 +1515,9 @@ async function renderFishing() {
         });
     };
 
-    const tick = () => $$('[data-ends]').forEach(node => { const ms = remaining(node.dataset.ends, clock.now()); node.textContent = ms ? duration(ms) : 'Đã hết giờ'; node.closest('.fishing-slot')?.classList.toggle('expired', ms === 0); }); activeTimer = setInterval(tick, 1000);
+    const tick = () => $$('[data-ends]').forEach(node => { const ms = remaining(node.dataset.ends, clock.now()); node.textContent = ms ? duration(ms) : 'Đã hết giờ'; node.closest('.fishing-slot')?.classList.toggle('expired', ms === 0); });
+    tick();
+    pageLifecycle.interval(tick, 1000);
     
     $$('[data-spot]').forEach(node => node.onclick = () => {
         const spotId = Number(node.dataset.spot);
@@ -1993,40 +1575,7 @@ async function openFishing(spot, menu, fishingConfig = {}) {
     const orderedMenu = orderedPosMenu(menu);
     const categories = posMenuCategories(orderedMenu);
 
-    const modalBody = `
-        <div class="modal-pos-layout" style="display:grid; grid-template-columns: 1.25fr 0.75fr; gap: 16px; margin: -23px; height: 80vh; min-height: 550px; background: var(--paper);">
-            <main class="pos-menu-section" style="padding: 20px; overflow-y: auto; background: var(--white); border-radius: 22px 0 0 22px; display: flex; flex-direction: column; height: 100%;">
-                <div class="pos-section-head" style="margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;">
-                    <div class="category-tabs" style="margin-bottom: 0; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; flex: 1; min-width: 0;">
-                        ${categories.map(category => `<button class="${category === activeCategory ? 'active' : ''}" data-modal-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join('')}
-                    </div>
-                    <label class="pos-search" style="width: 240px; position: relative; flex-shrink: 0;">
-                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); z-index: 1; display: flex; align-items: center;">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        </span>
-                        <input id="modal-product-search" type="search" placeholder="Tìm tên món…" style="height: 38px; padding: 8px 12px 8px 34px; border-radius: 10px; font-size: 11px; width: 100%; border: 1px solid var(--line); outline: none;">
-                    </label>
-                </div>
-                <div class="pos-product-grid" style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-content: start;">
-                    ${orderedMenu.map((item, index) => `
-                        <article class="pos-product-card" data-modal-product-card data-name="${escapeHtml(item.name.toLowerCase())}" data-category="${escapeHtml(item.category)}">
-                            <button class="product-main" data-modal-product="${item.id}">
-                                ${productMedia(item, index)}
-                                <small>${escapeHtml(item.category)}</small>
-                                <strong>${escapeHtml(item.name)}</strong>
-                                <b>${escapeHtml(formatDisplayPrice(item.display_price) || money(item.price))}</b>
-                                <em>
-                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color: white;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                </em>
-                            </button>
-                        </article>`).join('')}
-                </div>
-            </main>
-            <aside class="modal-order-dock-aside" style="border: 0; border-radius: 0 22px 22px 0; height: 100%; box-shadow: none; background: #fffdf9; display: flex; flex-direction: column;">
-                <div id="modal-order-panel" style="height: 100%; display: flex; flex-direction: column;"></div>
-            </aside>
-        </div>
-    `;
+    const modalBody = renderOrderModalBody({ categories, menu: orderedMenu, activeCategory });
 
     openModal({
         title: `${escapeHtml(spot.label)} · ${initialSession.status === 'expired' ? 'Đã hết giờ' : 'Đang câu'}`,
@@ -2154,65 +1703,24 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                     totalItemCount += Number(line.quantity || 0);
                     unpaidItemCount += Math.max(0, unpaidQty);
                     if (unpaidQty > 0) {
-                        unpaidHtmls.push(`
-                            <div class="order-line unpaid-item" style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line);">
-                                <div class="order-line-title" style="grid-column: 1 / -1;">
-                                    <strong style="font-family: Georgia, serif; font-size: 13px;">${escapeHtml(line.name)}</strong>
-                                    ${orderLineUnitPriceHtml(line, menu)}
-                                </div>
-                                <div class="order-line-note-row">
-                                    <input type="text" data-modal-note="${line.menu_item_id}" data-modal-price="${line.price}" value="${escapeHtml(line.note || '')}" placeholder="Ghi chú (ít đá, ngọt vừa...)" style="height: 28px; padding: 4px 8px; border-radius: 8px; font-size: 10px; border: 1px solid var(--line); background: #fafaf9; width: 100%; outline: none; margin-top: 2px;">
-                                    <div class="quantity" style="display: flex; align-items: center; gap: 4px;">
-                                        <button data-modal-minus="${line.menu_item_id}" data-modal-price="${line.price}" style="width: 30px; height: 30px; border: 0; border-radius: 7px; background: var(--paper); cursor: pointer; display: grid; place-items: center; padding:0;">
-                                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                        </button>
-                                        <b style="font-size: 12px; min-width: 16px; text-align: center;">${unpaidQty}</b>
-                                        <button data-modal-plus="${line.menu_item_id}" data-modal-price="${line.price}" style="width: 30px; height: 30px; border: 0; border-radius: 7px; background: var(--paper); cursor: pointer; display: grid; place-items: center; padding:0;">
-                                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                        </button>
-                                    </div>
-                                    ${orderLineTotalHtml(line, unpaidQty, menu)}
-                                </div>
-                            </div>
-                        `);
+                        unpaidHtmls.push(renderEditableOrderLine(line, unpaidQty, menu));
                     }
                     if (paidQty > 0) {
-                        paidHtmls.push(`
-                            <div class="order-line paid-item" style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); background: #f4faf6; border-left: 3px solid #28a745; padding-left: 8px; border-radius: 4px;">
-                                <div class="order-line-title" style="grid-column: 1 / -1;">
-                                    <strong style="font-family: Georgia, serif; font-size: 13px; color: #1e4620;">${escapeHtml(line.name)} <span style="font-size:9px; background:#d4edda; color:#155724; padding:2px 6px; border-radius:4px; margin-left:4px; font-family:var(--font-sans); font-weight:600;">✓ Đã trả</span></strong>
-                                    <small style="color: var(--muted); font-size: 8px; display: block; margin-top: 4px;">${money(line.price)} / món</small>
-                                </div>
-                                <div class="order-line-paid-row">
-                                    <span class="order-line-paid-note ${line.note ? '' : 'is-empty'}">${line.note ? escapeHtml(line.note) : ''}</span>
-                                    <div class="quantity" style="display: flex; align-items: center; gap: 4px;">
-                                        <b style="font-size: 12px; min-width: 16px; text-align: center; color: #155724;">× ${paidQty}</b>
-                                    </div>
-                                    <b style="align-self: center; font-size: 10px; color: #2e5a32; text-align:right;">${money(line.price * paidQty)}</b>
-                                </div>
-                            </div>
-                        `);
+                        paidHtmls.push(renderPaidOrderLine(line, paidQty));
                     }
                 });
 
                 let linesHtml = '';
                 if (unpaidHtmls.length) {
-                    linesHtml += `<div class="modal-lines-section-header unpaid-header" style="font-size: 9px; font-weight: 750; color: #856404; background: #fff3cd; padding: 4px 8px; border-radius: 6px; margin: 4px 0 8px; letter-spacing: 0.05em;">MÓN CHƯA THANH TOÁN</div>`;
+                    linesHtml += renderLineSectionHeader('MÓN CHƯA THANH TOÁN', 'unpaid-header');
                     linesHtml += unpaidHtmls.join('');
                 }
                 if (paidHtmls.length) {
-                    linesHtml += `<div class="modal-lines-section-header paid-header" style="font-size: 9px; font-weight: 750; color: #155724; background: #d4edda; padding: 4px 8px; border-radius: 6px; margin: 12px 0 8px; letter-spacing: 0.05em;">MÓN ĐÃ THANH TOÁN</div>`;
+                    linesHtml += renderLineSectionHeader('MÓN ĐÃ THANH TOÁN', 'paid-header');
                     linesHtml += paidHtmls.join('');
                 }
                 if (!unpaidHtmls.length && !paidHtmls.length) {
-                    linesHtml = `
-                        <div class="order-empty" style="height: 100%; min-height: 240px; display: grid; place-content: center; text-align: center; color: var(--muted);">
-                            <span style="font-size: 28px; display: block; margin-bottom: 8px;">
-                                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 10px; opacity: 0.6;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-                            </span>
-                            <strong style="color: var(--ink); font-family: Georgia, serif; font-size: 15px; display: block; margin-top: 8px;">Đơn hàng đang trống</strong>
-                            <p style="font-size: 9px; margin: 4px 0;">Chạm vào món ở bên trái để bắt đầu.</p>
-                        </div>`;
+                    linesHtml = renderOrderEmpty();
                 }
                 const paymentCountLabel = orderPaymentItemCountLabel(unpaidItemCount, totalItemCount);
 
@@ -2245,37 +1753,37 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                         </div>
                     </div>
 
-                    <div class="order-lines" style="flex: 1; min-height: 160px; max-height: none !important; overflow-y: auto; padding: 6px 14px;">
+                    <div class="order-lines">
                         ${linesHtml}
                     </div>
                     
-                    <div class="order-dock-footer" style="padding: 13px 14px 14px; border-top: 1px solid var(--line); background: #fff;">
+                    <div class="order-dock-footer">
 	                        <div class="order-total-breakdown" aria-label="Chi tiết tạm tính">
 	                            <span>Nước <b>${money(cart.total())}</b></span>
 	                            <span>Giờ câu <b>${money(sessionTotal)}</b></span>
 	                            ${totalPaid > 0 ? `<span class="is-paid">Đã trả <b>${money(totalPaid)}</b></span>` : ''}
 	                        </div>
-	                        <div class="summary-row total" style="display: flex; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; font-family: Georgia, serif; font-size: 16px; font-weight: 700;">
+	                        <div class="summary-row total order-total-row">
                             <span>${totalPaid > 0 ? 'Còn lại cần trả' : 'Khách cần trả'} <small class="order-total-count">${paymentCountLabel}</small></span>
                             <strong>${money(Math.max(0, totalBill - totalPaid))}</strong>
                         </div>
-                        <div class="order-actions" style="display: grid; ${currentOrder && currentOrder.status === 'paid' ? 'grid-template-columns: 1fr 1.35fr;' : 'grid-template-columns: 0.85fr 1fr 1fr;'} gap: 7px; margin-top: 10px;">
+                        <div class="order-actions ${currentOrder && currentOrder.status === 'paid' ? 'fishing-paid' : 'fishing-open'}">
                             ${currentOrder && currentOrder.status === 'paid' ? `
-                                <button class="button secondary" id="extend-session" style="padding: 11px 5px; font-size: 10px; border-radius: 10px; min-height: auto;">
+                                <button class="button secondary" id="extend-session">
                                     Gia hạn
                                 </button>
-                                <button class="button primary" id="modal-release-spot" style="display: grid; place-items: center; gap: 2px; padding: 9px 8px; font-size: 10px; line-height: 1.15; border-radius: 10px; min-height: auto;">
+                                <button class="button primary order-action-stacked" id="modal-release-spot">
                                     <span>Trả chòi & Giải phóng</span>
-                                    <small style="font-size: 8px; font-weight: 750; line-height: 1.1; opacity: .86;">Khách rời đi</small>
+                                    <small>Khách rời đi</small>
                                 </button>
                             ` : `
-                                <button class="button secondary" id="extend-session" style="padding: 11px 5px; font-size: 10px; border-radius: 10px; min-height: auto;">
+                                <button class="button secondary" id="extend-session">
                                     Gia hạn
                                 </button>
-                                <button class="button secondary" id="modal-save-order" style="padding: 11px 5px; font-size: 10px; border-radius: 10px; min-height: auto;">
+                                <button class="button secondary" id="modal-save-order">
                                     Lưu lại
                                 </button>
-                                <button class="button primary" id="modal-checkout-order" style="padding: 11px 5px; font-size: 10px; border-radius: 10px; min-height: auto;">
+                                <button class="button primary" id="modal-checkout-order">
                                     Thanh toán
                                 </button>
                             `}
@@ -2698,7 +2206,8 @@ function shouldPollOrders() {
 }
 
 function stopOrderPolling() {
-    if (orderPollingTimer) window.clearInterval(orderPollingTimer);
+    orderPollingCleanup?.();
+    orderPollingCleanup = null;
     orderPollingTimer = null;
     orderPollSignature = '';
     isPollingOrders = false;
@@ -2732,7 +2241,8 @@ function shouldPollAdminMap() {
 }
 
 function stopAdminMapPolling() {
-    if (adminMapPollingTimer) window.clearInterval(adminMapPollingTimer);
+    adminMapPollingCleanup?.();
+    adminMapPollingCleanup = null;
     adminMapPollingTimer = null;
     adminMapPollSignature = '';
     isPollingAdminMap = false;
@@ -2742,6 +2252,14 @@ function stopAdminMapPolling() {
 function startAdminMapPolling() {
     if (!shouldPollAdminMap() || adminMapPollingTimer) return;
     adminMapPollingTimer = window.setInterval(() => pollAdminMap(), 3000);
+    adminMapPollingCleanup = pageLifecycle.add(() => {
+        window.clearInterval(adminMapPollingTimer);
+        adminMapPollingTimer = null;
+        adminMapPollSignature = '';
+        isPollingAdminMap = false;
+        adminMapUpdateHandler = null;
+        adminMapPollingCleanup = null;
+    });
 }
 
 async function pollAdminMap(force = false) {
@@ -2764,6 +2282,13 @@ async function pollAdminMap(force = false) {
 function startOrderPolling() {
     if (!shouldPollOrders() || orderPollingTimer) return;
     orderPollingTimer = window.setInterval(() => pollOrders(), 3000);
+    orderPollingCleanup = pageLifecycle.add(() => {
+        window.clearInterval(orderPollingTimer);
+        orderPollingTimer = null;
+        orderPollSignature = '';
+        isPollingOrders = false;
+        orderPollingCleanup = null;
+    });
 }
 
 function orderServiceIcon(type = '') {
@@ -2960,20 +2485,6 @@ function orderTimeLabel(value) {
     }).format(date);
 }
 
-function matchingOrderItems(order, menuItemId, unitPrice) {
-    return (order?.items || []).filter(item => item.menu_item_id === menuItemId && Number(item.unit_price) === Number(unitPrice));
-}
-
-function paidQuantityForLine(order, menuItemId, unitPrice) {
-    return matchingOrderItems(order, menuItemId, unitPrice).reduce((sum, item) => sum + Number(item.paid_quantity || 0), 0);
-}
-
-function orderPaymentItemCountLabel(unpaidQuantity, totalQuantity) {
-    const unpaid = Math.max(0, Number(unpaidQuantity) || 0);
-    const total = Math.max(unpaid, Number(totalQuantity) || 0);
-    return `(${number(unpaid)}/${number(total)} món)`;
-}
-
 function groupOrderItemsByTime(items) {
     const groups = new Map();
     [...items]
@@ -3104,224 +2615,6 @@ function bindOrderActions() {
         };
     });
     $$('[data-void-order]').forEach(button => button.onclick = () => reasonAction('Hủy đơn', 'Lý do hủy đơn', `/api/v1/admin/orders/${button.dataset.voidOrder}/void`, () => renderOrders()));
-}
-
-function localDateStr(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const r = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${r}`;
-}
-
-function dashboardDatePresets(referenceDate = new Date()) {
-    const today = new Date(referenceDate);
-    const yesterday = new Date(referenceDate);
-    const weekStart = new Date(referenceDate);
-    const monthStart = new Date(referenceDate);
-    yesterday.setDate(yesterday.getDate() - 1);
-    weekStart.setDate(weekStart.getDate() - 6);
-    monthStart.setDate(monthStart.getDate() - 29);
-
-    return [
-        { key: 'today', label: 'Hôm nay', from: localDateStr(today), to: localDateStr(today) },
-        { key: 'yesterday', label: 'Hôm qua', from: localDateStr(yesterday), to: localDateStr(yesterday) },
-        { key: '7d', label: '7 ngày', from: localDateStr(weekStart), to: localDateStr(today) },
-        { key: '30d', label: '30 ngày', from: localDateStr(monthStart), to: localDateStr(today) },
-    ];
-}
-
-async function renderDashboard() {
-    $('#page-content').classList.add('owner-dashboard-page');
-    const today = localDateStr(new Date());
-    const from = localDateStr(new Date(Date.now() - 29 * 86400000));
-    const data = await api(`/api/v1/admin/dashboard?from=${from}&to=${today}`);
-    drawDashboard(data);
-}
-
-
-function drawDashboard(data) {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    const collected = Number(data.metrics.collected_revenue) || 0;
-    const coffeeRev = Number(data.metrics.coffee_revenue) || 0;
-    const fishingRev = Number(data.metrics.fishing_revenue) || 0;
-    const coffeeShare = collected ? Math.round(coffeeRev / collected * 100) : 0;
-    const fishingShare = collected ? Math.max(0, 100 - coffeeShare) : 0;
-    const coffeeItems = (data.top_items || []).filter(item => item.line_type === 'menu').slice(0, 5);
-    const svg = (path, viewBox = '0 0 24 24') => `<svg viewBox="${viewBox}" aria-hidden="true">${path}</svg>`;
-    const icons = {
-        revenue: svg('<rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M7 9h10M7 15h5"></path>'),
-        orders: svg('<path d="M7 3h10v18H7zM9.5 8h5M9.5 12h5M9.5 16h3"></path>'),
-        ticket: svg('<path d="M4 5h16v14H4zM8 9h8M8 13h5"></path>'),
-        outstanding: svg('<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>'),
-        coffee: svg('<path d="M5 9h12v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM17 11h2a2 2 0 0 1 0 4h-2M8 6c0-1 1-1 1-2M12 6c0-1 1-1 1-2"></path>'),
-        fishing: svg('<path d="M3 12s4-5 9-5c4 0 7 3 9 5-2 2-5 5-9 5-5 0-9-5-9-5zM3 12l-2-3v6z"></path><circle cx="15.5" cy="11" r=".8"></circle>'),
-        clock: svg('<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>'),
-        user: svg('<circle cx="12" cy="8" r="3"></circle><path d="M5 20c.8-4 3-6 7-6s6.2 2 7 6"></path>')
-    };
-    const renderTopItems = items => items.length ? items.map((item, index) => {
-        const max = Number(items[0]?.revenue) || 1;
-        return `<div class="dash-product-row">
-            <span class="dash-rank">${index + 1}</span>
-            <span class="dash-product-copy"><strong>${escapeHtml(item.name)}</strong><small>${number(item.quantity)} phần</small><i><b style="width:${Math.max(8, Number(item.revenue) / max * 100)}%"></b></i></span>
-            <strong>${money(item.revenue)}</strong>
-        </div>`;
-    }).join('') : '<div class="dash-empty-compact">Chưa có món được thanh toán trong kỳ.</div>';
-    const renderPeakHours = hours => hours?.length ? hours.map((hour, index) => `<div class="dash-mini-row"><span><b>${index + 1}</b>${escapeHtml(hour.hour)}</span><small>${number(hour.transactions)} giao dịch</small><strong>${money(hour.revenue)}</strong></div>`).join('') : '<div class="dash-empty-compact">Chưa có dữ liệu theo giờ.</div>';
-    const renderCashiers = cashiers => cashiers?.length ? cashiers.map((cashier, index) => `<div class="dash-mini-row"><span><b>${index + 1}</b>${escapeHtml(cashier.name)}</span><small>${number(cashier.transactions)} giao dịch</small><strong>${money(cashier.revenue)}</strong></div>`).join('') : '<div class="dash-empty-compact">Chưa phát sinh giao dịch.</div>';
-    const rangePresets = dashboardDatePresets();
-    const presetHtml = rangePresets.map(preset => {
-        const active = preset.from === data.range.from && preset.to === data.range.to ? ' active' : '';
-        return `<button class="button${active}" type="button" data-dashboard-preset="${preset.key}" data-from="${preset.from}" data-to="${preset.to}">${preset.label}</button>`;
-    }).join('');
-
-    const filterHtml = `<div class="dashboard-filter-bar" aria-label="Bộ lọc thời gian">
-        <div class="dashboard-presets dashboard-range-badges" aria-label="Chọn nhanh doanh thu theo ngày">
-            ${presetHtml}
-        </div>
-        <div class="dashboard-filter">
-            <input type="date" id="dashboard-from" value="${data.range.from}" aria-label="Từ ngày">
-            <span class="filter-separator">—</span>
-            <input type="date" id="dashboard-to" value="${data.range.to}" aria-label="Đến ngày">
-            <button class="button primary" id="dashboard-filter">Xem</button>
-        </div>
-    </div>`;
-
-    const dashboardHead = `<header class="page-head owner-dashboard-head">
-        <div class="owner-dashboard-title"><p class="eyebrow">BÁO CÁO QUẢN LÝ</p><h1>Tổng quan kinh doanh</h1></div>
-        ${filterHtml}
-    </header>`;
-
-
-    $('#page-content').innerHTML = dashboardHead + `
-        <section class="owner-kpis">
-            <article class="owner-kpi primary"><span class="owner-kpi-icon">${icons.revenue}</span><div><small>DOANH THU ĐÃ THU</small><strong>${money(data.metrics.collected_revenue)}</strong></div></article>
-            <article class="owner-kpi"><span class="owner-kpi-icon">${icons.orders}</span><div><small>ĐƠN HOÀN TẤT</small><strong>${number(data.metrics.paid_order_count)} <em>đơn</em></strong></div></article>
-            <article class="owner-kpi"><span class="owner-kpi-icon">${icons.ticket}</span><div><small>GIÁ TRỊ TRUNG BÌNH</small><strong>${money(data.metrics.average_ticket)}</strong></div></article>
-            <article class="owner-kpi warning"><span class="owner-kpi-icon">${icons.outstanding}</span><div><small>CÒN PHẢI THU</small><strong>${money(data.metrics.outstanding_amount)}</strong><span class="dash-trend neutral">${number(data.metrics.attention_order_count)} đơn chưa tất toán</span></div></article>
-        </section>
-
-        <article class="owner-panel revenue-overview">
-            <header class="owner-panel-head"><div><span>DÒNG TIỀN</span><h3>Doanh thu theo thời gian</h3></div><div class="chart-legend"><span class="coffee">Cà phê</span><span class="fishing">Câu cá</span></div></header>
-            ${chartSvg(data.daily)}
-        </article>
-
-        <section class="owner-main-grid">
-            <article class="owner-panel business-card coffee-business">
-                <header class="owner-panel-head"><div><span>MÔ HÌNH CÀ PHÊ</span><h3>Hiệu quả bán hàng</h3></div><i>${icons.coffee}</i></header>
-                <div class="business-total"><strong>${money(data.coffee_summary.revenue)}</strong><span>${coffeeShare}% tổng doanh thu</span></div>
-                <div class="business-stat-grid"><div><small>Đơn hoàn tất</small><strong>${number(data.coffee_summary.paid_orders)}</strong></div><div><small>Sản phẩm đã bán</small><strong>${number(data.coffee_summary.items_sold)}</strong></div></div>
-                <div class="business-share"><i style="width:${coffeeShare}%"></i></div>
-                <h4>Món đóng góp nhiều nhất</h4>${renderTopItems(coffeeItems)}
-            </article>
-            <article class="owner-panel business-card fishing-business">
-                <header class="owner-panel-head"><div><span>MÔ HÌNH CÂU CÁ</span><h3>Hiệu quả hồ câu</h3></div><i>${icons.fishing}</i></header>
-                <div class="business-total"><strong>${money(data.fishing_summary.revenue)}</strong><span>${fishingShare}% tổng doanh thu</span></div>
-                <div class="business-stat-grid"><div><small>Phiên bắt đầu</small><strong>${number(data.fishing_summary.sessions_started)}</strong></div><div><small>Lượt gia hạn</small><strong>${number(data.fishing_summary.extensions)}</strong></div></div>
-                <div class="fishing-income"><div><span>Tiền phiên câu</span><strong>${money(data.fishing_summary.session_revenue)}</strong></div><div><span>Gọi món tại chòi</span><strong>${money(data.fishing_summary.menu_revenue)}</strong></div></div>
-                <div class="occupancy-row"><span>Chòi đang có khách <b>${number(data.metrics.occupied_spots)}/${number(data.metrics.enabled_spots)}</b></span><strong>${number(data.metrics.spot_occupancy_rate)}%</strong></div>
-                <div class="business-share"><i style="width:${data.metrics.spot_occupancy_rate}%"></i></div>
-            </article>
-        </section>
-
-        <section class="owner-bottom-grid">
-            <article class="owner-panel"><header class="owner-panel-head"><div><span>NHỊP BÁN HÀNG</span><h3>Khung giờ doanh thu cao</h3></div><i>${icons.clock}</i></header>${renderPeakHours(data.peak_hours)}</article>
-            <article class="owner-panel"><header class="owner-panel-head"><div><span>THANH TOÁN</span><h3>Giao dịch theo nhân viên</h3></div><i>${icons.user}</i></header>${renderCashiers(data.cashiers)}</article>
-        </section>`;
-
-    const chartWrap = $('.owner-chart-wrap');
-    const chartTooltip = $('.owner-chart-tooltip', chartWrap);
-    const hideChartTooltip = () => {
-        chartTooltip.classList.remove('open');
-        $$('[data-chart-stack]', chartWrap).forEach(stack => stack.classList.remove('selected'));
-    };
-    const showChartTooltip = stack => {
-        const date = new Date(`${stack.dataset.day}T00:00:00`).toLocaleDateString('vi-VN', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
-        chartTooltip.innerHTML = `<strong>${date}</strong><div><span><i class="coffee"></i>Cà phê</span><b>${money(stack.dataset.coffee)}</b></div><div><span><i class="fishing"></i>Câu cá</span><b>${money(stack.dataset.fishing)}</b></div><div class="total"><span>Tổng doanh thu</span><b>${money(stack.dataset.total)}</b></div>`;
-        $$('[data-chart-stack]', chartWrap).forEach(item => item.classList.toggle('selected', item === stack));
-        chartTooltip.classList.add('open');
-        const wrapRect = chartWrap.getBoundingClientRect();
-        const stackRect = stack.getBoundingClientRect();
-        const tooltipWidth = chartTooltip.offsetWidth;
-        const center = stackRect.left - wrapRect.left + stackRect.width / 2;
-        const left = Math.max(8, Math.min(center - tooltipWidth / 2, chartWrap.clientWidth - tooltipWidth - 8));
-        chartTooltip.style.left = `${left}px`;
-        chartTooltip.style.top = `${Math.max(8, stackRect.top - wrapRect.top - chartTooltip.offsetHeight - 12)}px`;
-    };
-    $$('[data-chart-stack]', chartWrap).forEach(stack => {
-        stack.onclick = event => {
-            event.stopPropagation();
-            if (stack.classList.contains('selected')) hideChartTooltip();
-            else showChartTooltip(stack);
-        };
-        stack.onkeydown = event => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                showChartTooltip(stack);
-            }
-        };
-    });
-    chartWrap.onclick = event => {
-        if (!event.target.closest('[data-chart-stack]') && !event.target.closest('.owner-chart-tooltip')) hideChartTooltip();
-    };
-
-    const filterBtn = $('#dashboard-filter');
-    const syncDashboardPresetState = () => {
-        const fromValue = $('#dashboard-from')?.value;
-        const toValue = $('#dashboard-to')?.value;
-        $$('[data-dashboard-preset]').forEach(button => {
-            button.classList.toggle('active', button.dataset.from === fromValue && button.dataset.to === toValue);
-        });
-    };
-    filterBtn.onclick = async () => {
-        const result = await api(`/api/v1/admin/dashboard?from=${$('#dashboard-from').value}&to=${$('#dashboard-to').value}`);
-        drawDashboard(result);
-    };
-    $('#dashboard-from').oninput = syncDashboardPresetState;
-    $('#dashboard-to').oninput = syncDashboardPresetState;
-    $$('[data-dashboard-preset]').forEach(button => {
-        button.onclick = () => {
-            $('#dashboard-from').value = button.dataset.from;
-            $('#dashboard-to').value = button.dataset.to;
-            syncDashboardPresetState();
-            filterBtn.click();
-        };
-    });
-
-
-    const sidebarTotal = $('#sidebar-total');
-    if (sidebarTotal) sidebarTotal.textContent = money(data.metrics.collected_revenue);
-}
-
-function chartSvg(rows) {
-    if (!rows.length) return '<div class="empty-state">Chưa có doanh thu trong khoảng này.</div>';
-    const width = 960, height = 300, left = 68, right = 22, top = 18, bottom = 42;
-    const max = Math.max(...rows.map(row => Number(row.revenue)), 1);
-    const plotWidth = width - left - right, plotHeight = height - top - bottom, slot = plotWidth / rows.length, barWidth = Math.max(5, Math.min(32, slot * .58));
-    
-    const grid = [0, .5, 1].map(ratio => {
-        const y = top + plotHeight * (1 - ratio);
-        return `<line x1="${left}" x2="${width - right}" y1="${y}" y2="${y}"/><text x="${left - 12}" y="${y + 4}">${ratio ? `${Math.round(max * ratio / 1000)}k` : '0'}</text>`;
-    }).join('');
-
-    const bars = rows.map((row, index) => {
-        const coffee = Number(row.coffee || 0);
-        const fishing = Number(row.fishing || 0);
-        const coffeeHeight = (coffee / max) * plotHeight;
-        const fishingHeight = (fishing / max) * plotHeight;
-        const x = left + index * slot + (slot - barWidth) / 2;
-        const coffeeY = top + plotHeight - coffeeHeight;
-        const fishingY = coffeeY - fishingHeight;
-        return `<g class="revenue-stack" role="button" tabindex="0" data-chart-stack data-day="${row.day}" data-coffee="${coffee}" data-fishing="${fishing}" data-total="${coffee + fishing}" aria-label="Xem doanh thu ngày ${row.day}"><rect class="chart-hit-area" x="${left + index * slot}" y="${top}" width="${slot}" height="${plotHeight}"></rect><rect class="coffee-bar" x="${x}" y="${coffeeY}" width="${barWidth}" height="${Math.max(coffeeHeight, coffee ? 2 : 0)}" rx="4"></rect><rect class="fishing-bar" x="${x}" y="${fishingY}" width="${barWidth}" height="${Math.max(fishingHeight, fishing ? 2 : 0)}" rx="4"></rect></g>`;
-    }).join('');
-
-    const labelStep = Math.max(1, Math.ceil(rows.length / 6));
-    const labels = rows.map((row, index) => index % labelStep === 0 || index === rows.length - 1 ? `<text class="chart-date" x="${left + index * slot + slot / 2}" y="${height - 10}">${new Date(`${row.day}T00:00:00`).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</text>` : '').join('');
-
-    return `<div class="owner-chart-wrap"><svg class="chart owner-revenue-chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
-            <g class="chart-grid">${grid}</g>
-            <g class="chart-bars">${bars}</g>
-            <g class="chart-labels">${labels}</g>
-        </svg><div class="owner-chart-tooltip" role="status" aria-live="polite"></div></div>`;
 }
 
 async function renderMenuAdmin(page = adminMenuPage, options = {}) {
@@ -3869,50 +3162,10 @@ async function renderSettingsAdmin() {
 }
 
 function paymentMethodForm(method = null) {
-    const qrPlaceholder = '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect><rect x="30" y="6" width="12" height="12" rx="2"></rect><rect x="6" y="30" width="12" height="12" rx="2"></rect><path d="M24 8h2M24 14h2M22 22h5v5h-5zM31 24h4v4M38 24h4M24 33h3M31 32h3v8M39 32h3v3M22 39h5M39 40h3"></path></svg>';
-    const imagePreview = method?.qr_image_url
-        ? `<img src="${escapeHtml(method.qr_image_url)}" alt="Mã QR thanh toán">`
-        : qrPlaceholder;
-    const initialType = method?.type || 'qr';
-
     openModal({
-        title: method ? 'Chỉnh sửa phương thức' : 'Thêm phương thức',
-        body: `<form id="payment-method-form" class="payment-method-form" enctype="multipart/form-data">
-            <div class="payment-method-form-main">
-                <div class="payment-method-form-grid">
-                    <label>Tên phương thức<input name="name" value="${escapeHtml(method?.name || '')}" maxlength="120" placeholder="Ví dụ: Vietcombank QR" required></label>
-                    <label>Loại thanh toán<select id="payment-method-type" name="type" ${method ? 'disabled' : ''}>
-                        <option value="qr" ${initialType === 'qr' ? 'selected' : ''}>QR / chuyển khoản</option>
-                        ${method ? `<option value="cash" ${initialType === 'cash' ? 'selected' : ''}>Tiền mặt</option>` : ''}
-                    </select></label>
-                </div>
-                <label class="payment-toggle-card payment-method-enabled" for="payment-method-enabled">
-                    <span><strong>Đang bật trên POS</strong><small>Chỉ phương thức đang bật mới xuất hiện khi thanh toán.</small></span>
-                    <input id="payment-method-enabled" name="is_enabled" type="checkbox" ${method?.is_enabled !== false ? 'checked' : ''}>
-                    <i aria-hidden="true"></i>
-                </label>
-                <section class="payment-method-qr-fields" data-payment-method-qr>
-                    <div class="payment-method-qr-media">
-                        <label class="payment-qr-drop">
-                            <span class="payment-qr-preview" id="payment-method-qr-preview">${imagePreview}</span>
-                            <span class="payment-qr-overlay"><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"></path><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"></path></svg><strong>${method?.qr_image_url ? 'Thay QR' : 'Chọn QR'}</strong></span>
-                            <input id="payment-method-qr-image" name="qr_image" type="file" accept="image/jpeg,image/png,image/webp">
-                        </label>
-                        ${method?.qr_image_url ? '<label class="payment-qr-remove"><input type="checkbox" name="remove_qr_image" value="1"><span>Xóa QR hiện tại</span></label>' : ''}
-                    </div>
-                    <div class="payment-method-qr-info">
-                        <div class="payment-settings-grid">
-                            <label>Ngân hàng / Ví điện tử<input name="bank_name" value="${escapeHtml(method?.bank_name || '')}" maxlength="120" placeholder="Ví dụ: Vietcombank"></label>
-                            <label>Tên chủ tài khoản<input name="account_name" value="${escapeHtml(method?.account_name || '')}" maxlength="120" placeholder="Ví dụ: DONG LAY FISHING"></label>
-                            <label>Số tài khoản<input name="account_number" value="${escapeHtml(method?.account_number || '')}" maxlength="80" placeholder="Nhập số tài khoản"></label>
-                            <label>Nội dung chuyển khoản<input name="transfer_note" value="${escapeHtml(method?.transfer_note || '')}" maxlength="160" placeholder="Ví dụ: DONG LAY"></label>
-                        </div>
-                        <label>Ghi chú thêm<textarea name="extra_info" rows="3" maxlength="1000" placeholder="Ví dụ: Đưa màn hình chuyển khoản thành công cho nhân viên xác nhận.">${escapeHtml(method?.extra_info || '')}</textarea></label>
-                    </div>
-                </section>
-            </div>
-        </form>`,
-        footer: '<span class="muted payment-method-footnote">POS sẽ chỉ hiển thị phương thức đang bật và đủ thông tin cần thiết.</span><div><button class="button primary" id="save-payment-method">Lưu phương thức</button></div>',
+        title: paymentMethodFormTitle(method),
+        body: renderPaymentMethodForm(method),
+        footer: paymentMethodFormFooter(),
         onReady(modal, close) {
             modal.classList.add('payment-method-modal');
             const form = $('#payment-method-form', modal);
@@ -3973,96 +3226,6 @@ function paymentMethodForm(method = null) {
                 } catch (error) {
                     saveButton.disabled = false;
                     saveButton.textContent = 'Lưu phương thức';
-                    toast(error.message, 'error');
-                }
-            };
-        }
-    });
-}
-
-async function renderUsers() {
-    const data=await api('/api/v1/admin/users');
-    $('#page-content').classList.add('owner-users-page');
-    $('#page-content').innerHTML=pageHead('NHÂN SỰ','Quản lý User','','<button class="button primary" id="add-user"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Thêm tài khoản</button>')+`<div class="data-table-wrap"><table class="data-table user-admin-table"><thead><tr><th>THÀNH VIÊN</th><th>ĐĂNG NHẬP</th><th>VAI TRÒ</th><th>TRẠNG THÁI</th></tr></thead><tbody>${data.users.map(user=>`<tr class="user-row-clickable" data-edit-user-row="${user.id}" tabindex="0" aria-label="Chỉnh sửa tài khoản ${escapeHtml(user.name)}"><td data-label="Thành viên"><strong>${escapeHtml(user.name)}</strong></td><td data-label="Đăng nhập">${escapeHtml(user.role==='admin'?user.username:user.email)}</td><td data-label="Vai trò">${user.role==='admin'?'Admin':'Nhân viên'}</td><td data-label="Trạng thái"><span class="pill ${user.is_active?'':'gray'}">${user.is_active?'Hoạt động':'Đã khóa'}</span></td></tr>`).join('')}</tbody></table></div>`;
-    $('#add-user').onclick=()=>userForm();
-    $$('[data-edit-user-row]').forEach(row => {
-        const openUser = () => userForm(data.users.find(user => user.id === Number(row.dataset.editUserRow)));
-        row.onclick = event => {
-            if (event.target.closest('button, a, input, select, textarea, label')) return;
-            openUser();
-        };
-        row.onkeydown = event => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            openUser();
-        };
-    });
-}
-
-function userForm(user = null) {
-    const initialRole = user?.role === 'admin' ? 'admin' : 'employee';
-    const initial = (user?.name || 'T').trim().charAt(0).toUpperCase();
-    const title = user ? `Chỉnh sửa ${initialRole === 'admin' ? 'quản trị viên' : 'nhân viên'}` : 'Thêm thành viên';
-    openModal({
-        title,
-        body: `<form id="user-form" class="user-account-form">
-            <div class="user-form-intro">
-                <span class="user-form-avatar">${escapeHtml(initial)}</span>
-                <div><small>THÔNG TIN TÀI KHOẢN</small><strong>${escapeHtml(user?.name || 'Thành viên mới')}</strong></div>
-            </div>
-            <label class="user-form-field">Họ và tên<input name="name" value="${escapeHtml(user?.name || '')}" placeholder="Nhập họ tên thành viên" autocomplete="name" required></label>
-            <fieldset class="user-role-fieldset"><legend>Vai trò</legend><input type="hidden" name="role" id="user-role-value" value="${initialRole}"><div class="user-role-tabs">
-                <button type="button" class="user-role-tab ${initialRole === 'employee' ? 'active' : ''}" data-user-role="employee" aria-pressed="${initialRole === 'employee'}"><span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span><strong>Nhân viên</strong></button>
-                <button type="button" class="user-role-tab ${initialRole === 'admin' ? 'active' : ''}" data-user-role="admin" aria-pressed="${initialRole === 'admin'}"><span><svg viewBox="0 0 24 24"><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7l-8-4Z"></path><path d="m9 12 2 2 4-4"></path></svg></span><strong>Quản trị viên</strong></button>
-            </div></fieldset>
-            <section class="user-credential-section" data-role-fields="employee">
-                <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Mã OTP sẽ được gửi đến địa chỉ này.</small></div></div>
-                <label class="user-form-field">Địa chỉ email<input type="email" name="email" value="${escapeHtml(user?.email || '')}" placeholder="tennhanvien@gmail.com" autocomplete="email"></label>
-                <label class="user-toggle-card" for="user-email-verified"><span><strong>Email đã xác minh</strong><small>Cho phép tài khoản nhận OTP và đăng nhập.</small></span><input id="user-email-verified" name="email_verified" type="checkbox" ${user ? (user.email_verified_at ? 'checked' : '') : 'checked'}><i></i></label>
-            </section>
-            <section class="user-credential-section" data-role-fields="admin">
-                <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Quản trị viên sử dụng tên đăng nhập và mật khẩu.</small></div></div>
-                <div class="user-form-grid"><label class="user-form-field">Tên đăng nhập<input name="username" value="${escapeHtml(user?.username || '')}" placeholder="Ví dụ: quanly" autocomplete="username"></label><label class="user-form-field">${user ? 'Mật khẩu mới' : 'Mật khẩu'}<input type="password" name="password" placeholder="${user ? 'Để trống nếu giữ nguyên' : 'Tối thiểu 8 ký tự'}" autocomplete="new-password"></label></div>
-            </section>
-            <label class="user-toggle-card account-status" for="user-is-active"><span><strong>Tài khoản hoạt động</strong><small>Cho phép thành viên tiếp tục đăng nhập vào hệ thống.</small></span><input id="user-is-active" name="is_active" type="checkbox" ${user?.is_active !== false ? 'checked' : ''}><i></i></label>
-        </form>`,
-        footer: '<span class="muted user-form-footnote">Các thay đổi sẽ áp dụng ở lần đăng nhập tiếp theo.</span><div><button class="button primary" id="save-user">Lưu tài khoản</button></div>',
-        onReady(modal, close) {
-            modal.classList.add('user-account-modal');
-            const roleValue = $('#user-role-value', modal);
-            const syncRole = role => {
-                roleValue.value = role;
-                $$('[data-user-role]', modal).forEach(button => {
-                    const active = button.dataset.userRole === role;
-                    button.classList.toggle('active', active);
-                    button.setAttribute('aria-pressed', String(active));
-                });
-                $$('[data-role-fields]', modal).forEach(section => {
-                    const active = section.dataset.roleFields === role;
-                    section.classList.toggle('hidden', !active);
-                    $$('input', section).forEach(input => input.disabled = !active);
-                });
-            };
-            $$('[data-user-role]', modal).forEach(button => button.onclick = () => syncRole(button.dataset.userRole));
-            syncRole(initialRole);
-            $('#save-user', modal).onclick = async () => {
-                const formData = new FormData($('#user-form', modal));
-                const values = Object.fromEntries(formData);
-                values.is_active = $('#user-is-active', modal).checked;
-                values.email_verified = values.role === 'employee' && $('#user-email-verified', modal).checked;
-                if (values.role === 'employee') {
-                    values.username = null;
-                    delete values.password;
-                } else {
-                    values.email = null;
-                    if (!values.password) delete values.password;
-                }
-                try {
-                    const result = await api(user ? `/api/v1/admin/users/${user.id}` : '/api/v1/admin/users', { method:user ? 'PUT' : 'POST', body:values });
-                    toast(result.message);
-                    close();
-                    renderUsers();
-                } catch (error) {
                     toast(error.message, 'error');
                 }
             };

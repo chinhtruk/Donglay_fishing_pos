@@ -1,0 +1,58 @@
+/* Base data table and pill primitives.
+   Moved from resources/css/app.css:1414-1465. */
+
+.data-table-wrap {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: auto
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px
+}
+
+.data-table th {
+    text-align: left;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    background: #faf8f5;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--line)
+}
+
+.data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px
+}
+
+.data-table tr:last-child td {
+    border-bottom: 0
+}
+
+.data-table tr:hover td {
+    background: #f8efe6
+}
+
+.table-actions {
+    display: flex;
+    gap: 6px
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: var(--sage);
+    color: var(--moss);
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.3
+}

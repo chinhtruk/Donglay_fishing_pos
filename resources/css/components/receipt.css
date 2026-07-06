@@ -1,0 +1,1223 @@
+/* Order detail and receipt composition.
+   Moved from resources/css/app.css:6285-7509. */
+
+/* Rich order-detail receipt */
+.order-detail-modal {
+    width: min(1040px, 100%)
+}
+
+.order-detail-modal>.modal-head {
+    padding: 18px 22px;
+    background: #fbfcfa
+}
+
+.order-detail-modal>.modal-head h2 {
+    font-size: 16px;
+    letter-spacing: -.02em
+}
+
+.order-detail-modal>.modal-body {
+    padding: 0;
+    background: #f4f6f2
+}
+
+.order-detail {
+    display: grid
+}
+
+.order-detail-hero {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 13px;
+    padding: 20px 22px 17px;
+    background: #fff;
+    border-bottom: 1px solid var(--line)
+}
+
+.order-detail-service-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: #f8efe6;
+    color: var(--moss)
+}
+
+.order-detail-service-icon svg,
+.order-detail-meta svg,
+.payment-check svg,
+.order-detail-no-payment svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round
+}
+
+.order-detail-identity {
+    min-width: 0
+}
+
+.order-detail-identity>span {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--moss-2);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .13em;
+    text-transform: uppercase
+}
+
+.order-detail-identity>strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 18px;
+    letter-spacing: .01em;
+    white-space: nowrap
+}
+
+.order-detail-hero>.pill {
+    align-self: start;
+    margin-top: 3px;
+    padding: 6px 10px
+}
+
+.order-detail-meta {
+    grid-column: 1/-1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-top: 3px
+}
+
+.order-detail-meta>span {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: #fbfcfa
+}
+
+.order-detail-meta svg {
+    grid-row: 1/3;
+    color: var(--muted)
+}
+
+.order-detail-meta small {
+    color: var(--muted);
+    font-size: 8px
+}
+
+.order-detail-meta strong {
+    margin-top: 2px;
+    font-size: 10px
+}
+
+.order-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+    gap: 13px;
+    padding: 13px
+}
+
+.order-detail-card {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 7px 20px rgba(74, 53, 36, 0.035)
+}
+
+.order-detail-items>header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--line)
+}
+
+.order-detail-items>header span:first-child,
+.order-detail-kicker {
+    display: block;
+    color: var(--moss-2);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .14em
+}
+
+.order-detail-items>header h3 {
+    margin: 4px 0 0;
+    font-family: Georgia, serif;
+    font-size: 16px;
+    font-weight: 500
+}
+
+.order-detail-count {
+    padding: 6px 9px;
+    border-radius: 9px;
+    background: var(--paper);
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 600
+}
+
+.order-detail-item-list {
+    max-height: 350px;
+    overflow-y: auto;
+    padding: 0 16px
+}
+
+.order-detail-item {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line)
+}
+
+.order-detail-item:last-child {
+    border-bottom: 0
+}
+
+.order-detail-item-number {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: #edf3eb;
+    color: var(--moss);
+    font-size: 9px;
+    font-weight: 700
+}
+
+.order-detail-item div>strong,
+.order-detail-item div>small {
+    display: block
+}
+
+.order-detail-item div>strong {
+    font-family: Georgia, serif;
+    font-size: 13px
+}
+
+.order-detail-item div>small {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 8px
+}
+
+.order-detail-item>strong {
+    color: #765943;
+    font-size: 10px
+}
+
+.order-detail-side {
+    display: grid;
+    align-content: start;
+    gap: 13px
+}
+
+.order-detail-summary {
+    padding: 16px
+}
+
+.order-detail-summary>div {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    color: var(--muted);
+    font-size: 9px
+}
+
+.order-detail-summary>div strong {
+    color: var(--ink)
+}
+
+.order-detail-summary .remaining {
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #dce3dc
+}
+
+.order-detail-summary .grand-total {
+    align-items: end;
+    padding: 13px 0 0;
+    color: var(--ink);
+    font-family: Georgia, serif;
+    font-size: 15px;
+    font-weight: 700
+}
+
+.order-detail-summary .grand-total strong {
+    font-size: 20px;
+    color: var(--moss)
+}
+
+.order-detail-payments>header {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 15px;
+    border-bottom: 1px solid var(--line)
+}
+
+.order-detail-payments>header>span:last-child {
+    color: var(--muted);
+    font-size: 8px
+}
+
+.order-detail-payment {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--line)
+}
+
+.order-detail-payment:last-child {
+    border-bottom: 0
+}
+
+.payment-check {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #e7f1e5;
+    color: var(--moss)
+}
+
+.payment-check svg {
+    width: 17px;
+    height: 17px
+}
+
+.order-detail-payment div>strong,
+.order-detail-payment div>small {
+    display: block
+}
+
+.order-detail-payment div>strong {
+    font-size: 9px
+}
+
+.order-detail-payment div>small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 7px
+}
+
+.payment-amount {
+    text-align: right
+}
+
+.payment-amount>strong {
+    font-size: 10px !important
+}
+
+.payment-amount button {
+    display: block;
+    margin: 5px 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--rose);
+    font-size: 7px;
+    font-weight: 700;
+    cursor: pointer
+}
+
+.order-detail-no-payment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 14px;
+    color: var(--muted);
+    font-size: 9px
+}
+
+
+
+/* Refined receipt composition: compact, quieter and content-sized. */
+.order-detail-modal {
+    width: min(860px, 100%);
+    max-height: calc(100dvh - 40px);
+    border-radius: 20px
+}
+
+.order-detail-modal>.modal-head {
+    min-height: 58px;
+    padding: 12px 16px 12px 20px;
+    background: #fff
+}
+
+.order-detail-modal>.modal-head h2 {
+    font-size: 14px;
+    font-weight: 600
+}
+
+.order-detail-modal>.modal-head .modal-close {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px
+}
+
+.order-detail-modal>.modal-body {
+    background: #f6f7f4
+}
+
+.order-detail-hero {
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+    gap: 11px;
+    padding: 16px 18px 15px
+}
+
+.order-detail-service-icon {
+    grid-row: 1/3;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px
+}
+
+.order-detail-identity>span {
+    font-size: 8px;
+    margin-bottom: 3px
+}
+
+.order-detail-identity>strong {
+    font-size: 15px;
+    letter-spacing: 0
+}
+
+.order-detail-hero>.pill {
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 8px
+}
+
+.order-detail-meta {
+    grid-column: 2/-1;
+    display: flex;
+    gap: 0;
+    margin: 1px 0 0
+}
+
+.order-detail-meta>span {
+    display: grid;
+    grid-template-columns: 21px auto;
+    grid-template-rows: auto auto;
+    column-gap: 6px;
+    min-width: 0;
+    padding: 0 18px 0 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent
+}
+
+.order-detail-meta>span+span {
+    margin-left: 18px;
+    padding-left: 18px;
+    border-left: 1px solid var(--line)
+}
+
+.order-detail-meta svg {
+    width: 17px;
+    height: 17px;
+    grid-row: 1/3
+}
+
+.order-detail-meta small {
+    font-size: 7px
+}
+
+.order-detail-meta strong {
+    font-size: 9px
+}
+
+.order-detail-grid {
+    grid-template-columns: minmax(0, 1.18fr) minmax(280px, .82fr);
+    align-items: start;
+    gap: 10px;
+    padding: 10px
+}
+
+.order-detail-card {
+    border-color: var(--line);
+    border-radius: 13px;
+    box-shadow: 0 5px 16px rgba(74, 53, 36, .025)
+}
+
+.order-detail-items {
+    align-self: start
+}
+
+.order-detail-items>header {
+    padding: 13px 14px
+}
+
+.order-detail-items>header h3 {
+    margin-top: 3px;
+    font-size: 15px
+}
+
+.order-detail-count {
+    padding: 5px 8px;
+    font-size: 8px
+}
+
+.order-detail-item-list {
+    max-height: 285px;
+    padding: 0 14px
+}
+
+.order-detail-item {
+    grid-template-columns: 27px minmax(0, 1fr) auto;
+    gap: 9px;
+    padding: 13px 0
+}
+
+.order-detail-item-number {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px
+}
+
+.order-detail-item div>strong {
+    font-size: 12px
+}
+
+.order-detail-item div>small {
+    font-size: 7px
+}
+
+.order-detail-side {
+    gap: 10px
+}
+
+.order-detail-summary {
+    padding: 15px;
+    background: linear-gradient(145deg, #5c4033, #4a3424);
+    border-color: #5c4033;
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(74, 53, 36, .13)
+}
+
+.order-detail-summary .order-detail-kicker {
+    color: #dcc9bb
+}
+
+.order-detail-summary>div {
+    padding: 6px 0;
+    color: #d2c4b9;
+    font-size: 8px
+}
+
+.order-detail-summary>div strong {
+    color: #fff
+}
+
+.order-detail-summary .remaining {
+    border-color: rgba(255, 255, 255, .14)
+}
+
+.order-detail-summary .grand-total {
+    color: #fff;
+    font-size: 14px
+}
+
+.order-detail-summary .grand-total strong {
+    color: #fff;
+    font-size: 20px
+}
+
+.order-detail-payments>header {
+    padding: 12px 13px
+}
+
+.order-detail-payment {
+    grid-template-columns: 29px minmax(0, 1fr) auto;
+    padding: 11px 12px
+}
+
+.payment-check {
+    width: 27px;
+    height: 27px
+}
+
+.order-detail-no-payment {
+    padding: 19px 12px
+}
+
+
+
+/* Content-sized receipt layout: no empty column beside short orders. */
+.order-detail-modal {
+    width: min(780px, 100%)
+}
+
+.order-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+    align-items: start
+}
+
+.order-detail-items {
+    width: 100%
+}
+
+.order-detail-item-list {
+    max-height: 230px
+}
+
+.order-detail-side {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 9px
+}
+
+.order-detail-payments {
+    grid-column: 1;
+    grid-row: 1
+}
+
+.order-detail-summary {
+    grid-column: 2;
+    grid-row: 1
+}
+
+
+
+/* Structural receipt flow; isolated from the former two-column grid. */
+.order-detail-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 10px
+}
+
+.order-detail-flow>.order-detail-items {
+    flex: 0 0 auto;
+    width: 100%;
+    align-self: auto
+}
+
+.order-detail-flow .order-detail-item-list {
+    max-height: 245px;
+    overflow-y: auto
+}
+
+.order-detail-footer-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 9px
+}
+
+.order-detail-footer-grid>.order-detail-payments {
+    grid-column: 1;
+    grid-row: 1
+}
+
+.order-detail-footer-grid>.order-detail-summary {
+    grid-column: 2;
+    grid-row: 1
+}
+
+
+
+/* POS receipt detail — informed by Square/Shopify/Toast transaction views. */
+.pos-receipt-modal {
+    width: min(680px, 100%);
+    max-height: calc(100dvh - 36px);
+    border-radius: 20px
+}
+
+.pos-receipt-modal>.modal-head {
+    min-height: 58px;
+    padding: 12px 15px 12px 20px;
+    background: #fff
+}
+
+.pos-receipt-modal>.modal-head h2 {
+    font-size: 14px
+}
+
+.pos-receipt-modal>.modal-body {
+    padding: 0;
+    overflow-y: auto;
+    background: #fff
+}
+
+.pos-receipt {
+    color: var(--ink)
+}
+
+.pos-receipt-head {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    padding: 17px 20px 14px
+}
+
+.pos-receipt-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: #efe6dd;
+    color: var(--moss)
+}
+
+.pos-receipt-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round
+}
+
+.pos-receipt-title {
+    min-width: 0
+}
+
+.pos-receipt-title small,
+.pos-receipt-title strong {
+    display: block
+}
+
+.pos-receipt-title small {
+    margin-bottom: 4px;
+    color: var(--moss-2);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .11em
+}
+
+.pos-receipt-title strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    white-space: nowrap
+}
+
+.pos-receipt-head>.pill {
+    font-size: 8px
+}
+
+.pos-receipt-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0 20px 14px;
+    padding: 11px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line)
+}
+
+.pos-receipt-meta>span {
+    min-width: 0;
+    padding: 0 12px;
+    border-right: 1px solid var(--line)
+}
+
+.pos-receipt-meta>span:first-child {
+    padding-left: 0
+}
+
+.pos-receipt-meta>span:last-child {
+    padding-right: 0;
+    border-right: 0
+}
+
+.pos-receipt-meta small,
+.pos-receipt-meta strong {
+    display: block
+}
+
+.pos-receipt-meta small {
+    color: var(--muted);
+    font-size: 7px
+}
+
+.pos-receipt-meta strong {
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 9px;
+    white-space: nowrap
+}
+
+.pos-receipt-section {
+    border-top: 8px solid var(--paper)
+}
+
+.pos-receipt-section>header,
+.pos-receipt-payments>header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--line)
+}
+
+.pos-receipt-section>header strong,
+.pos-receipt-payments>header strong {
+    font-size: 10px
+}
+
+.pos-receipt-section>header span,
+.pos-receipt-payments>header span {
+    color: var(--muted);
+    font-size: 8px
+}
+
+.pos-receipt-lines {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 0 20px
+}
+
+.pos-receipt-line {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line)
+}
+
+.pos-receipt-line:last-child {
+    border-bottom: 0
+}
+
+.receipt-quantity {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: #f7eee3;
+    color: var(--moss);
+    font-size: 9px;
+    font-weight: 700
+}
+
+.pos-receipt-line div>strong,
+.pos-receipt-line div>small {
+    display: block
+}
+
+.pos-receipt-line div>strong {
+    font-family: Georgia, serif;
+    font-size: 12px
+}
+
+.pos-receipt-line div>small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 7px
+}
+
+.pos-receipt-line>strong {
+    color: #765943;
+    font-size: 9px
+}
+
+.pos-receipt-totals {
+    padding: 12px 20px 15px;
+    border-top: 8px solid var(--paper)
+}
+
+.pos-receipt-totals>div {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    color: var(--muted);
+    font-size: 8px
+}
+
+.pos-receipt-totals>div strong {
+    color: var(--ink)
+}
+
+.pos-receipt-totals .receipt-grand-total {
+    align-items: center;
+    margin-top: 7px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    color: var(--ink);
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: 700
+}
+
+.pos-receipt-totals .receipt-grand-total strong {
+    color: var(--moss);
+    font-size: 19px
+}
+
+.pos-receipt-payments {
+    border-top: 8px solid var(--paper)
+}
+
+.pos-payment-row {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--line)
+}
+
+.pos-payment-row:last-child {
+    border-bottom: 0
+}
+
+.pos-payment-status {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #f2ebe3;
+    color: var(--moss)
+}
+
+.pos-payment-status svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8
+}
+
+.pos-payment-row div>strong,
+.pos-payment-row div>small {
+    display: block
+}
+
+.pos-payment-row div>strong {
+    font-size: 9px
+}
+
+.pos-payment-row div>small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 7px
+}
+
+.pos-payment-row>div:last-child {
+    text-align: right
+}
+
+.pos-payment-row button {
+    display: block;
+    margin: 4px 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--rose);
+    font-size: 7px;
+    font-weight: 700;
+    cursor: pointer
+}
+
+.pos-receipt-empty {
+    padding: 21px 20px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 8px
+}
+
+
+
+/* iPad-first receipt palette and readable type scale. */
+.pos-receipt-modal {
+    width: min(720px, calc(100% - 24px));
+    max-height: calc(100dvh - 28px)
+}
+
+.pos-receipt-modal>.modal-head {
+    min-height: 66px;
+    padding: 14px 18px 14px 24px;
+    border-bottom-color: var(--line);
+    background: #fffdf9
+}
+
+.pos-receipt-modal>.modal-head h2 {
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -.025em
+}
+
+.pos-receipt-modal>.modal-head .modal-close {
+    width: 44px;
+    height: 44px;
+    background: var(--paper)
+}
+
+.pos-receipt-modal>.modal-body {
+    background: #fffdf9
+}
+
+.pos-receipt {
+    --receipt-accent: #76553f;
+    --receipt-soft: #f1e3d3;
+    --receipt-wash: #fbf5ec;
+    --receipt-price: #76553f;
+    background: #fffdf9
+}
+
+.pos-receipt.receipt-coffee {
+    --receipt-accent: #76553f;
+    --receipt-soft: #f1e3d3;
+    --receipt-wash: #fbf5ec;
+    --receipt-price: #76553f
+}
+
+.pos-receipt.receipt-fishing {
+    --receipt-accent: #35636a;
+    --receipt-soft: #dcebed;
+    --receipt-wash: #f0f7f6;
+    --receipt-price: #35636a
+}
+
+.pos-receipt-head {
+    gap: 14px;
+    padding: 21px 24px 17px;
+    background: linear-gradient(135deg, var(--receipt-wash), #fffdf9 72%)
+}
+
+.pos-receipt-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+    background: var(--receipt-soft);
+    color: var(--receipt-accent);
+    box-shadow: inset 0 0 0 1px rgba(74, 53, 37, .04)
+}
+
+.pos-receipt-icon svg {
+    width: 23px;
+    height: 23px;
+    stroke-width: 1.9
+}
+
+.pos-receipt-title small {
+    margin-bottom: 5px;
+    color: var(--receipt-accent);
+    font-size: 10px;
+    letter-spacing: .13em
+}
+
+.pos-receipt-title strong {
+    font-size: 18px;
+    letter-spacing: .005em
+}
+
+.pos-receipt-head>.pill {
+    padding: 7px 11px;
+    font-size: 10px
+}
+
+.pos-receipt-meta {
+    margin: 0 24px 18px;
+    padding: 14px 0;
+    border-color: var(--line);
+    background: transparent
+}
+
+.pos-receipt-meta>span {
+    padding: 0 16px;
+    border-color: var(--line)
+}
+
+.pos-receipt-meta small {
+    font-size: 10px;
+    line-height: 1.3
+}
+
+.pos-receipt-meta strong {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.35
+}
+
+.pos-receipt-section,
+.pos-receipt-payments {
+    border-top: 10px solid var(--paper)
+}
+
+.pos-receipt-section>header,
+.pos-receipt-payments>header {
+    min-height: 52px;
+    padding: 14px 24px;
+    border-color: var(--line);
+    background: var(--receipt-wash)
+}
+
+.pos-receipt-section>header strong,
+.pos-receipt-payments>header strong {
+    font-size: 13px
+}
+
+.pos-receipt-section>header span,
+.pos-receipt-payments>header span {
+    font-size: 10px;
+    font-weight: 600
+}
+
+.pos-receipt-lines {
+    max-height: min(38dvh, 360px);
+    padding: 0 24px
+}
+
+.pos-receipt-line {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 12px;
+    min-height: 68px;
+    padding: 14px 0;
+    border-color: var(--line)
+}
+
+.receipt-quantity {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--receipt-soft);
+    color: var(--receipt-accent);
+    font-size: 11px
+}
+
+.pos-receipt-line div>strong {
+    font-size: 15px;
+    line-height: 1.35
+}
+
+.pos-receipt-line div>small {
+    margin-top: 5px;
+    font-size: 10px;
+    line-height: 1.35
+}
+
+.pos-receipt-line>strong {
+    color: var(--receipt-price);
+    font-size: 12px
+}
+
+.pos-receipt-totals {
+    padding: 16px 24px 19px;
+    border-top: 10px solid var(--paper);
+    background: #fff
+}
+
+.pos-receipt-totals>div {
+    padding: 7px 0;
+    font-size: 11px
+}
+
+.pos-receipt-totals .receipt-grand-total {
+    margin-top: 8px;
+    padding-top: 15px;
+    border-color: #ced9ce;
+    font-size: 17px
+}
+
+.pos-receipt-totals .receipt-grand-total strong {
+    color: var(--receipt-accent);
+    font-size: 24px
+}
+
+.pos-payment-row {
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    gap: 12px;
+    min-height: 66px;
+    padding: 13px 24px;
+    border-color: #e1e7e0;
+    background: #fff
+}
+
+.pos-payment-status {
+    width: 36px;
+    height: 36px;
+    background: var(--receipt-soft);
+    color: var(--receipt-accent)
+}
+
+.pos-payment-status svg {
+    width: 20px;
+    height: 20px
+}
+
+.pos-payment-row div>strong {
+    font-size: 12px;
+    line-height: 1.35
+}
+
+.pos-payment-row div>small {
+    margin-top: 4px;
+    font-size: 10px;
+    line-height: 1.35
+}
+
+.pos-payment-row button {
+    min-height: 32px;
+    margin-top: 5px;
+    padding: 0 8px;
+    border-radius: 8px;
+    background: #fbe9e6;
+    font-size: 10px
+}
+
+.pos-receipt-empty {
+    min-height: 76px;
+    display: grid;
+    place-items: center;
+    padding: 22px 24px;
+    background: #fff;
+    font-size: 11px
+}
+
+@media(min-width:768px) and (max-width:1100px) {
+    .pos-receipt-modal {
+        width: min(700px, calc(100% - 20px));
+        max-height: calc(100dvh - 20px)
+    }
+
+    .pos-receipt-head {
+        padding: 19px 22px 16px
+    }
+
+    .pos-receipt-meta {
+        margin-left: 22px;
+        margin-right: 22px
+    }
+
+    .pos-receipt-section>header,
+    .pos-receipt-payments>header,
+    .pos-payment-row {
+        padding-left: 22px;
+        padding-right: 22px
+    }
+
+    .pos-receipt-lines,
+    .pos-receipt-totals {
+        padding-left: 22px;
+        padding-right: 22px
+    }
+}

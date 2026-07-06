@@ -1,0 +1,244 @@
+/* POS order modal independent scroll block.
+   Moved from resources/css/app.css:4995-5197. */
+
+.pos-order-modal {
+    height: min(900px, calc(100dvh - 48px));
+    max-height: calc(100dvh - 48px)
+}
+
+.pos-order-modal>.modal-head {
+    flex: 0 0 auto
+}
+
+.pos-order-modal>.modal-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 !important
+}
+
+.pos-order-modal .modal-pos-layout {
+    flex: 1;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    grid-template-rows: 1fr
+}
+
+.pos-order-modal .pos-menu-section {
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden !important
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head,
+.pos-order-modal .pos-menu-section>.category-tabs {
+    flex: 0 0 auto
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .pos-search {
+    order: 1;
+    width: 100% !important;
+    flex: 0 0 100% !important
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .pos-search input {
+    width: 100% !important;
+    height: 42px !important;
+    font-size: 12px !important
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .category-tabs {
+    order: 2;
+    width: 100%;
+    flex: 0 0 100% !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 0 3px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .category-tabs::-webkit-scrollbar {
+    display: none
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .category-tabs button {
+    flex: 0 0 auto
+}
+
+.pos-order-modal .pos-menu-section>.pos-product-grid {
+    flex: 1;
+    min-height: 0;
+    grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+    grid-auto-rows: max-content;
+    align-content: start;
+    gap: 14px !important;
+    overflow-x: hidden !important;
+    overflow-y: scroll !important;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 8px 24px 2px
+}
+
+.pos-order-modal .pos-menu-section>.pos-product-grid::-webkit-scrollbar {
+    width: 7px
+}
+
+.pos-order-modal .pos-menu-section>.pos-product-grid::-webkit-scrollbar-thumb {
+    border-radius: 99px;
+    background: #cdbbaa
+}
+
+.pos-order-modal .pos-menu-section>.pos-product-grid::-webkit-scrollbar-track {
+    background: transparent
+}
+
+.pos-order-modal .pos-product-card {
+    min-height: 218px;
+    border-radius: 18px
+}
+
+.pos-order-modal .product-main {
+    min-height: 218px;
+    display: flex !important;
+    flex-direction: column
+}
+
+.pos-order-modal .product-art {
+    flex: 0 0 142px;
+    height: 142px
+}
+
+.pos-order-modal .product-main strong {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 50px 4px 14px !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.35 !important
+}
+
+.pos-order-modal .product-main b {
+    width: 100%;
+    margin-top: auto !important;
+    padding: 3px 50px 14px 14px !important
+}
+
+.pos-order-modal .product-main em {
+    right: 14px !important;
+    bottom: 13px !important;
+    width: 34px !important;
+    height: 34px !important
+}
+
+.pos-order-modal .modal-order-dock-aside,
+.pos-order-modal #modal-order-panel {
+    height: 100% !important;
+    min-height: 0;
+    overflow: hidden
+}
+
+.pos-order-modal .order-dock-head,
+.pos-order-modal .order-resource-select,
+.pos-order-modal .order-notice,
+.pos-order-modal .order-dock-footer {
+    flex: 0 0 auto
+}
+
+.pos-order-modal .order-lines {
+    flex: 1;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch
+}
+
+.pos-order-modal .order-dock-footer {
+    position: relative;
+    z-index: 2;
+    padding-bottom: max(14px, env(safe-area-inset-bottom)) !important;
+    box-shadow: 0 -12px 24px rgba(31, 45, 36, .045)
+}
+
+@media(min-width:768px) and (max-width:900px) {
+    .modal-backdrop:has(.pos-order-modal) {
+        padding: 36px 24px
+    }
+
+    .pos-order-modal {
+        width: min(740px, calc(100vw - 48px)) !important;
+        height: min(880px, calc(100dvh - 72px));
+        max-height: calc(100dvh - 72px)
+    }
+
+    .pos-order-modal .modal-pos-layout {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.7fr) minmax(280px, .95fr) !important;
+        grid-template-rows: 1fr !important;
+        gap: 0 !important;
+        margin: 0 !important
+    }
+
+    .pos-order-modal .pos-menu-section {
+        padding: 16px !important;
+        border-radius: 0 !important
+    }
+
+    .pos-order-modal .modal-order-dock-aside {
+        border-radius: 0 !important;
+        border-left: 1px solid var(--line) !important
+    }
+
+    .pos-order-modal .pos-menu-section>.pos-product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important
+    }
+
+    .pos-order-modal .pos-product-card,
+    .pos-order-modal .product-main {
+        min-height: 196px
+    }
+
+    .pos-order-modal .product-art {
+        flex-basis: 122px;
+        height: 122px
+    }
+
+    .pos-order-modal .product-main strong {
+        min-height: 43px;
+        padding-top: 9px !important;
+        font-size: 13px !important
+    }
+
+    .pos-order-modal .product-main b {
+        font-size: 12px !important;
+        padding-bottom: 11px !important
+    }
+
+    .pos-order-modal .order-dock-head {
+        padding: 16px !important
+    }
+
+    .pos-order-modal .order-resource-select {
+        margin: 12px !important
+    }
+}

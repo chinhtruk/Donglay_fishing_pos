@@ -1,0 +1,756 @@
+/* Staff order table and staff order detail modal.
+   Moved from resources/css/app.css:11556-12308. */
+
+/* Staff POS orders: whole-row touch target, no money/payment/action columns. */
+#order-results .staff-order-table {
+    table-layout: fixed;
+}
+
+#order-results .staff-order-table .order-row-clickable {
+    cursor: pointer;
+    transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+#order-results .staff-order-table .order-row-clickable:hover,
+#order-results .staff-order-table .order-row-clickable:focus-visible {
+    background: #fffdf7;
+    box-shadow: inset 3px 0 0 var(--moss);
+    outline: none;
+}
+
+#order-results .staff-order-table .order-row-clickable:active {
+    transform: scale(.997);
+}
+
+#order-results .staff-order-table th:nth-child(1),
+#order-results .staff-order-table td:nth-child(1) {
+    width: 21% !important;
+}
+
+#order-results .staff-order-table th:nth-child(2),
+#order-results .staff-order-table td:nth-child(2) {
+    width: 16% !important;
+}
+
+#order-results .staff-order-table th:nth-child(3),
+#order-results .staff-order-table td:nth-child(3) {
+    width: 19% !important;
+}
+
+#order-results .staff-order-table th:nth-child(4),
+#order-results .staff-order-table td:nth-child(4) {
+    width: 24% !important;
+}
+
+#order-results .staff-order-table th:nth-child(5),
+#order-results .staff-order-table td:nth-child(5) {
+    width: 20% !important;
+    text-align: center !important;
+}
+
+#order-results .staff-order-table td:nth-child(5) .pill {
+    width: auto !important;
+    min-width: 76px !important;
+}
+
+.modal.staff-order-detail-modal {
+    width: min(760px, calc(100vw - 48px)) !important;
+    max-height: min(760px, calc(100dvh - 72px)) !important;
+    border-radius: 18px;
+}
+
+.staff-order-detail-modal>.modal-head {
+    min-height: 56px !important;
+    padding: 11px 14px 11px 20px !important;
+    flex: 0 0 auto;
+}
+
+.staff-order-detail-modal>.modal-head h2 {
+    font-size: 16px !important;
+}
+
+.staff-order-detail-modal>.modal-head .modal-close {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 11px !important;
+}
+
+.staff-order-detail-modal>.modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden !important;
+    display: flex;
+    padding: 0 !important;
+}
+
+.staff-order-detail-modal .staff-receipt {
+    width: 100%;
+    min-height: 0;
+    max-height: 100%;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex: 0 0 auto;
+    margin: 0 18px 12px;
+    padding: 10px 0;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-meta>span:nth-child(2) {
+    border-right: 0;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-head {
+    flex: 0 0 auto;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    gap: 11px;
+    padding: 15px 18px 12px;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-title small {
+    margin-bottom: 3px;
+    font-size: 9px;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-title strong {
+    font-size: 16px;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-head>.pill {
+    padding: 5px 9px;
+    font-size: 9px;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-section {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-top-width: 7px;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-section>header {
+    flex: 0 0 auto;
+    min-height: 46px;
+    padding: 11px 18px;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-line {
+    grid-template-columns: 54px minmax(0, 1fr);
+    min-height: 72px;
+    padding: 14px 0;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-lines {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 18px;
+}
+
+.staff-order-detail-modal .staff-receipt .staff-item-quantity {
+    width: auto;
+    min-width: 50px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    letter-spacing: .02em;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-line div>strong {
+    font-size: 18px;
+    line-height: 1.25;
+}
+
+.staff-order-detail-modal .staff-receipt .pos-receipt-line div>small {
+    color: var(--moss-2);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+
+
+
+
+
+
+/* Compact ordering modal chrome so the menu and bill lines get more room. */
+.pos-order-modal>.modal-head {
+    min-height: 64px !important;
+    padding: 14px 22px !important;
+}
+
+.pos-order-modal>.modal-head h2 {
+    font-size: 22px !important;
+    line-height: 1.18 !important;
+}
+
+.pos-order-modal>.modal-head .modal-close {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+}
+
+.pos-order-modal .order-dock-head {
+    padding: 12px 17px !important;
+}
+
+.pos-order-modal .order-dock-head .eyebrow {
+    margin-bottom: 3px !important;
+    font-size: 8px !important;
+    letter-spacing: .13em !important;
+}
+
+.pos-order-modal .order-dock-head h2 {
+    font-size: 19px !important;
+    line-height: 1.14 !important;
+}
+
+.pos-order-modal .order-head-actions span {
+    padding: 4px 8px !important;
+    font-size: 8px !important;
+}
+
+.pos-order-modal .order-dock-footer {
+    padding: 10px 14px 12px !important;
+}
+
+.pos-order-modal .order-dock-footer .summary-row {
+    padding: 3px 0 !important;
+    font-size: 11px !important;
+}
+
+.pos-order-modal .order-dock-footer .summary-row.total {
+    margin-top: 4px !important;
+    padding-top: 8px !important;
+    font-size: 16px !important;
+}
+
+.pos-order-modal .order-actions {
+    gap: 7px !important;
+    margin-top: 8px !important;
+}
+
+.pos-order-modal .order-actions .button {
+    min-height: 40px !important;
+    padding: 9px 8px !important;
+    border-radius: 10px !important;
+    font-size: 12px !important;
+}
+
+.pos-order-modal .order-lines {
+    min-height: 0 !important;
+}
+
+@media(min-width:768px) {
+    .pos-order-modal>.modal-head h2 {
+        font-size: 22px !important;
+    }
+
+    .pos-order-modal .order-dock-head .eyebrow {
+        font-size: 8px !important;
+    }
+
+    .pos-order-modal .order-dock-head h2 {
+        font-size: 19px !important;
+    }
+
+    .pos-order-modal .order-dock-footer .summary-row {
+        font-size: 11px !important;
+        padding: 3px 0 !important;
+    }
+
+    .pos-order-modal .order-dock-footer .summary-row.total {
+        font-size: 16px !important;
+        padding-top: 8px !important;
+    }
+
+    .pos-order-modal .order-actions .button {
+        min-height: 40px !important;
+        padding: 9px 8px !important;
+        font-size: 12px !important;
+    }
+}
+
+
+
+
+
+/* Denser ordering workspace: prioritize menu browsing and ordered item lines. */
+.pos-order-modal .pos-menu-section {
+    padding: 14px !important;
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head {
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .pos-search input {
+    height: 34px !important;
+    padding-block: 6px !important;
+    font-size: 11px !important;
+}
+
+.pos-order-modal .pos-search>span {
+    left: 10px !important;
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .category-tabs {
+    padding-bottom: 0 !important;
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .category-tabs button {
+    min-height: 34px !important;
+    padding: 6px 11px !important;
+    border-radius: 8px !important;
+    font-size: 11px !important;
+}
+
+.pos-order-modal .pos-menu-section>.pos-product-grid {
+    gap: 10px !important;
+    padding: 1px 6px 12px 1px !important;
+}
+
+.pos-order-modal .pos-product-card,
+.pos-order-modal .product-main {
+    min-height: 178px !important;
+}
+
+.pos-order-modal .product-art {
+    flex-basis: 108px !important;
+    height: 108px !important;
+}
+
+.pos-order-modal .product-main strong {
+    min-height: 34px !important;
+    padding: 8px 42px 2px 12px !important;
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+}
+
+.pos-order-modal .product-main b {
+    padding: 2px 42px 10px 12px !important;
+    font-size: 12px !important;
+}
+
+.pos-order-modal .product-main em {
+    right: 12px !important;
+    bottom: 10px !important;
+    width: 30px !important;
+    height: 30px !important;
+}
+
+.pos-order-modal .order-resource-select {
+    margin: 8px 12px 0 !important;
+    gap: 8px !important;
+    padding: 7px 8px !important;
+    border-radius: 9px !important;
+}
+
+.pos-order-modal .order-resource-select>span,
+.pos-order-modal .order-resource-select span:first-child {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 8px !important;
+}
+
+.pos-order-modal .order-resource-select small {
+    font-size: 8px !important;
+}
+
+.pos-order-modal .order-resource-select select {
+    min-height: 20px !important;
+    font-size: 13px !important;
+}
+
+.pos-order-modal .modal-lines-section-header {
+    padding: 4px 9px !important;
+    margin: 5px 0 6px !important;
+    border-radius: 7px !important;
+    font-size: 8.5px !important;
+}
+
+.pos-order-modal .modal-lines-section-header.paid-header {
+    margin-top: 9px !important;
+}
+
+.pos-order-modal .order-lines {
+    padding: 4px 12px !important;
+}
+
+.pos-order-modal .order-line {
+    gap: 6px !important;
+    padding: 8px 0 !important;
+}
+
+.pos-order-modal .order-line>div:first-child strong,
+.pos-order-modal .order-line strong {
+    font-size: 14px !important;
+    line-height: 1.22 !important;
+}
+
+.pos-order-modal .order-line>div:first-child small,
+.pos-order-modal .order-line small {
+    margin-top: 2px !important;
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+}
+
+.pos-order-modal .order-line>div:first-child>div {
+    margin-top: 4px !important;
+}
+
+.pos-order-modal .order-line input[data-modal-note] {
+    height: 30px !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    font-size: 11px !important;
+}
+
+.variable-price-dialog-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(47, 35, 27, .32);
+    backdrop-filter: blur(3px);
+}
+
+.variable-price-dialog {
+    width: min(360px, calc(100vw - 48px));
+    border: 1px solid var(--pos-line);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fffefa 0%, #fff9f1 100%);
+    box-shadow: 0 24px 56px rgba(47, 35, 27, .26);
+    padding: 16px;
+}
+
+.variable-price-dialog-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.variable-price-dialog-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--pos-soft);
+    color: var(--pos-brand);
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.variable-price-dialog h3 {
+    margin: 0;
+    color: var(--pos-ink);
+    font-size: 17px;
+    font-weight: 850;
+    line-height: 1.15;
+}
+
+.variable-price-dialog p {
+    margin: 4px 0 0;
+    color: var(--pos-muted);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.variable-price-range {
+    margin-top: 12px;
+    border: 1px solid #ecdcc9;
+    border-radius: 10px;
+    background: #fffaf2;
+    color: var(--pos-muted);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.variable-price-range strong {
+    color: var(--pos-brand);
+    font-weight: 850;
+}
+
+.variable-price-input-label {
+    display: grid;
+    gap: 7px;
+    margin-top: 12px;
+    color: var(--pos-muted);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.variable-price-input-wrap {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+    border: 1px solid var(--pos-line);
+    border-radius: 12px;
+    background: #fff;
+    padding: 0 12px;
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.variable-price-input-wrap:focus-within {
+    border-color: #b95e55;
+    box-shadow: 0 0 0 4px rgba(185, 94, 85, .1);
+}
+
+.variable-price-input-wrap input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--pos-ink);
+    font-size: 19px;
+    font-weight: 900;
+    line-height: 1;
+    text-align: right;
+}
+
+body[data-role="employee"] #modal-root .variable-price-input-wrap input[data-variable-price-input],
+body[data-role="employee"] #modal-root .variable-price-input-wrap input[data-variable-price-input]:focus,
+body[data-role="employee"] #modal-root .variable-price-input-wrap input[data-variable-price-input]:focus-visible {
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+    color: var(--pos-ink) !important;
+    font-size: 19px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    text-align: right !important;
+}
+
+.variable-price-input-wrap input::placeholder {
+    color: #b89d8e;
+}
+
+.variable-price-input-wrap em {
+    flex: 0 0 auto;
+    margin-left: 6px;
+    color: var(--pos-brand);
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 900;
+}
+
+.variable-price-error {
+    min-height: 16px;
+    margin: 7px 0 0 !important;
+    color: #b95e55 !important;
+    font-size: 11px !important;
+    font-weight: 750 !important;
+}
+
+.variable-price-dialog-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.variable-price-dialog-actions .button {
+    min-height: 42px;
+    border-radius: 10px;
+}
+
+.pos-order-modal .order-line .quantity {
+    gap: 4px !important;
+}
+
+.pos-order-modal .order-line .quantity button {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+}
+
+.pos-order-modal .order-line .quantity b {
+    font-size: 13px !important;
+}
+
+.pos-order-modal .order-line>b {
+    font-size: 11px !important;
+    white-space: nowrap !important;
+}
+
+.pos-order-modal .order-dock-footer {
+    padding: 8px 12px 10px !important;
+    box-shadow: 0 -8px 18px rgba(31, 45, 36, .035) !important;
+}
+
+.pos-order-modal .modal-lines-section-header.unpaid-header {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    padding: 5px 10px !important;
+    background: #fff6ea !important;
+    border-color: rgba(158, 100, 50, .22) !important;
+    color: #8a592f !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .72) !important;
+}
+
+.pos-order-modal .modal-lines-section-header.unpaid-header::before {
+    content: "!";
+    display: grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #f1dcc2;
+    color: #8a592f;
+    font-size: 9px;
+    font-weight: 900;
+}
+
+.pos-order-modal .order-line.unpaid-item {
+    position: relative !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    align-items: end !important;
+    gap: 9px !important;
+    margin: 2px 0 8px !important;
+    padding: 10px 10px 10px 12px !important;
+    border: 1px solid rgba(154, 105, 60, .18) !important;
+    border-bottom: 1px solid rgba(154, 105, 60, .18) !important;
+    border-left: 0 !important;
+    border-radius: 8px !important;
+    background: linear-gradient(180deg, #fffdf9 0%, #fff7ee 100%) !important;
+    box-shadow: 0 8px 18px rgba(103, 69, 35, .04) !important;
+    overflow: hidden !important;
+}
+
+.pos-order-modal .order-line.unpaid-item::before {
+    content: "";
+    position: absolute;
+    inset: 8px auto 8px 0;
+    width: 3px;
+    border-radius: 999px;
+    background: #c89055;
+}
+
+.pos-order-modal .order-line.unpaid-item>div:first-child {
+    grid-column: auto !important;
+    min-width: 0 !important;
+}
+
+.pos-order-modal .order-line.unpaid-item>div:first-child strong {
+    color: #2d221b !important;
+    font-size: 13.5px !important;
+    line-height: 1.18 !important;
+}
+
+.pos-order-modal .order-line.unpaid-item small {
+    color: #725b49 !important;
+    font-size: 9.5px !important;
+}
+
+.pos-order-modal .order-line.unpaid-item input[data-modal-note] {
+    border-color: rgba(156, 118, 82, .32) !important;
+    background: rgba(255, 255, 255, .82) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72) !important;
+}
+
+.pos-order-modal .order-line.unpaid-item .quantity {
+    gap: 5px !important;
+}
+
+.pos-order-modal .order-line.unpaid-item .quantity button {
+    border: 1px solid rgba(154, 105, 60, .12) !important;
+    background: #fffaf5 !important;
+    color: #4c3528 !important;
+    box-shadow: 0 5px 12px rgba(77, 51, 31, .035) !important;
+}
+
+.pos-order-modal .order-line.unpaid-item .quantity b {
+    color: #2d221b !important;
+    font-size: 12.5px !important;
+    font-weight: 850 !important;
+}
+
+.pos-order-modal .order-line.session-item .session-quantity {
+    min-width: 42px !important;
+    height: 28px !important;
+    justify-content: center !important;
+    padding: 0 9px !important;
+    border: 1px solid rgba(154, 105, 60, .12) !important;
+    border-radius: 999px !important;
+    background: #fffaf5 !important;
+    color: #4c3528 !important;
+}
+
+.pos-order-modal .order-line.session-item .session-quantity b {
+    min-width: 0 !important;
+    color: inherit !important;
+    font-size: 11.5px !important;
+    font-weight: 850 !important;
+}
+
+.pos-order-modal .order-line.unpaid-item>b {
+    align-self: end !important;
+    min-width: 68px !important;
+    color: #76533d !important;
+    font-size: 11px !important;
+    font-weight: 850 !important;
+    text-align: right !important;
+}
+
+.pos-order-modal .modal-lines-section-header.paid-header {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    padding: 5px 10px !important;
+    background: #eef7f0 !important;
+    border-color: rgba(71, 127, 83, .2) !important;
+    color: #315f3d !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7) !important;
+}
+
+.pos-order-modal .modal-lines-section-header.paid-header::before {
+    content: "✓";
+    display: grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #d9ecdc;
+    color: #2e6b3e;
+    font-size: 8px;
+    font-weight: 900;
+}

@@ -1,17 +1,35 @@
-export function openModal({ title, body, footer = '', wide = false, className = '', onReady }) {
+export function openModal({ title, body, footer = '', wide = false, className = '', onReady, onClose }) {
     const root = document.querySelector('#modal-root');
     document.body.classList.add('modal-open');
-    root.innerHTML = `<div class="modal-backdrop"><section class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${title}"><header class="modal-head"><h2>${title}</h2><button class="modal-close" aria-label="Đóng"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></header><div class="modal-body">${body}</div>${footer ? `<footer class="modal-foot">${footer}</footer>` : ''}</section></div>`;
+    const shell = cloneTemplate('tpl-modal-shell');
+    if (shell) {
+        root.replaceChildren(shell);
+        const modalTitle = root.querySelector('[data-modal-title]');
+        const modalBody = root.querySelector('[data-modal-body]');
+        const modalFooter = root.querySelector('[data-modal-footer]');
+        modalTitle.innerHTML = title;
+        root.querySelector('.modal').setAttribute('aria-label', modalTitle.textContent || title);
+        modalBody.innerHTML = body;
+        if (footer) modalFooter.innerHTML = footer;
+        else modalFooter.remove();
+    } else {
+        root.innerHTML = `<div class="modal-backdrop"><section class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${title}"><header class="modal-head"><h2>${title}</h2><button class="modal-close" aria-label="Đóng"><svg class="modal-close-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></header><div class="modal-body">${body}</div>${footer ? `<footer class="modal-foot">${footer}</footer>` : ''}</section></div>`;
+    }
     const modal = root.querySelector('.modal');
     const backdrop = root.querySelector('.modal-backdrop');
+    modal.classList.toggle('wide', Boolean(wide));
     if (modal.querySelector('.modal-pos-layout')) modal.classList.add('pos-order-modal');
     if (className) modal.classList.add(...className.split(/\s+/).filter(Boolean));
     const removeKeyboardGuard = setupModalKeyboardGuard(backdrop);
+    let closed = false;
     const close = () => {
+        if (closed) return;
+        closed = true;
         removeKeyboardGuard();
         root.innerHTML = '';
         document.body.classList.remove('modal-open');
         document.removeEventListener('keydown', escape);
+        onClose?.();
     };
     const escape = event => { if (event.key === 'Escape') close(); };
     root.querySelector('.modal-close').addEventListener('click', close);
@@ -22,7 +40,78 @@ export function openModal({ title, body, footer = '', wide = false, className = 
 }
 
 export function confirmModal(title, message, confirmText = 'Xác nhận') {
-    return new Promise(resolve => openModal({ title, body: `<p class="muted" style="line-height:1.7">${message}</p>`, footer: `<span></span><div><button class="button secondary" data-cancel>Để sau</button><button class="button primary" data-confirm>${confirmText}</button></div>`, onReady(modal, close) { modal.querySelector('[data-cancel]').onclick = () => { close(); resolve(false); }; modal.querySelector('[data-confirm]').onclick = () => { close(); resolve(true); }; } }));
+    const bodyTemplate = cloneTemplate('tpl-confirm-body');
+    const footerTemplate = document.getElementById('tpl-confirm-footer');
+    if (bodyTemplate) {
+        findInSelfOrDescendant(bodyTemplate, '[data-confirm-message]').textContent = message;
+    }
+    const body = bodyTemplate
+        ? bodyTemplate.outerHTML
+        : `<p class="muted modal-confirm-message">${message}</p>`;
+    const footer = confirmFooterHtml(confirmText, footerTemplate);
+    return new Promise(resolve => {
+        const settle = once(resolve);
+
+        openModal({
+            title,
+            body,
+            footer,
+            onClose() {
+                settle(false);
+            },
+            onReady(modal, close) {
+                modal.querySelector('[data-cancel]')?.addEventListener('click', () => {
+                    settle(false);
+                    close();
+                });
+                modal.querySelector('[data-confirm]')?.addEventListener('click', () => {
+                    settle(true);
+                    close();
+                });
+            }
+        });
+    });
+}
+
+function cloneTemplate(id) {
+    const template = document.getElementById(id);
+    return template ? template.content.firstElementChild.cloneNode(true) : null;
+}
+
+export function findInSelfOrDescendant(element, selector) {
+    return element.matches(selector) ? element : element.querySelector(selector);
+}
+
+export function once(callback) {
+    let settled = false;
+
+    return value => {
+        if (settled) return;
+        settled = true;
+        callback(value);
+    };
+}
+
+export function prepareConfirmFooter(fragment, confirmText) {
+    fragment.querySelectorAll('button').forEach(button => {
+        button.type = 'button';
+    });
+    fragment.querySelector('[data-confirm]').textContent = confirmText;
+
+    return fragment;
+}
+
+export function fallbackConfirmFooterHtml(confirmText) {
+    return `<span></span><div><button type="button" class="button secondary" data-cancel>Để sau</button><button type="button" class="button primary" data-confirm>${confirmText}</button></div>`;
+}
+
+function confirmFooterHtml(confirmText, footerTemplate) {
+    if (!footerTemplate) return fallbackConfirmFooterHtml(confirmText);
+
+    const wrap = document.createElement('div');
+    wrap.append(prepareConfirmFooter(footerTemplate.content.cloneNode(true), confirmText));
+
+    return wrap.innerHTML;
 }
 
 function setupModalKeyboardGuard(backdrop) {
