@@ -7,7 +7,7 @@ import { duration, remaining } from '../modules/timers.js';
 import { paymentMethodFormTitle, renderPaymentMethodForm, renderUserForm, userFormTitle } from '../pages/admin/forms.js';
 import { renderCoffeeOrderLines, renderCoffeeOrderPanel } from '../pages/pos/order-modal.js';
 import { fishingOrderActionMode, fishingOrderModalCatalog } from '../pages/pos/fishing.js';
-import { employeeOrderDisplayTime } from '../pages/orders/list.js';
+import { adminOrderStatusOptions, employeeOrderDisplayTime, renderOrderPaymentRow } from '../pages/orders/list.js';
 import { fishingSessionLineTotalHtml, fishingSessionMetaHtml, formatDisplayPrice, orderPaymentItemCountLabel, orderedPosMenu, orderRemainingDue, paidQuantityForLine, posMenuCategories } from '../pages/pos/shared.js';
 import { createLifecycleScope } from '../shell/lifecycle.js';
 import { createPageRuntime, definePageModule } from '../shell/page-runtime.js';
@@ -303,6 +303,22 @@ test('employee order time uses latest payment without changing list order', () =
         opened_at: '2026-07-11T09:00:00+07:00',
         activity_at: '2026-07-11T10:00:00+07:00',
     }), '2026-07-11T10:00:00+07:00');
+});
+
+test('admin orders hide reconciliation filters and payment adjustment actions', () => {
+    assert.deepEqual(adminOrderStatusOptions().map(option => option.value), ['', 'open', 'partially_paid', 'paid']);
+
+    const paymentHtml = renderOrderPaymentRow({
+        payment_number: 'PAY-001',
+        amount: 20000,
+        paid_at: '2026-07-12T22:30:00+07:00',
+        method: 'cash',
+        status: 'completed',
+        lines: [{ name: 'Bạc xỉu đá', quantity: 1 }],
+    });
+
+    assert.match(paymentHtml, /PAY-001/);
+    assert.doesNotMatch(paymentHtml, /Điều chỉnh|data-reverse-payment/);
 });
 
 test('POS menu helpers keep drink categories before food categories', () => {

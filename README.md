@@ -58,7 +58,7 @@
 - Ô tiền khách đưa nhập theo đơn vị nghìn: nhập `40` được hiểu là `40.000 đ`.
 - `payment_lines` ghi nhận chính xác dòng và số lượng đã trả.
 - Trạng thái đơn gồm `open`, `partially_paid`, `paid`, `payment_exception` và `void`.
-- Hủy đơn, đảo giao dịch và thay đổi nhạy cảm đều yêu cầu lý do và được ghi audit log.
+- Modal chi tiết đơn hàng hiển thị lịch sử thanh toán ở chế độ chỉ đọc, không cung cấp thao tác điều chỉnh payment trên giao diện.
 
 ### Giao diện
 
@@ -152,8 +152,9 @@ Admin có các trang riêng trong sidebar:
 ### Đơn hàng
 
 - Tìm kiếm và lọc theo loại dịch vụ, trạng thái.
+- Bộ lọc trạng thái gồm tất cả, đang mở, trả một phần và hoàn tất; trạng thái đối soát cũ vẫn đọc được nhưng không còn filter riêng.
 - Xem dòng món, lịch sử payment và số tiền còn lại.
-- Hủy đơn hoặc đảo payment có lý do.
+- Lịch sử payment trong modal chỉ dùng để xem mã giao dịch, món đã trả, phương thức, trạng thái và số tiền.
 
 ### Quản lý menu
 
@@ -186,6 +187,7 @@ Admin có các trang riêng trong sidebar:
 ### Dữ liệu & sao lưu
 
 - Đây là trang độc lập tại `/admin/data`, không nằm trong Quản lý thanh toán.
+- Trang dùng một bảng điều khiển full-width: trạng thái backup, thao tác sao lưu thông thường và vùng nguy hiểm được phân tách rõ.
 - **Sao lưu qua email** tạo file `.sql`, gửi đến email của admin đang đăng nhập và xóa file tạm khỏi server.
 - **Sao lưu & xóa dữ liệu** yêu cầu confirm modal, gửi file SQL trước rồi mới xóa dữ liệu vận hành.
 - Nếu tạo dump hoặc gửi email thất bại, dữ liệu không bị xóa.
@@ -501,7 +503,7 @@ Tất cả JSON endpoint dùng prefix `/api/v1`, Laravel session và CSRF cùng 
 | `POST` | `/admin/payment-methods` | Thêm phương thức |
 | `POST/PUT` | `/admin/payment-methods/{method}` | Cập nhật phương thức |
 | `POST` | `/admin/orders/{order}/void` | Hủy đơn |
-| `POST` | `/admin/payments/{payment}/reverse` | Đảo payment |
+| `POST` | `/admin/payments/{payment}/reverse` | API bảo trì để đảo payment; không hiển thị trên UI |
 | `GET` | `/admin/data` | Email nhận backup và khả năng backup |
 | `POST` | `/admin/data/backup` | Gửi file SQL qua email |
 | `POST` | `/admin/data/backup-and-clear` | Backup rồi xóa dữ liệu vận hành |

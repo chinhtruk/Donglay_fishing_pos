@@ -1,5 +1,4 @@
 import { api } from '../../modules/api.js';
-import { toast } from '../../modules/toast.js';
 import { dateTime, escapeHtml, money, number, statusClass, statusLabel } from '../../modules/format.js';
 import { openModal } from '../../modules/modal.js';
 import { definePageModule } from '../../shell/page-runtime.js';
@@ -75,25 +74,17 @@ export function orderServiceIcon(type = '') {
     return orderStackIcon();
 }
 
-function orderStatusFilterIcon(status = '') {
-    const paths = {
-        open: '<circle cx="12" cy="12" r="8"></circle><path d="M12 7v5l3 2"></path>',
-        partially_paid: '<path d="M5 12a7 7 0 1 1 7 7"></path><path d="M12 5v14"></path><path d="M8 10h8M8 14h5"></path>',
-        paid: '<circle cx="12" cy="12" r="8"></circle><path d="m8.5 12.5 2.3 2.3 4.8-5.3"></path>',
-        payment_exception: '<path d="M12 4 21 20H3L12 4Z"></path><path d="M12 9v5M12 17h.01"></path>'
-    };
-
-    return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[status] || '<path d="M5 7h14M5 12h14M5 17h14"></path>'}</svg>`;
-}
-
-function adminOrderFilterMarkup() {
-    const statusOptions = [
+export function adminOrderStatusOptions() {
+    return [
         { value: '', label: 'Tất cả' },
         { value: 'open', label: 'Đang mở' },
         { value: 'partially_paid', label: 'Trả một phần' },
         { value: 'paid', label: 'Hoàn tất' },
-        { value: 'payment_exception', label: 'Cần đối soát' }
     ];
+}
+
+function adminOrderFilterMarkup() {
+    const statusOptions = adminOrderStatusOptions();
 
     return `<div class="pos-section-head admin-order-filter-bar">
         <div class="category-tabs admin-order-status-tabs" aria-label="Trạng thái đơn">
@@ -293,11 +284,31 @@ function groupOrderItemsByTime(items) {
     return [...groups.values()];
 }
 
+export function renderOrderPaymentRow(payment) {
+    const paymentStatus = payment.status === 'completed'
+        ? 'Hoàn tất'
+        : payment.status === 'reversed'
+            ? 'Đã đảo'
+            : statusLabel(payment.status);
+
+    return `<div class="pos-payment-row">
+        <span class="pos-payment-status"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 2.5 2.5L16 9"></path></svg></span>
+        <div>
+            <strong>${escapeHtml(payment.payment_number)}</strong>
+            ${payment.lines && payment.lines.length ? `<div class="payment-row-items">
+                ${payment.lines.map(line => `${escapeHtml(line.name)} <span class="payment-row-quantity">x${line.quantity}</span>`).join(', ')}
+            </div>` : ''}
+            <small>${dateTime(payment.paid_at)} · ${paymentMethodDisplayLabel(payment.method)} · ${paymentStatus}</small>
+        </div>
+        <div><strong>${money(payment.amount)}</strong></div>
+    </div>`;
+}
+
 function bindOrderActions() {
     $$('[data-view-order]').forEach(trigger => {
         const openOrder = async () => {
             const { order } = await api(`/api/v1/orders/${trigger.dataset.viewOrder}`);
-            const canReverse = document.body.dataset.role === 'admin';
+            const isAdmin = document.body.dataset.role === 'admin';
             const isCoffee = order.service_type === 'coffee';
             const serviceIcon = isCoffee
                 ? '<svg viewBox="0 0 24 24"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"></path><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17"></path><path d="M3 22h16M8 2v3M12 2v3"></path></svg>'
@@ -305,7 +316,6 @@ function bindOrderActions() {
             const completedPayments = order.payments.filter(payment => payment.status === 'completed');
             const paidAmount = completedPayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
             const remainingAmount = Math.max(0, Number(order.total) - paidAmount);
-            const paymentStatus = status => status === 'completed' ? 'Hoàn tất' : status === 'reversed' ? 'Đã đảo' : statusLabel(status);
             const staffItemGroups = groupOrderItemsByTime(order.items);
             const receiptBody = `
             <article class="pos-receipt ${isCoffee ? 'receipt-coffee' : 'receipt-fishing'}">
@@ -341,17 +351,7 @@ function bindOrderActions() {
                 </section>
                 <section class="pos-receipt-payments">
                     <header><strong>Lịch sử thanh toán</strong><span>${number(order.payments.length)} giao dịch</span></header>
-                    ${order.payments.length ? order.payments.map(payment => `<div class="pos-payment-row">
-                        <span class="pos-payment-status"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 2.5 2.5L16 9"></path></svg></span>
-                        <div>
-                            <strong>${escapeHtml(payment.payment_number)}</strong>
-                            ${payment.lines && payment.lines.length ? `<div class="payment-row-items">
-                                ${payment.lines.map(line => `${escapeHtml(line.name)} <span class="payment-row-quantity">x${line.quantity}</span>`).join(', ')}
-                            </div>` : ''}
-                            <small>${dateTime(payment.paid_at)} · ${paymentMethodDisplayLabel(payment.method)} · ${paymentStatus(payment.status)}</small>
-                        </div>
-                        <div><strong>${money(payment.amount)}</strong>${canReverse && payment.status === 'completed' ? `<button type="button" data-reverse-payment="${payment.id}">Điều chỉnh</button>` : ''}</div>
-                    </div>`).join('') : '<div class="pos-receipt-empty">Chưa phát sinh giao dịch thanh toán.</div>'}
+                    ${order.payments.length ? order.payments.map(renderOrderPaymentRow).join('') : '<div class="pos-receipt-empty">Chưa phát sinh giao dịch thanh toán.</div>'}
                 </section>
             </article>`;
             const staffReceiptBody = `
@@ -386,14 +386,10 @@ function bindOrderActions() {
                     </div>
                 </section>
             </article>`;
-            openModal({ title: canReverse ? 'Chi tiết giao dịch' : 'Chi tiết đơn hàng', body: canReverse ? receiptBody : staffReceiptBody, wide: canReverse, onReady(modal, close) {
+            openModal({ title: 'Chi tiết đơn hàng', body: isAdmin ? receiptBody : staffReceiptBody, wide: isAdmin, onReady(modal) {
                 modal.classList.add('order-detail-modal');
                 modal.classList.add('pos-receipt-modal');
-                if (!canReverse) modal.classList.add('staff-order-detail-modal');
-                $$('[data-reverse-payment]', modal).forEach(reverse => reverse.onclick = () => {
-                    close();
-                    reasonAction('Điều chỉnh thanh toán', 'Lý do điều chỉnh', `/api/v1/admin/payments/${reverse.dataset.reversePayment}/reverse`, () => renderOrders());
-                });
+                if (!isAdmin) modal.classList.add('staff-order-detail-modal');
             } });
         };
         trigger.onclick = openOrder;
@@ -404,11 +400,7 @@ function bindOrderActions() {
             }
         };
     });
-    $$('[data-void-order]').forEach(button => button.onclick = () => reasonAction('Hủy đơn', 'Lý do hủy đơn', `/api/v1/admin/orders/${button.dataset.voidOrder}/void`, () => renderOrders()));
 }
-
-
-function reasonAction(title,label,path,after){openModal({title,body:`<label>${label}<textarea id="reason" minlength="5" required placeholder="Ghi lại lý do để đội ngũ dễ đối soát…"></textarea></label>`,footer:`<span></span><div><button class="button danger" id="reason-confirm">Xác nhận</button></div>`,onReady(modal,close){$('#reason-confirm',modal).onclick=async()=>{try{const result=await api(path,{method:'POST',body:{reason:$('#reason',modal).value}});toast(result.message);close();after();}catch(error){toast(error.message,'error');}};}});}
 
 export const ordersPage = definePageModule({
     mount(context) {

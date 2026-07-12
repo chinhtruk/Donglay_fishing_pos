@@ -1,69 +1,270 @@
 /* Admin payment settings and data-management ownership. */
 
-.admin-data-management {
+.admin-data-console {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--white);
+    box-shadow: 0 10px 30px rgba(74, 53, 36, 0.05);
+}
+
+.admin-data-console-head {
+    display: grid;
+    grid-template-columns: minmax(300px, 1fr) minmax(420px, 1.15fr);
+    align-items: center;
+    gap: 28px;
+    padding: 20px 22px;
+    background: #f8f4ef;
+    border-bottom: 1px solid var(--line);
+}
+
+.admin-data-destination,
+.admin-data-action-copy {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 13px;
+}
+
+.admin-data-destination>span:last-child,
+.admin-data-action-copy>span:last-child {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+}
+
+.admin-data-destination small {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.admin-data-icon,
+.admin-data-action-icon {
+    display: grid;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 7px;
+    background: #eee4d9;
+    color: var(--moss);
+}
+
+.admin-backup-email {
+    overflow-wrap: anywhere;
+    color: #41664d;
+    font-size: 14px;
+}
+
+.admin-backup-email.is-missing {
+    color: var(--rose);
+}
+
+.admin-data-status-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+}
+
+.admin-data-status-list>div {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    padding: 2px 16px;
+    border-left: 1px solid var(--line);
+}
+
+.admin-data-status-list dt {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.admin-data-status-list dd {
+    margin: 0;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.admin-data-action-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    margin-top: 24px;
-    padding: 22px 0 4px;
-    border-top: 1px solid var(--line, #e5d9cd);
+    padding: 22px;
+    border-bottom: 1px solid var(--line);
 }
 
-.owner-data-page .admin-data-management {
-    margin-top: 0;
-    padding-top: 8px;
-    border-top: 0;
+.admin-data-action-copy strong {
+    color: var(--ink);
+    font-size: 15px;
 }
 
-.admin-data-management-copy {
+.admin-data-action-copy small {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.admin-data-action-row>.button,
+.admin-data-danger-action>.button {
+    flex: 0 0 auto;
+    min-width: 210px;
+}
+
+.admin-data-danger-zone {
+    padding: 22px;
+    background: #fffafa;
+}
+
+.admin-data-danger-head {
     display: grid;
-    gap: 6px;
-    max-width: 680px;
+    gap: 5px;
 }
 
-.admin-data-management-copy .eyebrow,
-.admin-data-management-copy h2,
-.admin-data-management-copy p {
+.admin-data-danger-label {
+    display: inline-flex;
+    align-items: center;
+    width: max-content;
+    gap: 6px;
+    color: var(--rose);
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.admin-data-danger-label svg {
+    flex: 0 0 auto;
+}
+
+.admin-data-danger-head h2,
+.admin-data-danger-head p,
+.admin-data-impact p {
     margin: 0;
 }
 
-.admin-data-management-copy h2 {
-    font-size: 20px;
+.admin-data-danger-head h2 {
+    color: var(--ink);
+    font-size: 17px;
 }
 
-.admin-data-management-copy>p:not(.eyebrow) {
-    color: var(--muted, #75675d);
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-.admin-backup-email {
-    color: #4f6f58;
+.admin-data-danger-head p {
+    color: var(--muted);
     font-size: 12px;
 }
 
-.admin-backup-email.is-missing {
-    color: #a14235;
-    font-weight: 700;
+.admin-data-impact-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 18px 0;
 }
 
-.admin-data-management-actions {
+.admin-data-impact {
+    padding: 2px 20px;
+}
+
+.admin-data-impact:first-child {
+    padding-left: 0;
+}
+
+.admin-data-impact + .admin-data-impact {
+    border-left: 1px solid #dfc4c0;
+}
+
+.admin-data-impact strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.admin-data-impact p {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.admin-data-impact.is-deleted strong {
+    color: var(--rose);
+}
+
+.admin-data-impact.is-kept strong {
+    color: #41664d;
+}
+
+.admin-data-danger-action {
     display: flex;
-    flex: 0 0 auto;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding-top: 17px;
+    border-top: 1px dashed #dfc4c0;
+}
+
+.admin-data-danger-action>span {
+    display: grid;
+    gap: 3px;
+}
+
+.admin-data-danger-action strong {
+    color: var(--ink);
+    font-size: 12px;
+}
+
+.admin-data-danger-action small {
+    color: var(--muted);
+    font-size: 10px;
 }
 
 @media(max-width: 900px) {
-    .admin-data-management {
+    .admin-data-console-head {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .admin-data-status-list>div:first-child {
+        padding-left: 0;
+        border-left: 0;
+    }
+
+    .admin-data-action-row,
+    .admin-data-danger-action {
         align-items: stretch;
         flex-direction: column;
     }
 
-    .admin-data-management-actions {
-        justify-content: flex-start;
+    .admin-data-action-row>.button,
+    .admin-data-danger-action>.button {
+        width: 100%;
+    }
+}
+
+@media(max-width: 600px) {
+    .admin-data-console-head,
+    .admin-data-action-row,
+    .admin-data-danger-zone {
+        padding: 17px;
+    }
+
+    .admin-data-status-list,
+    .admin-data-impact-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-data-status-list>div {
+        padding: 9px 0;
+        border-left: 0;
+        border-top: 1px solid var(--line);
+    }
+
+    .admin-data-impact {
+        padding: 12px 0;
+    }
+
+    .admin-data-impact + .admin-data-impact {
+        border-top: 1px solid #dfc4c0;
+        border-left: 0;
     }
 }
 
