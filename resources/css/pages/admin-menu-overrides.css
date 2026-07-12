@@ -1,0 +1,407 @@
+/* Admin Menu compatibility overrides.
+   This file intentionally loads immediately after legacy-overrides.css. */
+
+body[data-role="admin"] .owner-menu-page {
+    gap: 14px;
+}
+
+body[data-role="admin"] .owner-menu-page .page-head {
+    margin-bottom: 0 !important;
+}
+
+body[data-role="admin"] .owner-menu-page #menu-results {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+body[data-role="admin"] .owner-menu-page #menu-results .paginated-scroll {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden !important;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-admin-table-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    overflow: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px !important;
+    background-clip: padding-box;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-admin-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    box-shadow: 0 1px 0 var(--pos-line);
+}
+
+body[data-role="admin"] .admin-menu-toolbar {
+    flex: 0 0 auto;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 0 0 10px !important;
+    padding: 0;
+}
+
+body[data-role="admin"] .admin-menu-category-tabs {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 6px;
+    margin: 0 !important;
+    padding: 0 0 2px !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+body[data-role="admin"] .admin-menu-category-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+body[data-role="admin"] .admin-menu-category-tabs button {
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 1px solid var(--pos-line);
+    border-radius: 9px;
+    background: #fffdfa;
+    color: var(--pos-muted);
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+body[data-role="admin"] .admin-menu-category-tabs button.active {
+    border-color: var(--pos-brand);
+    background: var(--pos-brand);
+    color: #fff;
+}
+
+body[data-role="admin"] .admin-menu-category-tabs button:hover:not(.active) {
+    background: var(--pos-soft);
+    color: var(--pos-brand);
+}
+
+body[data-role="admin"] .admin-menu-search {
+    flex: 0 0 240px;
+    width: 240px;
+    max-width: 240px;
+    margin: 0;
+}
+
+body[data-role="admin"] .admin-menu-search>span {
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+}
+
+body[data-role="admin"] .admin-menu-search svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+body[data-role="admin"] .admin-menu-search input {
+    width: 100%;
+    height: 38px;
+    padding: 8px 12px 8px 34px;
+    border: 1px solid var(--pos-line);
+    border-radius: 10px;
+    outline: none;
+    background: #fffdfa;
+    color: var(--pos-ink);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+body[data-role="admin"] .admin-menu-search input::placeholder {
+    color: var(--pos-muted);
+    opacity: .82;
+}
+
+body[data-role="admin"] .admin-menu-search input:focus {
+    border-color: var(--pos-brand);
+    box-shadow: 0 0 0 3px rgba(86, 57, 42, .1);
+}
+
+body[data-role="admin"] .owner-menu-page .admin-pagination {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-height: 44px;
+    margin-top: 0 !important;
+    padding: 4px 2px 0 !important;
+    border-top: 0 !important;
+    background: var(--pos-page);
+}
+
+body[data-role="admin"] .owner-menu-page .pagination-controls {
+    gap: 6px;
+}
+
+body[data-role="admin"] .owner-menu-page .pagination-nav,
+body[data-role="admin"] .owner-menu-page .pagination-page {
+    border: 1px solid transparent;
+    background: #fffefa;
+    color: var(--pos-muted) !important;
+}
+
+body[data-role="admin"] .owner-menu-page .pagination-page.active {
+    color: #fff !important;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-admin-table .menu-row-clickable {
+    cursor: pointer;
+    transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-admin-table .menu-row-clickable:hover,
+body[data-role="admin"] .owner-menu-page .menu-admin-table .menu-row-clickable:focus-visible {
+    box-shadow: inset 3px 0 0 var(--pos-brand);
+    outline: none;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-admin-table .menu-row-clickable:hover td,
+body[data-role="admin"] .owner-menu-page .menu-admin-table .menu-row-clickable:focus-visible td {
+    background: #fffaf4 !important;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-admin-table .menu-row-clickable:active {
+    transform: scale(.998);
+}
+
+body[data-role="admin"] .owner-menu-page .menu-admin-table .table-actions {
+    justify-content: flex-end;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-delete-button {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    border: 1px solid rgba(166, 83, 78, .22) !important;
+    border-radius: 10px !important;
+    background: var(--pos-alert-bg) !important;
+    color: var(--pos-alert) !important;
+    box-shadow: none !important;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-delete-button:hover,
+body[data-role="admin"] .owner-menu-page .menu-delete-button:focus-visible {
+    border-color: var(--pos-alert) !important;
+    outline: none;
+    background: var(--pos-alert) !important;
+    color: #fff !important;
+    transform: none !important;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-delete-button svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Single-item editor uses the flat admin modal language. */
+body[data-role="admin"] .menu-item-modal {
+    width: min(880px, calc(100vw - 44px)) !important;
+}
+
+body[data-role="admin"] .menu-item-modal .modal-body {
+    padding: 18px 22px !important;
+}
+
+body[data-role="admin"] .menu-item-form {
+    grid-template-columns: 248px minmax(0, 1fr);
+    gap: 20px;
+}
+
+body[data-role="admin"] .menu-media-column {
+    gap: 10px;
+    padding-right: 18px;
+    border-right: 1px solid var(--pos-line);
+}
+
+body[data-role="admin"] .menu-info-column {
+    gap: 13px;
+}
+
+body[data-role="admin"] .menu-form-section-title {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--pos-line);
+}
+
+body[data-role="admin"] .menu-form-section-title strong {
+    color: var(--pos-ink);
+    font-size: 15px;
+    font-weight: 850;
+}
+
+body[data-role="admin"] .menu-form-section-title small,
+body[data-role="admin"] .menu-image-help {
+    color: var(--pos-muted);
+}
+
+body[data-role="admin"] .menu-image-drop {
+    border-radius: 8px;
+}
+
+body[data-role="admin"] .menu-image-drop .menu-image-preview {
+    height: 184px;
+    border: 1px solid var(--pos-line);
+    border-radius: 8px;
+    background: #fffefa;
+}
+
+body[data-role="admin"] .menu-image-overlay {
+    left: 9px;
+    right: 9px;
+    bottom: 9px;
+    min-height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 253, 250, .92);
+    box-shadow: 0 6px 14px rgba(52, 36, 24, .08);
+    color: var(--pos-brand);
+}
+
+body[data-role="admin"] .menu-image-remove {
+    color: var(--pos-alert);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+body[data-role="admin"] .menu-form-grid {
+    gap: 10px;
+}
+
+body[data-role="admin"] .menu-info-column label {
+    color: var(--pos-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+body[data-role="admin"] .menu-availability-card {
+    min-height: 50px;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body[data-role="admin"] .menu-availability-card:not(:last-child) {
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid var(--pos-line) !important;
+}
+
+body[data-role="admin"] .menu-availability-card strong {
+    color: var(--pos-ink);
+    font-size: 12.5px;
+    font-weight: 850;
+}
+
+body[data-role="admin"] .menu-availability-card small {
+    color: var(--pos-muted);
+    font-size: 10px;
+}
+
+body[data-role="admin"] .menu-availability-card>i {
+    flex-basis: 42px;
+    width: 42px;
+    height: 24px;
+}
+
+body[data-role="admin"] .menu-availability-card>i:after {
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+}
+
+body[data-role="admin"] .menu-availability-card input:checked+i:after {
+    transform: translateX(18px);
+}
+
+/* Keep only the table body scrollable while preserving the table frame. */
+body[data-role="admin"] .owner-menu-page.paginated-page {
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100dvh - 78px) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+body[data-role="admin"] .owner-menu-page #menu-results {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+body[data-role="admin"] .owner-menu-page #menu-results>.paginated-scroll {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+body[data-role="admin"] .owner-menu-page .menu-admin-table-wrap {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: auto !important;
+    border-radius: 8px !important;
+}
+
+body[data-role="admin"] .owner-menu-page .admin-pagination {
+    position: static !important;
+    flex: 0 0 auto !important;
+}
+
+@media(max-width: 767px) {
+    body[data-role="admin"] .menu-item-modal {
+        width: min(100%, calc(100vw - 24px)) !important;
+    }
+
+    body[data-role="admin"] .menu-item-modal .modal-body {
+        padding: 14px !important;
+    }
+
+    body[data-role="admin"] .menu-item-form {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    body[data-role="admin"] .menu-media-column {
+        padding-right: 0;
+        padding-bottom: 14px;
+        border-right: 0;
+        border-bottom: 1px solid var(--pos-line);
+    }
+
+    body[data-role="admin"] .menu-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

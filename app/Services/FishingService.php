@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class FishingService
 {
-    public const FISH_TAKEAWAY_LINE_TYPE = 'fish_takeaway_fee';
+    public const LEGACY_FISH_TAKEAWAY_LINE_TYPE = 'fish_takeaway_fee';
 
     public function __construct(
         private readonly OrderLineReconciler $lineReconciler,
@@ -19,12 +19,15 @@ class FishingService
         private readonly OrderPaymentService $paymentService,
         private readonly OrderStatusResolver $statusResolver,
         private readonly OrderTotalsCalculator $totalsCalculator,
-    ) {
-    }
+    ) {}
 
     public function start(FishingSpot $spot, User $user): Order
     {
         return DB::transaction(function () use ($spot, $user) {
+            if (Order::isPosOperationalClosingMinute()) {
+                throw ValidationException::withMessages(['spot' => 'Hệ thống đang chốt ngày. Bạn có thể mở phiên câu mới sau 00:00 nhé.']);
+            }
+
             $spot = FishingSpot::lockForUpdate()->findOrFail($spot->id);
             if (! $spot->is_enabled) {
                 throw ValidationException::withMessages(['spot' => 'Vị trí này đang tạm nghỉ. Mời bạn chọn vị trí khác nhé.']);
@@ -106,15 +109,19 @@ class FishingService
         });
     }
 
-    public function toggleFishTakeaway(Order $order, int $version, bool $enabled): Order
+    public function updateDiscount(Order $order, int $version, int $discountAmount): Order
     {
-        return DB::transaction(function () use ($order, $version, $enabled) {
+        return DB::transaction(function () use ($order, $version, $discountAmount) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
 
-            $takeawayPrice = (float) config('fishing.session_price', 200000);
-            $withoutFishPrice = (float) config('fishing.session_without_fish_price', 150000);
-            $sessionPrice = $enabled ? $takeawayPrice : $withoutFishPrice;
+            $discountOptions = array_map('intval', config('fishing.discount_options', [0, 50000, 100000, 150000, 200000]));
+            if (! in_array($discountAmount, $discountOptions, true)) {
+                throw ValidationException::withMessages(['discount_amount' => 'Mức giảm giá không hợp lệ.']);
+            }
+
+            $standardPrice = (float) config('fishing.session_price', 200000);
+            $sessionPrice = max(0, $standardPrice - $discountAmount);
 
             $sessionItem = $order->items()
                 ->where('line_type', 'fishing_session')
@@ -122,24 +129,21 @@ class FishingService
                 ->firstOrFail();
 
             if ((int) $sessionItem->paid_quantity > 0 && (float) $sessionItem->unit_price !== $sessionPrice) {
-                throw ValidationException::withMessages(['fish_takeaway' => 'Phiên câu đã thanh toán nên không thể đổi tùy chọn lấy cá.']);
+                throw ValidationException::withMessages(['discount_amount' => 'Phiên câu đã thanh toán nên không thể đổi mức giảm giá.']);
             }
 
             $legacyFeeItems = $order->items()
-                ->where('line_type', self::FISH_TAKEAWAY_LINE_TYPE)
+                ->where('line_type', self::LEGACY_FISH_TAKEAWAY_LINE_TYPE)
                 ->lockForUpdate()
                 ->get();
             foreach ($legacyFeeItems as $legacyFeeItem) {
                 if ((int) $legacyFeeItem->paid_quantity > 0) {
-                    throw ValidationException::withMessages(['fish_takeaway' => 'Hóa đơn đã có phí lấy cá được thanh toán, không thể đổi tùy chọn này.']);
+                    throw ValidationException::withMessages(['discount_amount' => 'Hóa đơn có khoản phí cũ đã thanh toán nên không thể đổi mức giảm giá.']);
                 }
                 $legacyFeeItem->delete();
             }
 
-            $sessionItem->update([
-                'unit_price' => $sessionPrice,
-                'ordered_at' => now(),
-            ]);
+            $sessionItem->update(['unit_price' => $sessionPrice]);
 
             $this->refreshSummary($order, ['completed_at' => null]);
 
@@ -175,7 +179,7 @@ class FishingService
                     $item->update([
                         'order_id' => $targetOrder->id,
                         'line_type' => $item->line_type === 'fishing_session' ? 'merged_session' : 'hourly_extension',
-                        'name_snapshot' => "{$item->name_snapshot} ({$sourceSpotLabel})"
+                        'name_snapshot' => "{$item->name_snapshot} ({$sourceSpotLabel})",
                     ]);
                 } else {
                     $matchingItem = $targetOrder->items()
@@ -188,10 +192,10 @@ class FishingService
                         $matchingItem->increment('quantity', $item->quantity);
                         $matchingItem->increment('paid_quantity', $item->paid_quantity);
                         if ($item->note) {
-                            $newNotes = array_filter(array_unique(array_map('trim', explode(',', ($matchingItem->note ?? '') . ',' . $item->note))));
+                            $newNotes = array_filter(array_unique(array_map('trim', explode(',', ($matchingItem->note ?? '').','.$item->note))));
                             $matchingItem->update(['note' => implode(', ', $newNotes)]);
                         }
-                        \Illuminate\Support\Facades\DB::table('payment_lines')
+                        DB::table('payment_lines')
                             ->where('order_item_id', $item->id)
                             ->update(['order_item_id' => $matchingItem->id]);
                         $item->delete();
@@ -205,14 +209,14 @@ class FishingService
 
             $order->fishingSession()->update([
                 'status' => 'completed',
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             $order->update([
                 'status' => 'void',
                 'void_reason' => "Gộp hóa đơn vào đơn {$targetOrder->order_number} của {$targetSpot->label}",
                 'voided_at' => now(),
-                'version' => $order->version + 1
+                'version' => $order->version + 1,
             ]);
 
             $this->refreshSummary($targetOrder);
@@ -239,12 +243,13 @@ class FishingService
             }
             $order->update([
                 'completed_at' => now(),
-                'version' => $order->version + 1
+                'version' => $order->version + 1,
             ]);
             $order->fishingSession()->update([
                 'status' => 'completed',
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
+
             return $order;
         });
     }

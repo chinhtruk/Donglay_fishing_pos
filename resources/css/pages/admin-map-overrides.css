@@ -1,0 +1,234 @@
+/* Admin Map compatibility overrides.
+   This file intentionally loads immediately after legacy-overrides.css. */
+
+.admin-fishing-preview .fishing-lake-plan {
+    background: transparent !important;
+    box-shadow: none !important
+}
+
+.admin-map-pos-preview .pos-section-head {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2d7cc;
+    color: var(--muted);
+}
+
+body[data-role="admin"] .admin-map-grid,
+body[data-role="admin"] .map-editor-form,
+body[data-role="admin"] .admin-map-pos-preview .pos-map-shell,
+body[data-role="admin"] .admin-map-pos-preview .fishing-map-shell {
+    border-color: var(--pos-line) !important;
+    border-radius: 8px !important;
+    background: var(--pos-card) !important;
+    box-shadow: var(--pos-shadow-card) !important;
+}
+
+body[data-role="admin"] .admin-map-pos-preview .pos-section-head,
+body[data-role="admin"] .admin-map-pos-preview .fishing-map-header {
+    border-color: var(--pos-line) !important;
+    color: var(--pos-muted) !important;
+}
+
+body[data-role="admin"] .admin-map-pos-preview .pos-table-card,
+body[data-role="admin"] .admin-map-pos-preview .fishing-slot {
+    border-radius: 8px !important;
+    border-color: var(--pos-line) !important;
+    background: linear-gradient(180deg, #fff 0%, #fffbf6 100%) !important;
+    box-shadow: 0 5px 14px rgba(64, 43, 30, .035) !important;
+}
+
+/* Resource editor uses the same flat form language as other admin modals. */
+body[data-role="admin"] .admin-resource-form {
+    gap: 16px;
+}
+
+body[data-role="admin"] .admin-resource-summary {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 0 0 14px !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--pos-line) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body[data-role="admin"] .admin-resource-summary>span {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 10px !important;
+    background: var(--pos-soft) !important;
+    color: var(--pos-brand) !important;
+}
+
+body[data-role="admin"] .admin-resource-summary svg {
+    width: 20px;
+    height: 20px;
+}
+
+body[data-role="admin"] .admin-resource-summary small {
+    margin-bottom: 3px;
+    color: var(--pos-brand-2) !important;
+    font-size: 9px !important;
+    font-weight: 850 !important;
+    letter-spacing: 0 !important;
+}
+
+body[data-role="admin"] .admin-resource-summary strong {
+    color: var(--pos-ink);
+    font-size: 18px;
+    font-weight: 850;
+    line-height: 1.2;
+}
+
+body[data-role="admin"] .admin-resource-summary em {
+    padding: 6px 10px;
+    border-radius: 999px !important;
+    background: var(--pos-soft) !important;
+    color: var(--pos-muted) !important;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 850;
+}
+
+body[data-role="admin"] .admin-resource-summary em.active {
+    background: var(--pos-active-bg) !important;
+    color: var(--pos-active) !important;
+}
+
+body[data-role="admin"] .admin-resource-field {
+    display: grid;
+    gap: 7px;
+    color: var(--pos-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+body[data-role="admin"] .admin-resource-field input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--pos-line);
+    border-radius: 8px;
+    outline: none;
+    background: #fffefa;
+    color: var(--pos-ink);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+body[data-role="admin"] .admin-resource-toggle-row {
+    min-height: 52px;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body[data-role="admin"] .admin-resource-toggle-row strong {
+    color: var(--pos-ink);
+    font-size: 12.5px;
+    font-weight: 850;
+}
+
+body[data-role="admin"] .admin-resource-toggle-row small {
+    color: var(--pos-muted);
+    font-size: 10px;
+}
+
+body[data-role="admin"] .admin-resource-toggle-row>i {
+    flex-basis: 42px;
+    width: 42px;
+    height: 24px;
+    background: #e6ddd4;
+}
+
+body[data-role="admin"] .admin-resource-toggle-row>i:after {
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+}
+
+body[data-role="admin"] .admin-resource-toggle-row input:checked+i {
+    background: var(--pos-brand);
+}
+
+body[data-role="admin"] .admin-resource-toggle-row input:checked+i:after {
+    transform: translateX(18px);
+}
+
+/* Match POS occupancy states and keep the map segmented control compact. */
+body[data-role="admin"] .head-actions .admin-map-toolbar,
+body[data-role="admin"] .admin-map-toolbar {
+    box-sizing: border-box !important;
+    align-items: center !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 2px !important;
+    border-radius: 12px !important;
+}
+
+body[data-role="admin"] .admin-map-tab {
+    min-width: 104px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    font-size: 11px !important;
+}
+
+body[data-role="admin"] .admin-map-tab svg {
+    width: 15px !important;
+    height: 15px !important;
+}
+
+body[data-role="admin"] .admin-map-pos-preview .pos-section-head,
+body[data-role="admin"] .admin-fishing-note {
+    padding-bottom: 0 !important;
+    border-bottom: 0 !important;
+}
+
+body[data-role="admin"] .admin-map-pos-preview .pos-table-card.occupied,
+body[data-role="admin"] .admin-fishing-preview .fishing-slot.occupied {
+    border-color: rgba(79, 130, 89, .22) !important;
+    background: var(--pos-active-bg, #eef7ef) !important;
+    box-shadow: 0 6px 14px rgba(58, 93, 64, .05) !important;
+}
+
+body[data-role="admin"] .admin-map-pos-preview .pos-table-card.occupied .table-state,
+body[data-role="admin"] .admin-fishing-preview .fishing-slot.occupied .fishing-slot-number {
+    background: #dcefe1 !important;
+    color: var(--pos-active, #4f8259) !important;
+}
+
+body[data-role="admin"] .admin-map-pos-preview .pos-table-card.occupied.paid-ready,
+body[data-role="admin"] .admin-fishing-preview .fishing-slot.occupied.paid-ready,
+body[data-role="admin"] .admin-fishing-preview .fishing-slot.expired.paid-ready {
+    border-color: rgba(63, 107, 160, .22) !important;
+    background: #f4f8fc !important;
+}
+
+body[data-role="admin"] .admin-map-pos-preview .pos-table-card.occupied.paid-ready .table-state,
+body[data-role="admin"] .admin-fishing-preview .fishing-slot.occupied.paid-ready .fishing-slot-number,
+body[data-role="admin"] .admin-fishing-preview .fishing-slot.expired.paid-ready .fishing-slot-number {
+    background: #e1ecfa !important;
+    color: #2b70c9 !important;
+}
+
+body[data-role="admin"] .admin-fishing-preview .fishing-slot.expired {
+    border-color: rgba(185, 94, 85, .22) !important;
+    background: var(--pos-alert-bg, #fff2f0) !important;
+}
+
+body[data-role="admin"] .admin-fishing-preview .fishing-slot.expired .fishing-slot-number {
+    background: #f8dedb !important;
+    color: var(--pos-alert, #b95e55) !important;
+}
+
+body[data-role="admin"] .admin-map-pos-preview .pos-table-card.disabled,
+body[data-role="admin"] .admin-fishing-preview .fishing-slot.disabled {
+    background: #f3f0ec !important;
+}

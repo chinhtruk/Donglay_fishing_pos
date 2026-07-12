@@ -1,0 +1,165 @@
+/* Late staff order table compatibility rules. */
+
+#modal-root .pos-order-modal .fishing-discount-control {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 148px;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    margin-top: 2px;
+    padding-top: 12px;
+    border-top: 1px solid var(--pos-line, #e4d7ca);
+    color: var(--pos-ink, #2d211b);
+}
+
+#modal-root .pos-order-modal .fishing-discount-copy {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+#modal-root .pos-order-modal .fishing-discount-copy strong {
+    font-size: 11px;
+    font-weight: 850;
+    line-height: 1.2;
+}
+
+#modal-root .pos-order-modal .fishing-discount-copy small {
+    color: var(--pos-muted, #7f6b5d);
+    font-size: 8.5px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+#modal-root .pos-order-modal .fishing-discount-control select {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 8px 28px 8px 10px !important;
+    border: 1px solid var(--pos-line, #e4d7ca) !important;
+    border-radius: 8px !important;
+    background-color: var(--pos-card, #fffefa) !important;
+    color: var(--pos-ink, #2d211b) !important;
+    font: inherit !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+}
+
+#modal-root .pos-order-modal .fishing-discount-control.is-locked {
+    opacity: .76;
+}
+
+/* Order modal toolbar: search first, all categories visible below. */
+.pos-order-modal .pos-menu-section>.pos-section-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .pos-search {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    order: 1 !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+.pos-order-modal .pos-search>span {
+    top: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    line-height: 0 !important;
+    transform: translateY(-50%) !important;
+}
+
+.pos-order-modal .pos-search>span svg {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .category-tabs {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    order: 2 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    overscroll-behavior-x: auto;
+}
+
+.pos-order-modal .pos-menu-section>.pos-section-head .category-tabs button {
+    flex: 0 0 auto !important;
+}
+
+@media(min-width: 768px) {
+    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll {
+        overflow: auto !important;
+        border: 1px solid var(--pos-line, #e4d7ca) !important;
+        border-radius: 10px !important;
+        background: var(--pos-card, #fffefa) !important;
+        box-shadow: var(--pos-shadow-soft, 0 8px 20px rgba(64, 43, 30, .045)) !important;
+        scrollbar-gutter: stable;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll>.data-table-wrap {
+        overflow: visible !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    body[data-role="employee"].pos-orders-page #order-results .staff-order-table {
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+    body[data-role="employee"].pos-orders-page #order-results .staff-order-table thead th {
+        position: sticky !important;
+        top: 0;
+        z-index: 5;
+        background: #fff7ee !important;
+        box-shadow: 0 1px 0 var(--pos-line, #e4d7ca), 0 8px 14px rgba(78, 54, 41, .035);
+    }
+}
+
+@media(min-width: 768px) and (max-width: 1024px) {
+    body[data-role="employee"].pos-orders-page .staff-order-table {
+        min-width: 100% !important;
+    }
+
+    body[data-role="employee"].pos-orders-page .staff-order-table th,
+    body[data-role="employee"].pos-orders-page .staff-order-table td {
+        padding: 12px 10px !important;
+        font-size: 13px !important;
+    }
+
+    body[data-role="employee"].pos-orders-page .staff-order-table td {
+        word-break: break-word !important;
+    }
+
+    body[data-role="employee"].pos-orders-page .staff-order-table th {
+        font-size: 11px !important;
+    }
+
+    body[data-role="employee"].pos-orders-page .staff-order-table .pill {
+        padding: 5px 8px !important;
+        font-size: 10px !important;
+    }
+}

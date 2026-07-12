@@ -1,5 +1,5 @@
-/* Admin map and resource form controls.
-   Moved from resources/css/app.css:4129-4406. */
+/* Admin map base layout and resource controls.
+   Extracted from pages/admin.css without changing its cascade position. */
 
 .admin-map-pos-preview .pos-section-head {
     border-bottom: 1px solid #e2d7cc;
@@ -186,7 +186,7 @@
     color: var(--moss-2);
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: .1em
+    letter-spacing: 0
 }
 
 .admin-resource-summary strong {
@@ -281,4 +281,43 @@
 .admin-resource-toggle-row input:focus-visible+i {
     outline: 3px solid rgba(140, 98, 70, .22);
     outline-offset: 2px
+}
+
+.admin-fishing-preview .admin-fish {
+    color: rgba(55, 85, 80, .15);
+}
+
+.admin-resource-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-resource-action {
+    min-height: 36px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+.admin-map-head-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    width: 100%;
+}
+
+.admin-map-head-actions .admin-map-toolbar {
+    margin-bottom: 0;
+}
+
+.admin-add-resource-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 11px;
 }

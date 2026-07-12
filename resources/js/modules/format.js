@@ -13,6 +13,7 @@ export const formatStoredMoneyInput = (value = '') => {
     return Number.isFinite(amount) ? formatMoneyInput(String(Math.round(amount))) : '';
 };
 export const parseMoneyInput = (value = '') => Number(moneyInputDigits(value) || 0);
+export const parseThousandsMoneyInput = (value = '') => parseMoneyInput(value) * 1000;
 export const dateTime = (value) => value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—';
 export const dateOnly = (value) => value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short' }).format(new Date(value)) : '—';
 export const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' })[char]);

@@ -59,13 +59,13 @@
     <div class="modal-pos-layout">
         <main class="pos-menu-section">
             <div class="pos-section-head">
-                <div class="category-tabs" data-pos-modal-categories></div>
                 <label class="pos-search">
                     <span aria-hidden="true">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     </span>
                     <input id="modal-product-search" type="search" placeholder="Tìm tên món…">
                 </label>
+                <div class="category-tabs" data-pos-modal-categories></div>
             </div>
             <div class="pos-product-grid" data-pos-modal-products></div>
         </main>
@@ -139,13 +139,17 @@
             <button type="button" class="user-role-tab" data-user-role="admin" aria-pressed="false"><span><svg viewBox="0 0 24 24"><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7l-8-4Z"></path><path d="m9 12 2 2 4-4"></path></svg></span><strong>Quản trị viên</strong></button>
         </div></fieldset>
         <section class="user-credential-section" data-role-fields="employee">
-            <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Mã OTP sẽ được gửi đến địa chỉ này.</small></div></div>
-            <label class="user-form-field">Địa chỉ email<input type="email" name="email" placeholder="tennhanvien@gmail.com" autocomplete="email"></label>
+            <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Nhân viên đăng nhập bằng username; OTP được gửi đến email liên kết.</small></div></div>
+            <div class="user-form-grid">
+                <label class="user-form-field">Tên đăng nhập<input name="username" placeholder="Ví dụ: nhanvien01" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="80" required></label>
+                <label class="user-form-field">Email liên kết<input type="email" name="email" placeholder="tennhanvien@gmail.com" autocomplete="email" maxlength="190" required></label>
+            </div>
             <label class="user-toggle-card" for="user-email-verified"><span><strong>Email đã xác minh</strong><small>Cho phép tài khoản nhận OTP và đăng nhập.</small></span><input id="user-email-verified" name="email_verified" type="checkbox"><i></i></label>
         </section>
         <section class="user-credential-section" data-role-fields="admin">
-            <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Quản trị viên sử dụng tên đăng nhập và mật khẩu.</small></div></div>
-            <div class="user-form-grid"><label class="user-form-field">Tên đăng nhập<input name="username" placeholder="Ví dụ: quanly" autocomplete="username"></label><label class="user-form-field"><span data-user-password-label>Mật khẩu</span><input type="password" name="password" autocomplete="new-password"></label></div>
+            <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Quản trị viên sử dụng tên đăng nhập, mật khẩu và email để nhận bản sao lưu.</small></div></div>
+            <div class="user-form-grid"><label class="user-form-field">Tên đăng nhập<input name="username" placeholder="Ví dụ: quanly" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="80" required></label><label class="user-form-field">Email nhận sao lưu<input type="email" name="email" placeholder="admin@gmail.com" autocomplete="email" maxlength="190" required></label></div>
+            <label class="user-form-field"><span data-user-password-label>Mật khẩu</span><input type="password" name="password" autocomplete="new-password"></label>
         </section>
         <label class="user-toggle-card account-status" for="user-is-active"><span><strong>Tài khoản hoạt động</strong><small>Cho phép thành viên tiếp tục đăng nhập vào hệ thống.</small></span><input id="user-is-active" name="is_active" type="checkbox"><i></i></label>
     </form>

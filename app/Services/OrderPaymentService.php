@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Validation\ValidationException;
 
 class OrderPaymentService
@@ -15,7 +16,7 @@ class OrderPaymentService
     ) {
     }
 
-    public function checkout(Order $order, User $cashier, array $selections, float $cashReceived, string $method = 'cash', ?callable $completedAtResolver = null): Payment
+    public function checkout(Order $order, User $cashier, array $selections, float $cashReceived, string $method = 'cash', ?callable $completedAtResolver = null, ?CarbonInterface $paidAt = null): Payment
     {
         $items = $order->items()->lockForUpdate()->get()->keyBy('id');
 
@@ -57,7 +58,7 @@ class OrderPaymentService
             'amount' => $amount,
             'cash_received' => $cashReceived,
             'change_due' => $cashReceived - $amount,
-            'paid_at' => now(),
+            'paid_at' => $paidAt ?? now(),
         ]);
 
         foreach ($selections as $selection) {

@@ -17,12 +17,15 @@ class CoffeeOrderService
         private readonly OrderPaymentService $paymentService,
         private readonly OrderStatusResolver $statusResolver,
         private readonly OrderTotalsCalculator $totalsCalculator,
-    ) {
-    }
+    ) {}
 
     public function create(?CoffeeTable $table, User $user, array $lines): Order
     {
         return DB::transaction(function () use ($table, $user, $lines) {
+            if (Order::isPosOperationalClosingMinute()) {
+                throw ValidationException::withMessages(['order' => 'Hệ thống đang chốt ngày. Bạn có thể mở đơn mới sau 00:00 nhé.']);
+            }
+
             if ($table) {
                 $table = CoffeeTable::lockForUpdate()->findOrFail($table->id);
                 $this->assertTableAvailable($table);
@@ -134,10 +137,10 @@ class CoffeeOrderService
                     $matchingItem->increment('quantity', $item->quantity);
                     $matchingItem->increment('paid_quantity', $item->paid_quantity);
                     if ($item->note) {
-                        $newNotes = array_filter(array_unique(array_map('trim', explode(',', ($matchingItem->note ?? '') . ',' . $item->note))));
+                        $newNotes = array_filter(array_unique(array_map('trim', explode(',', ($matchingItem->note ?? '').','.$item->note))));
                         $matchingItem->update(['note' => implode(', ', $newNotes)]);
                     }
-                    \Illuminate\Support\Facades\DB::table('payment_lines')
+                    DB::table('payment_lines')
                         ->where('order_item_id', $item->id)
                         ->update(['order_item_id' => $matchingItem->id]);
                     $item->delete();
@@ -152,14 +155,14 @@ class CoffeeOrderService
                 'status' => 'void',
                 'void_reason' => "Gộp hóa đơn vào đơn {$targetOrder->order_number} của {$targetTable->label}",
                 'voided_at' => now(),
-                'version' => $order->version + 1
+                'version' => $order->version + 1,
             ]);
 
             $this->refreshSummary($targetOrder);
 
             return $targetOrder->fresh();
         });
-     }
+    }
 
     public function release(Order $order, int $version): Order
     {
@@ -179,8 +182,9 @@ class CoffeeOrderService
             }
             $order->update([
                 'completed_at' => now(),
-                'version' => $order->version + 1
+                'version' => $order->version + 1,
             ]);
+
             return $order;
         });
     }

@@ -1,8 +1,8 @@
 # Regression Checklist
 
-Date: 2026-07-01
+Date: 2026-07-10
 
-Use this checklist before deleting CSS overrides, splitting controllers further, or moving more modal HTML out of `app.js`.
+Use this checklist before deleting CSS overrides, splitting controllers further, or moving modal HTML between feature modules and Blade templates.
 
 ## Automated Checks
 
@@ -62,7 +62,7 @@ Do not remove iPad, checkout, staff order modal, or table overrides until the af
 ## Login
 
 - Admin login with username/password.
-- Employee OTP request and verify.
+- Employee enters username, receives OTP at the linked verified email, and verifies the single-use code.
 - Logout returns to login.
 - Inactive or wrong-role users cannot access protected pages.
 
@@ -86,7 +86,7 @@ Do not remove iPad, checkout, staff order modal, or table overrides until the af
 - Start fishing session.
 - Extend by session block.
 - Extend by hour mode.
-- Toggle fish takeaway pricing.
+- Select no discount or a 50.000/100.000/150.000/200.000 fishing-session discount.
 - Add/update menu items.
 - Partial checkout.
 - Full checkout.
@@ -101,9 +101,22 @@ Do not remove iPad, checkout, staff order modal, or table overrides until the af
 - Filter by status and service type.
 - Search by order number/resource.
 - Open order detail modal.
+- Employee orders move to the top when a newer item is ordered; checkout only updates status/payment time and does not reorder the row.
 - Paid and unpaid lines remain visually distinct.
 - Reverse payment requires a reason.
 - Void order requires a reason.
+- At 23:59, open and partially paid orders receive one automatic payment for the remaining balance and disappear from the employee POS.
+- At 23:59, paid but unreleased tables/spots and active fishing sessions are completed.
+- Running the operational-day closer repeatedly does not duplicate automatic payments.
+
+## Page Lifecycle
+
+- Switching Orders → Admin Map → Coffee → Fishing → Dashboard does not leave stale page content.
+- Orders polling stops after leaving Orders and starts once when Orders mounts again.
+- Admin Map polling stops after leaving Admin Map and starts once when Admin Map mounts again.
+- Fishing countdown stops after leaving Fishing and starts once when Fishing mounts again.
+- Menu and Orders search debounce cannot render an old page after navigation.
+- Notification drawer, live clock, sidebar, and profile listeners are bound once per app shell.
 
 ## Admin
 
@@ -115,18 +128,27 @@ Do not remove iPad, checkout, staff order modal, or table overrides until the af
 - Add/edit payment method with QR fields.
 - User list loads.
 - Add/edit admin user.
-- Add/edit employee user and email verification state.
+- Add/edit employee username, linked email, and email verification state.
 - Coffee map add/edit/delete slot.
 - Fishing map add/edit/delete spot.
 
 ## CSS-Specific Screens
 
 - Staff order table scrolls independently and row click opens detail.
+- Paginated desktop/iPad workspaces keep the page header and paginator fixed while only the data region scrolls; mobile returns to natural document scrolling.
+- Paginated mobile tables contain horizontal scrolling inside the data region without widening the document or clipping paginator controls.
+- Users, Payment Settings, and Staff Orders tables use only their feature-scoped tablet selectors; no broad `:not(.owner-orders-page):not(.owner-menu-page)` table rule returns.
+- Staff Orders cells use 12px by 10px padding at iPad landscape and 14px by 12px at iPad portrait.
 - Staff order detail modal keeps header/footer fixed and body scrollable.
 - Checkout modal keeps method tabs, QR/cash panel, selected lines, footer, and release checkbox visible.
 - POS order modal and checkout modal keep matching shell width/height at iPad portrait.
 - POS order modal keeps menu and bill columns independently scrollable without clipping footer actions.
+- Clicking an occupied Fishing spot opens the shared ordering modal without a `renderOrderModalBody` reference error; an available spot still opens the start confirmation.
 - Notification drawer opens, filters, paginates, and does not cover unusable controls.
+- Admin Menu keeps category tabs/search above an independently scrolling table with a fixed paginator.
+- Admin Menu single-item editor stays two-column on desktop/iPad and stacks to one column below 768px.
+- Admin Menu batch-create modal keeps category choices, image picker, fields, toggles, remove action, add-row action, and footer usable at desktop, iPad portrait/landscape, and mobile widths.
+- Admin Menu batch rows use three columns on desktop, two columns plus a full-width action row on iPad portrait, and an 82px image column plus stacked fields and a full-width action row below 768px.
 - iPad portrait keeps POS action controls reachable without horizontal page scroll.
 - iPad landscape keeps map/order modal usable without clipped footer buttons.
 

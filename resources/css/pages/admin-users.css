@@ -22,6 +22,18 @@
     padding: 15px 22px
 }
 
+.owner-users-page .user-login-identity,
+.owner-users-page .user-login-identity strong,
+.owner-users-page .user-login-identity small {
+    display: block
+}
+
+.owner-users-page .user-login-identity small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 11px
+}
+
 .user-account-form {
     display: grid;
     gap: 18px
@@ -458,4 +470,29 @@ body[data-role="admin"] .user-toggle-card strong {
 body[data-role="admin"] .user-toggle-card small {
     color: var(--pos-muted);
     font-size: 10px;
+}
+
+@media(min-width: 768px) and (max-width: 1024px) {
+    body[data-role="admin"] .owner-users-page .user-admin-table {
+        min-width: 100% !important;
+    }
+
+    body[data-role="admin"] .owner-users-page .user-admin-table th,
+    body[data-role="admin"] .owner-users-page .user-admin-table td {
+        padding: 12px 10px !important;
+        font-size: 13px !important;
+    }
+
+    body[data-role="admin"] .owner-users-page .user-admin-table td {
+        word-break: break-word !important;
+    }
+
+    body[data-role="admin"] .owner-users-page .user-admin-table th {
+        font-size: 11px !important;
+    }
+
+    body[data-role="admin"] .owner-users-page .user-admin-table .pill {
+        padding: 5px 8px !important;
+        font-size: 10px !important;
+    }
 }

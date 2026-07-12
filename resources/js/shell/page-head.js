@@ -16,8 +16,10 @@ export function updateLiveClock(now = new Date()) {
     $('#live-date').textContent = parts.date;
 }
 
-export function setupLiveClock() {
+export function setupLiveClock(lifecycle = null) {
     updateLiveClock();
+    if (lifecycle?.interval) return lifecycle.interval(updateLiveClock, 1000);
 
-    return window.setInterval(updateLiveClock, 1000);
+    const id = window.setInterval(updateLiveClock, 1000);
+    return () => window.clearInterval(id);
 }

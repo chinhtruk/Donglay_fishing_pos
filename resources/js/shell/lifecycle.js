@@ -26,6 +26,11 @@ export function createLifecycleScope(timers = globalThis.window || globalThis) {
 
             return add(() => timers.clearTimeout(id));
         },
+        listen(target, eventName, callback, options) {
+            target?.addEventListener?.(eventName, callback, options);
+
+            return add(() => target?.removeEventListener?.(eventName, callback, options));
+        },
         unmount() {
             const pending = [...cleanups];
             cleanups = [];

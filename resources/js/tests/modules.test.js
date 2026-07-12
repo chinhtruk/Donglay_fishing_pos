@@ -1,14 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Cart } from '../modules/cart.js';
-import { formatMoneyInput, formatStoredMoneyInput, number, parseMoneyInput } from '../modules/format.js';
+import { formatMoneyInput, formatStoredMoneyInput, number, parseMoneyInput, parseThousandsMoneyInput } from '../modules/format.js';
 import { fallbackConfirmFooterHtml, findInSelfOrDescendant, once, prepareConfirmFooter } from '../modules/modal.js';
 import { duration, remaining } from '../modules/timers.js';
 import { paymentMethodFormTitle, renderPaymentMethodForm, renderUserForm, userFormTitle } from '../pages/admin/forms.js';
 import { renderCoffeeOrderLines, renderCoffeeOrderPanel } from '../pages/pos/order-modal.js';
-import { formatDisplayPrice, orderPaymentItemCountLabel, orderedPosMenu, orderRemainingDue, paidQuantityForLine, posMenuCategories } from '../pages/pos/shared.js';
+import { fishingOrderActionMode, fishingOrderModalCatalog } from '../pages/pos/fishing.js';
+import { employeeOrderDisplayTime } from '../pages/orders/list.js';
+import { fishingSessionLineTotalHtml, fishingSessionMetaHtml, formatDisplayPrice, orderPaymentItemCountLabel, orderedPosMenu, orderRemainingDue, paidQuantityForLine, posMenuCategories } from '../pages/pos/shared.js';
 import { createLifecycleScope } from '../shell/lifecycle.js';
-import { pageFromPath, pageShellFlags } from '../shell/router.js';
+import { createPageRuntime, definePageModule } from '../shell/page-runtime.js';
+import {
+    notificationCategory,
+    notificationDayGroup,
+    notificationToastOptions,
+} from '../pages/notifications/index.js';
+import {
+    paymentMethodDisplayLabel,
+    paymentMethodTypeLabel,
+} from '../pages/pos/payment-methods.js';
+import { pageFromPath, pageShellFlags, renderRoutedPage } from '../shell/router.js';
 
 test('cart tracks quantities and totals independently of the UI', () => {
     const cart = new Cart(); cart.add({ id:1, name:'Cà phê', price:30000 }).add({ id:1, name:'Cà phê', price:30000 });
@@ -39,6 +51,9 @@ test('cash input formats Vietnamese thousands while preserving numeric value', (
     assert.equal(formatStoredMoneyInput(15000), '15.000');
     assert.equal(parseMoneyInput('1.000.000'), 1000000);
     assert.equal(parseMoneyInput(''), 0);
+    assert.equal(parseThousandsMoneyInput('40'), 40000);
+    assert.equal(parseThousandsMoneyInput('1.000'), 1000000);
+    assert.equal(parseThousandsMoneyInput(''), 0);
 });
 
 test('countdown never becomes negative', () => {
@@ -88,6 +103,7 @@ test('modal settle helper resolves a close or confirm path only once', () => {
 test('shell router resolves page names from app paths', () => {
     assert.equal(pageFromPath('/pos/coffee'), 'coffee');
     assert.equal(pageFromPath('/admin/settings'), 'settings');
+    assert.equal(pageFromPath('/admin/data'), 'data');
     assert.equal(pageFromPath('/'), 'coffee');
 });
 
@@ -140,6 +156,155 @@ test('lifecycle scope clears registered intervals on unmount', () => {
     assert.deepEqual(cleared, [42]);
 });
 
+test('lifecycle scope removes registered event listeners on unmount', () => {
+    const calls = [];
+    const target = {
+        addEventListener(eventName, callback) {
+            calls.push(['add', eventName, callback]);
+        },
+        removeEventListener(eventName, callback) {
+            calls.push(['remove', eventName, callback]);
+        },
+    };
+    const lifecycle = createLifecycleScope();
+    const handler = () => {};
+
+    lifecycle.listen(target, 'click', handler);
+    lifecycle.unmount();
+    lifecycle.unmount();
+
+    assert.deepEqual(calls, [
+        ['add', 'click', handler],
+        ['remove', 'click', handler],
+    ]);
+});
+
+test('page runtime unmounts the active module and its effects before switching', async () => {
+    const calls = [];
+    const runtime = createPageRuntime();
+    const first = definePageModule({
+        mount({ lifecycle }) {
+            calls.push('mount:first');
+            lifecycle.add(() => calls.push('cleanup:first'));
+        },
+        unmount() {
+            calls.push('unmount:first');
+        },
+    });
+    const second = definePageModule({
+        mount({ lifecycle }) {
+            calls.push('mount:second');
+            lifecycle.add(() => calls.push('cleanup:second'));
+        },
+        unmount() {
+            calls.push('unmount:second');
+        },
+    });
+
+    await runtime.mount('first', first);
+    await runtime.mount('second', second);
+    assert.equal(runtime.activePage(), 'second');
+    await runtime.unmount();
+
+    assert.deepEqual(calls, [
+        'mount:first',
+        'unmount:first',
+        'cleanup:first',
+        'mount:second',
+        'unmount:second',
+        'cleanup:second',
+    ]);
+    assert.equal(runtime.activePage(), null);
+});
+
+test('page runtime cleans a failed mount before surfacing the error', async () => {
+    const calls = [];
+    const runtime = createPageRuntime();
+    const failing = definePageModule({
+        mount({ lifecycle }) {
+            lifecycle.add(() => calls.push('cleanup'));
+            throw new Error('mount failed');
+        },
+        unmount() {
+            calls.push('unmount');
+        },
+    });
+
+    await assert.rejects(runtime.mount('broken', failing), /mount failed/);
+    assert.deepEqual(calls, ['unmount', 'cleanup']);
+    assert.equal(runtime.activePage(), null);
+});
+
+test('routed rendering unmounts the previous page before mounting the next page', async () => {
+    const originalWindow = globalThis.window;
+    const originalDocument = globalThis.document;
+    const calls = [];
+    globalThis.window = { scrollTo: () => calls.push('scroll') };
+    globalThis.document = {
+        body: {
+            dataset: { role: 'admin' },
+            classList: { toggle: () => {} },
+        },
+    };
+
+    try {
+        await renderRoutedPage('dashboard', {
+            modules: { dashboard: { mount() {}, unmount() {} } },
+            runtime: {
+                async unmount() { calls.push('unmount'); },
+                async mount(page) { calls.push(`mount:${page}`); },
+            },
+            beforeRender: () => calls.push('before'),
+            afterRender: () => calls.push('after'),
+        });
+    } finally {
+        globalThis.window = originalWindow;
+        globalThis.document = originalDocument;
+    }
+
+    assert.deepEqual(calls, ['unmount', 'before', 'mount:dashboard', 'scroll', 'after']);
+});
+
+test('notification helpers classify POS events for drawer and toast rendering', () => {
+    const payment = { id: 11, data: { type: 'coffee_payment_completed' } };
+    const expired = { id: 12, data: { type: 'fishing_session_expired', session_id: 99 } };
+
+    assert.equal(notificationCategory(payment), 'payments');
+    assert.equal(notificationToastOptions(payment).variant, 'payment');
+    assert.deepEqual(notificationToastOptions(expired), {
+        variant: 'alert',
+        icon: '!',
+        sticky: true,
+        dismissible: true,
+        id: 'fishing-expired-99',
+    });
+    assert.ok(['Hôm nay', 'Hôm qua', 'Cũ hơn'].includes(notificationDayGroup(new Date().toISOString())));
+});
+
+test('payment method labels keep cash and transfer copy stable', () => {
+    assert.equal(paymentMethodTypeLabel('cash'), 'Tiền mặt');
+    assert.equal(paymentMethodTypeLabel('qr'), 'QR / chuyển khoản');
+    assert.equal(paymentMethodDisplayLabel('qr-vcb'), 'QR / chuyển khoản');
+    assert.equal(paymentMethodDisplayLabel('auto_close'), 'Tự động chốt ngày');
+});
+
+test('employee order time uses latest payment without changing list order', () => {
+    assert.equal(employeeOrderDisplayTime({
+        status: 'paid',
+        opened_at: '2026-07-11T09:00:00+07:00',
+        activity_at: '2026-07-11T10:00:00+07:00',
+        payments: [
+            { paid_at: '2026-07-11T10:30:00+07:00' },
+            { paid_at: '2026-07-11T11:00:00+07:00' },
+        ],
+    }), '2026-07-11T11:00:00+07:00');
+    assert.equal(employeeOrderDisplayTime({
+        status: 'open',
+        opened_at: '2026-07-11T09:00:00+07:00',
+        activity_at: '2026-07-11T10:00:00+07:00',
+    }), '2026-07-11T10:00:00+07:00');
+});
+
 test('POS menu helpers keep drink categories before food categories', () => {
     const menu = [
         { id: 1, name: 'Khoai chiên', category: 'Đồ ăn' },
@@ -168,6 +333,28 @@ test('POS billing helpers format ranges and remaining due', () => {
     assert.equal(paidQuantityForLine({ items: [{ menu_item_id: 1, unit_price: 20000, paid_quantity: 2 }] }, 1, 20000), 2);
 });
 
+test('fishing session totals use semantic tone classes without inline styles', () => {
+    const unpaidHtml = fishingSessionLineTotalHtml(80000, 1, 0, 100000);
+    const paidHtml = fishingSessionLineTotalHtml(80000, 1, 20000, 100000, 'paid');
+
+    assert.match(unpaidHtml, /class="session-price-stack"/);
+    assert.match(paidHtml, /class="session-price-stack is-adjusted is-paid"/);
+    assert.doesNotMatch(unpaidHtml, /style\s*=/);
+    assert.doesNotMatch(paidHtml, /style\s*=/);
+});
+
+test('fishing session metadata shows the selected discount', () => {
+    assert.match(fishingSessionMetaHtml(150000, 50000), /Giảm 50\.000 ₫/);
+    assert.doesNotMatch(fishingSessionMetaHtml(200000, 0), /session-discount-note/);
+    assert.doesNotMatch(fishingSessionMetaHtml(200000, 0), /Không giảm/);
+    assert.doesNotMatch(fishingSessionMetaHtml(200000, 0), /Đã trả/);
+});
+
+test('fishing order actions reopen after adding unpaid items to a paid session', () => {
+    assert.equal(fishingOrderActionMode(0), 'paid');
+    assert.equal(fishingOrderActionMode(20000), 'outstanding');
+});
+
 test('POS order modal renderer keeps unpaid and paid lines distinct', () => {
     const menuItems = [{ id: 1, price: 25000 }];
     const linesHtml = renderCoffeeOrderLines({
@@ -191,6 +378,17 @@ test('POS order modal renderer keeps unpaid and paid lines distinct', () => {
     assert.match(panelHtml, /data-modal-note="1"/);
     assert.match(panelHtml, /modal-checkout-order/);
     assert.match(panelHtml, /Còn lại cần trả/);
+});
+
+test('fishing order modal catalog renders the shared order modal body', () => {
+    const catalog = fishingOrderModalCatalog([
+        { id: 1, name: 'Cà phê sữa', category: 'Cà phê', price: 30000 },
+    ]);
+
+    assert.deepEqual(catalog.categories, ['Tất cả', 'Cà phê']);
+    assert.match(catalog.modalBody, /modal-pos-layout/);
+    assert.match(catalog.modalBody, /data-modal-product="1"/);
+    assert.ok(catalog.modalBody.indexOf('modal-product-search') < catalog.modalBody.indexOf('data-modal-category'));
 });
 
 test('admin payment form renderer preserves editable QR fields', () => {
@@ -221,6 +419,7 @@ test('admin user form renderer keeps role-specific credential sections', () => {
         role: 'admin',
         name: 'Quản lý hồ',
         username: 'quanly',
+        email: 'manager@example.com',
         is_active: true,
     };
     const html = renderUserForm(user);
@@ -230,5 +429,26 @@ test('admin user form renderer keeps role-specific credential sections', () => {
     assert.match(html, /data-user-role="admin"/);
     assert.match(html, /data-role-fields="employee"/);
     assert.match(html, /name="username" value="quanly"/);
+    assert.match(html, /name="email" value="manager@example.com"/);
+    assert.match(html, /Email nhận sao lưu/);
     assert.match(html, /Mật khẩu mới/);
+});
+
+test('employee user form keeps username and linked email credentials', () => {
+    const employee = {
+        id: 4,
+        role: 'employee',
+        name: 'Nhân viên hồ',
+        username: 'nhanvien01',
+        email: 'staff@example.com',
+        email_verified_at: '2026-07-11T00:00:00Z',
+        is_active: true,
+    };
+    const html = renderUserForm(employee);
+
+    assert.equal(userFormTitle(employee), 'Chỉnh sửa nhân viên');
+    assert.match(html, /name="username" value="nhanvien01"/);
+    assert.match(html, /name="email" value="staff@example.com"/);
+    assert.match(html, /OTP được gửi đến email liên kết/);
+    assert.match(html, /id="user-email-verified"[^>]*checked/);
 });

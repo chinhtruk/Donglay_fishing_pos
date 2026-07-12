@@ -102,7 +102,7 @@ Major groups:
   - `GET /api/v1/fishing/map`
   - `POST /api/v1/fishing/spots/{fishingSpot}/start`
   - `POST /api/v1/fishing/orders/{order}/extend`
-  - `POST /api/v1/fishing/orders/{order}/fish-takeaway`
+  - `POST /api/v1/fishing/orders/{order}/discount`
   - `PUT /api/v1/fishing/orders/{order}`
   - `POST /api/v1/fishing/orders/{order}/checkout`
   - `POST /api/v1/fishing/orders/{order}/merge`
@@ -442,4 +442,3 @@ Before starting Day 2:
 - Decide whether `database/exports/` should be ignored or versioned.
 - Capture visual screenshots if browser tooling is available.
 - Start with Blade partial extraction only; avoid JS module split until the shell partials are stable.
-

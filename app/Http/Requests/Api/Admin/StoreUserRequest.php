@@ -8,6 +8,14 @@ use Illuminate\Validation\Rule;
 
 class StoreUserRequest extends ApiRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'username' => mb_strtolower(trim((string) $this->input('username'))),
+            'email' => $this->filled('email') ? mb_strtolower(trim((string) $this->input('email'))) : null,
+        ]);
+    }
+
     public function rules(): array
     {
         $user = $this->route('user');
@@ -15,8 +23,8 @@ class StoreUserRequest extends ApiRequest
 
         return [
             'name' => ['required', 'string', 'max:120'],
-            'username' => ['nullable', 'string', 'max:80', Rule::unique('users')->ignore($user?->id), 'required_if:role,admin'],
-            'email' => ['nullable', 'email', 'max:190', Rule::unique('users')->ignore($user?->id), 'required_if:role,employee'],
+            'username' => ['required', 'string', 'max:80', 'regex:/^[a-z0-9._-]+$/', Rule::unique('users')->ignore($user?->id)],
+            'email' => ['required', 'email', 'max:190', Rule::unique('users')->ignore($user?->id)],
             'email_verified' => ['sometimes', 'boolean'],
             'password' => [$user ? 'nullable' : 'sometimes', 'string', 'min:8'],
             'role' => ['required', Rule::in(['admin', 'employee'])],

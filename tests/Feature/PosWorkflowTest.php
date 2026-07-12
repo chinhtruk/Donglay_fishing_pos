@@ -9,11 +9,13 @@ use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\PaymentQrSetting;
 use App\Models\User;
+use App\Services\PosOperationalDayCloser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class PosWorkflowTest extends TestCase
@@ -43,7 +45,7 @@ class PosWorkflowTest extends TestCase
         $this->putJson("/api/v1/coffee/orders/{$order['id']}", ['version' => $order['version'] - 1, 'items' => [['menu_item_id' => $item->id, 'quantity' => 2]]])->assertStatus(409);
     }
 
-    public function test_order_index_prioritizes_recent_order_activity(): void
+    public function test_employee_order_index_uses_latest_item_activity_without_payment_reordering(): void
     {
         $employee = User::factory()->create(['role' => 'employee']);
         $firstTable = CoffeeTable::create(['label' => 'Bàn 1']);
@@ -58,22 +60,39 @@ class PosWorkflowTest extends TestCase
             ])->assertCreated()->json('order');
 
             Carbon::setTestNow('2026-06-24 10:00:00');
-            $this->postJson("/api/v1/coffee/tables/{$secondTable->id}/orders", [
+            $secondOrder = $this->postJson("/api/v1/coffee/tables/{$secondTable->id}/orders", [
                 'items' => [['menu_item_id' => $item->id, 'quantity' => 1]],
-            ])->assertCreated();
+            ])->assertCreated()->json('order');
+
+            $this->getJson('/api/v1/orders')
+                ->assertOk()
+                ->assertJsonPath('data.0.id', $secondOrder['id'])
+                ->assertJsonPath('data.1.id', $firstOrder['id']);
 
             Carbon::setTestNow('2026-06-24 11:00:00');
-            $this->putJson("/api/v1/coffee/orders/{$firstOrder['id']}", [
+            $updated = $this->putJson("/api/v1/coffee/orders/{$firstOrder['id']}", [
                 'version' => $firstOrder['version'],
                 'items' => [['menu_item_id' => $item->id, 'quantity' => 2]],
-            ])->assertOk();
+            ])->assertOk()->json('order');
+
+            $this->getJson('/api/v1/orders')
+                ->assertOk()
+                ->assertJsonPath('data.0.id', $firstOrder['id'])
+                ->assertJsonPath('data.1.id', $secondOrder['id']);
+
+            Carbon::setTestNow('2026-06-24 12:00:00');
+            $this->postJson("/api/v1/coffee/orders/{$firstOrder['id']}/checkout", [
+                'version' => $updated['version'],
+                'cash_received' => 60000,
+            ])->assertOk()->assertJsonPath('order.status', 'paid');
 
             $this->getJson('/api/v1/orders')
                 ->assertOk()
                 ->assertJsonPath('data.0.id', $firstOrder['id'])
                 ->assertJsonPath('data.0.resource.label', 'Bàn 1')
                 ->assertJsonPath('data.0.opened_at', '2026-06-24T09:00:00+07:00')
-                ->assertJsonPath('data.0.activity_at', '2026-06-24T11:00:00+07:00');
+                ->assertJsonPath('data.0.payments.0.paid_at', '2026-06-24T12:00:00+07:00')
+                ->assertJsonPath('data.1.id', $secondOrder['id']);
         } finally {
             Carbon::setTestNow();
         }
@@ -163,6 +182,70 @@ class PosWorkflowTest extends TestCase
         $this->assertSame('400000.00', $extended['total']);
         $this->assertSame(2, $extended['fishing_session']['blocks_count']);
         $this->postJson("/api/v1/fishing/orders/{$order['id']}/checkout", ['version' => $extended['version'], 'cash_received' => 500000])->assertOk()->assertJsonPath('order.status', 'paid');
+    }
+
+    public function test_fishing_session_discount_can_be_selected_or_removed(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $spot = FishingSpot::create(['label' => 'Chòi giảm giá']);
+        $order = $this->actingAs($employee)
+            ->postJson("/api/v1/fishing/spots/{$spot->id}/start")
+            ->assertCreated()
+            ->json('order');
+        $sessionOrderedAt = collect($order['items'])->firstWhere('line_type', 'fishing_session')['ordered_at'];
+
+        foreach ([
+            50000 => '150000.00',
+            100000 => '100000.00',
+            150000 => '50000.00',
+            200000 => '0.00',
+            0 => '200000.00',
+        ] as $discountAmount => $expectedPrice) {
+            $order = $this->postJson("/api/v1/fishing/orders/{$order['id']}/discount", [
+                'version' => $order['version'],
+                'discount_amount' => $discountAmount,
+            ])->assertOk()
+                ->assertJsonPath('order.total', $expectedPrice)
+                ->json('order');
+
+            $sessionItem = collect($order['items'])->firstWhere('line_type', 'fishing_session');
+            $this->assertSame($expectedPrice, $sessionItem['unit_price']);
+            $this->assertSame($sessionOrderedAt, $sessionItem['ordered_at']);
+        }
+    }
+
+    public function test_fishing_session_discount_rejects_an_unsupported_amount(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $spot = FishingSpot::create(['label' => 'Chòi kiểm tra giảm giá']);
+        $order = $this->actingAs($employee)
+            ->postJson("/api/v1/fishing/spots/{$spot->id}/start")
+            ->assertCreated()
+            ->json('order');
+
+        $this->postJson("/api/v1/fishing/orders/{$order['id']}/discount", [
+            'version' => $order['version'],
+            'discount_amount' => 75000,
+        ])->assertUnprocessable()->assertJsonValidationErrors('discount_amount');
+    }
+
+    public function test_paid_fishing_session_discount_is_locked(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $spot = FishingSpot::create(['label' => 'Chòi đã thanh toán']);
+        $order = $this->actingAs($employee)
+            ->postJson("/api/v1/fishing/spots/{$spot->id}/start")
+            ->assertCreated()
+            ->json('order');
+        $paidOrder = $this->postJson("/api/v1/fishing/orders/{$order['id']}/checkout", [
+            'version' => $order['version'],
+            'cash_received' => 200000,
+        ])->assertOk()->json('order');
+
+        $this->postJson("/api/v1/fishing/orders/{$order['id']}/discount", [
+            'version' => $paidOrder['version'],
+            'discount_amount' => 50000,
+        ])->assertUnprocessable()->assertJsonValidationErrors('discount_amount');
     }
 
     public function test_fishing_session_can_extend_by_multiple_session_blocks(): void
@@ -290,21 +373,21 @@ class PosWorkflowTest extends TestCase
 
         $updated = $this->putJson("/api/v1/fishing/orders/{$order['id']}", [
             'version' => $order['version'],
-            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2]]
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2]],
         ])->assertOk()->json('order');
 
         $this->assertSame('250000.00', $updated['total']);
         $this->assertCount(2, $updated['items']);
 
         $extended = $this->postJson("/api/v1/fishing/orders/{$order['id']}/extend", [
-            'version' => $updated['version']
+            'version' => $updated['version'],
         ])->assertOk()->json('order');
 
         $this->assertSame('450000.00', $extended['total']);
 
         $checkoutResult = $this->postJson("/api/v1/fishing/orders/{$order['id']}/checkout", [
             'version' => $extended['version'],
-            'cash_received' => 500000
+            'cash_received' => 500000,
         ])->assertOk()->json('order');
 
         $this->assertSame('paid', $checkoutResult['status']);
@@ -321,7 +404,7 @@ class PosWorkflowTest extends TestCase
 
         $updated = $this->putJson("/api/v1/fishing/orders/{$order['id']}", [
             'version' => $order['version'],
-            'items' => []
+            'items' => [],
         ])->assertOk()->json('order');
 
         $this->assertSame('200000.00', $updated['total']);
@@ -330,7 +413,7 @@ class PosWorkflowTest extends TestCase
 
         $this->postJson("/api/v1/fishing/orders/{$order['id']}/checkout", [
             'version' => $updated['version'],
-            'cash_received' => 200000
+            'cash_received' => 200000,
         ])->assertOk()->assertJsonPath('order.status', 'paid');
     }
 
@@ -339,15 +422,15 @@ class PosWorkflowTest extends TestCase
         $employee = User::factory()->create();
         $table = CoffeeTable::create(['label' => 'Bàn 5']);
         $item = MenuItem::create(['category' => 'Nước', 'name' => 'Cà phê đá', 'price' => 20000, 'is_available' => true]);
-        
+
         $order = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
-            'items' => [['menu_item_id' => $item->id, 'quantity' => 1]]
+            'items' => [['menu_item_id' => $item->id, 'quantity' => 1]],
         ])->assertCreated()->json('order');
 
         $checkoutResult = $this->postJson("/api/v1/coffee/orders/{$order['id']}/checkout", [
             'version' => $order['version'],
             'cash_received' => 20000,
-            'release' => true
+            'release' => true,
         ])->assertOk()->json('order');
 
         $this->assertSame('paid', $checkoutResult['status']);
@@ -459,7 +542,7 @@ class PosWorkflowTest extends TestCase
         $checkoutResult = $this->postJson("/api/v1/fishing/orders/{$order['id']}/checkout", [
             'version' => $order['version'],
             'cash_received' => 200000,
-            'release' => true
+            'release' => true,
         ])->assertOk()->json('order');
 
         $this->assertSame('paid', $checkoutResult['status']);
@@ -683,16 +766,16 @@ class PosWorkflowTest extends TestCase
         $coffee = MenuItem::create(['category' => 'Cà phê', 'name' => 'Cà phê sữa', 'price' => 30000, 'is_available' => true]);
 
         $order1 = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table1->id}/orders", [
-            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]]
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]],
         ])->assertCreated()->json('order');
 
         $order2 = $this->postJson("/api/v1/coffee/tables/{$table2->id}/orders", [
-            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2]]
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2]],
         ])->assertCreated()->json('order');
 
         $response = $this->postJson("/api/v1/coffee/orders/{$order1['id']}/merge", [
             'version' => $order1['version'],
-            'target_table_id' => $table2->id
+            'target_table_id' => $table2->id,
         ])->assertOk()->json('order');
 
         $this->assertSame('90000.00', $response['total']);
@@ -708,22 +791,22 @@ class PosWorkflowTest extends TestCase
         $coffee = MenuItem::create(['category' => 'Cà phê', 'name' => 'Cà phê sữa', 'price' => 30000, 'is_available' => true]);
 
         $order1 = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table1->id}/orders", [
-            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]]
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]],
         ])->assertCreated()->json('order');
         $checkout1 = $this->postJson("/api/v1/coffee/orders/{$order1['id']}/checkout", [
             'version' => $order1['version'],
-            'cash_received' => 30000
+            'cash_received' => 30000,
         ])->assertOk()->json('order');
         $this->assertSame('paid', $checkout1['status']);
 
         $order2 = $this->postJson("/api/v1/coffee/tables/{$table2->id}/orders", [
-            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2]]
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2]],
         ])->assertCreated()->json('order');
         $this->assertSame('open', $order2['status']);
 
         $response = $this->postJson("/api/v1/coffee/orders/{$order1['id']}/merge", [
             'version' => $checkout1['version'],
-            'target_table_id' => $table2->id
+            'target_table_id' => $table2->id,
         ])->assertOk()->json('order');
 
         $this->assertSame('90000.00', $response['total']);
@@ -783,12 +866,12 @@ class PosWorkflowTest extends TestCase
 
         $order1Updated = $this->putJson("/api/v1/fishing/orders/{$order1['id']}", [
             'version' => $order1['version'],
-            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]]
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]],
         ])->assertOk()->json('order');
 
         $response = $this->postJson("/api/v1/fishing/orders/{$order1['id']}/merge", [
             'version' => $order1Updated['version'],
-            'target_spot_id' => $spot2->id
+            'target_spot_id' => $spot2->id,
         ])->assertOk()->json('order');
 
         $this->assertSame('425000.00', $response['total']);
@@ -806,7 +889,7 @@ class PosWorkflowTest extends TestCase
         $order1 = $this->actingAs($employee)->postJson("/api/v1/fishing/spots/{$spot1->id}/start")->assertCreated()->json('order');
         $checkout1 = $this->postJson("/api/v1/fishing/orders/{$order1['id']}/checkout", [
             'version' => $order1['version'],
-            'cash_received' => 200000
+            'cash_received' => 200000,
         ])->assertOk()->json('order');
         $this->assertSame('paid', $checkout1['status']);
 
@@ -817,7 +900,7 @@ class PosWorkflowTest extends TestCase
         // Merge paid Spot 1 order into unpaid Spot 2 order
         $response = $this->postJson("/api/v1/fishing/orders/{$order1['id']}/merge", [
             'version' => $checkout1['version'],
-            'target_spot_id' => $spot2->id
+            'target_spot_id' => $spot2->id,
         ])->assertOk()->json('order');
 
         // Total should equal both sessions (200000 + 200000) = 400000
@@ -835,7 +918,7 @@ class PosWorkflowTest extends TestCase
 
         $created = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table->id}/orders", ['items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]]])->assertCreated()->json('order');
         $checkout = $this->postJson("/api/v1/coffee/orders/{$created['id']}/checkout", ['version' => $created['version'], 'cash_received' => 30000])->assertOk()->json('order');
-        
+
         $this->assertSame('paid', $checkout['status']);
         $this->assertNull($checkout['completed_at']);
 
@@ -887,7 +970,7 @@ class PosWorkflowTest extends TestCase
         $spot = FishingSpot::create(['label' => 'Chòi 1']);
 
         $order = $this->actingAs($employee)->postJson("/api/v1/fishing/spots/{$spot->id}/start")->assertCreated()->json('order');
-        
+
         $checkout = $this->postJson("/api/v1/fishing/orders/{$order['id']}/checkout", ['version' => $order['version'], 'cash_received' => 200000])->assertOk()->json('order');
         $this->assertSame('paid', $checkout['status']);
         $this->assertNull($checkout['completed_at']);
@@ -904,6 +987,43 @@ class PosWorkflowTest extends TestCase
         $this->assertSame('available', $map['spots'][0]['state']);
     }
 
+    public function test_paid_fishing_order_can_receive_new_unpaid_items_before_release(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $spot = FishingSpot::create(['label' => 'Chòi gọi thêm món']);
+        $drink = MenuItem::create([
+            'category' => 'Cà phê',
+            'name' => 'Bạc xỉu gọi thêm',
+            'price' => 20000,
+            'is_available' => true,
+        ]);
+
+        $order = $this->actingAs($employee)
+            ->postJson("/api/v1/fishing/spots/{$spot->id}/start")
+            ->assertCreated()
+            ->json('order');
+
+        $paid = $this->postJson("/api/v1/fishing/orders/{$order['id']}/checkout", [
+            'version' => $order['version'],
+            'cash_received' => 200000,
+        ])->assertOk()->assertJsonPath('order.status', 'paid')->json('order');
+
+        $updated = $this->putJson("/api/v1/fishing/orders/{$order['id']}", [
+            'version' => $paid['version'],
+            'items' => [['menu_item_id' => $drink->id, 'quantity' => 1]],
+        ])->assertOk()->json('order');
+
+        $sessionItem = collect($updated['items'])->firstWhere('line_type', 'fishing_session');
+        $drinkItem = collect($updated['items'])->firstWhere('menu_item_id', $drink->id);
+
+        $this->assertSame('partially_paid', $updated['status']);
+        $this->assertSame('220000.00', $updated['total']);
+        $this->assertSame(1, $sessionItem['paid_quantity']);
+        $this->assertSame(0, $drinkItem['paid_quantity']);
+        $this->assertNull($updated['completed_at']);
+        $this->assertSame('active', $updated['fishing_session']['status']);
+    }
+
     public function test_order_items_can_have_notes(): void
     {
         $employee = User::factory()->create(['role' => 'employee']);
@@ -912,7 +1032,7 @@ class PosWorkflowTest extends TestCase
 
         // Create Coffee order with a note
         $created = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
-            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1, 'note' => 'không đá']]
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1, 'note' => 'không đá']],
         ])->assertCreated()->json('order');
 
         $this->assertSame('không đá', $created['items'][0]['note']);
@@ -920,7 +1040,7 @@ class PosWorkflowTest extends TestCase
         // Update Coffee order with a new note
         $updated = $this->putJson("/api/v1/coffee/orders/{$created['id']}", [
             'version' => $created['version'],
-            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2, 'note' => 'không đường']]
+            'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2, 'note' => 'không đường']],
         ])->assertOk()->json('order');
 
         $this->assertSame('không đường', $updated['items'][0]['note']);
@@ -931,13 +1051,13 @@ class PosWorkflowTest extends TestCase
         $employee = User::factory()->create(['role' => 'employee']);
 
         $employee->notifications()->create([
-            'id' => \Illuminate\Support\Str::uuid()->toString(),
+            'id' => Str::uuid()->toString(),
             'type' => 'App\Notifications\TestNotification',
             'data' => ['title' => 'Test 1', 'message' => 'Hello 1'],
             'read_at' => null,
         ]);
         $employee->notifications()->create([
-            'id' => \Illuminate\Support\Str::uuid()->toString(),
+            'id' => Str::uuid()->toString(),
             'type' => 'App\Notifications\TestNotification',
             'data' => ['title' => 'Test 2', 'message' => 'Hello 2'],
             'read_at' => null,
@@ -972,7 +1092,7 @@ class PosWorkflowTest extends TestCase
             ['type' => 'fishing_session_expired', 'title' => 'Hết giờ'],
         ] as $payload) {
             $admin->notifications()->create([
-                'id' => \Illuminate\Support\Str::uuid()->toString(),
+                'id' => Str::uuid()->toString(),
                 'type' => 'App\Notifications\TestNotification',
                 'data' => ['type' => $payload['type'], 'title' => $payload['title'], 'message' => 'Test'],
                 'read_at' => null,
@@ -995,7 +1115,7 @@ class PosWorkflowTest extends TestCase
             ->assertJsonPath('notifications.0.data.type', 'fishing_session_expired');
     }
 
-    public function test_pos_operational_day_resets_visibility_without_mutating_orders(): void
+    public function test_pos_operational_day_auto_pays_and_closes_open_coffee_orders(): void
     {
         $employee = User::factory()->create(['role' => 'employee']);
         $table = CoffeeTable::create(['label' => 'Bàn 23']);
@@ -1035,8 +1155,22 @@ class PosWorkflowTest extends TestCase
                 ->assertNotFound();
 
             $storedOrder = Order::findOrFail($created['id']);
-            $this->assertSame('open', $storedOrder->status);
-            $this->assertNull($storedOrder->completed_at);
+            $this->assertSame('paid', $storedOrder->status);
+            $this->assertSame('2026-06-24 23:59:00', $storedOrder->completed_at?->format('Y-m-d H:i:s'));
+            $this->assertSame(1, $storedOrder->items()->firstOrFail()->paid_quantity);
+            $this->assertDatabaseHas('payments', [
+                'order_id' => $storedOrder->id,
+                'method' => 'auto_close',
+                'amount' => 20000,
+                'cash_received' => 20000,
+                'change_due' => 0,
+            ]);
+
+            $this->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
+                'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]],
+            ])->assertUnprocessable()->assertJsonValidationErrors('order');
+
+            Carbon::setTestNow('2026-06-25 00:00:00');
 
             $this->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
                 'items' => [['menu_item_id' => $coffee->id, 'quantity' => 1]],
@@ -1052,7 +1186,7 @@ class PosWorkflowTest extends TestCase
         }
     }
 
-    public function test_pos_operational_day_ignores_previous_fishing_session_for_new_day(): void
+    public function test_pos_operational_day_auto_pays_and_closes_fishing_session(): void
     {
         $employee = User::factory()->create(['role' => 'employee']);
         $spot = FishingSpot::create(['label' => 'Chòi 23']);
@@ -1078,9 +1212,21 @@ class PosWorkflowTest extends TestCase
                 ->assertJsonPath('stats.active_spots', 0);
 
             $storedOrder = Order::findOrFail($created['id']);
-            $this->assertSame('open', $storedOrder->status);
-            $this->assertNull($storedOrder->completed_at);
-            $this->assertSame('active', $storedOrder->fishingSession->status);
+            $this->assertSame('paid', $storedOrder->status);
+            $this->assertSame('2026-06-24 23:59:00', $storedOrder->completed_at?->format('Y-m-d H:i:s'));
+            $this->assertSame('completed', $storedOrder->fishingSession->status);
+            $this->assertSame('2026-06-24 23:59:00', $storedOrder->fishingSession->completed_at?->format('Y-m-d H:i:s'));
+            $this->assertDatabaseHas('payments', [
+                'order_id' => $storedOrder->id,
+                'method' => 'auto_close',
+                'amount' => (int) config('fishing.session_price'),
+            ]);
+
+            $this->postJson("/api/v1/fishing/spots/{$spot->id}/start")
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors('spot');
+
+            Carbon::setTestNow('2026-06-25 00:00:00');
 
             $this->postJson("/api/v1/fishing/spots/{$spot->id}/start")
                 ->assertCreated();
@@ -1090,6 +1236,99 @@ class PosWorkflowTest extends TestCase
                 ->assertOk()
                 ->assertJsonPath('spots.0.state', 'occupied')
                 ->assertJsonPath('stats.active_spots', 1);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_pos_day_close_recovers_a_fishing_order_created_during_the_closing_minute(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $spot = FishingSpot::create(['label' => 'Chòi lọt phút chốt']);
+
+        Carbon::setTestNow('2026-06-24 23:59:09');
+
+        try {
+            $order = Order::create([
+                'order_number' => 'FS-CLOSING-MINUTE',
+                'service_type' => 'fishing',
+                'fishing_spot_id' => $spot->id,
+                'opened_by' => $employee->id,
+                'status' => 'open',
+                'subtotal' => 200000,
+                'total' => 200000,
+            ]);
+            $order->items()->create([
+                'line_type' => 'fishing_session',
+                'name_snapshot' => 'Phiên câu 4 giờ',
+                'unit_price' => 200000,
+                'quantity' => 1,
+                'ordered_at' => now(),
+            ]);
+            $order->fishingSession()->create([
+                'fishing_spot_id' => $spot->id,
+                'started_at' => now(),
+                'ends_at' => now()->addHours(4),
+                'blocks_count' => 1,
+                'status' => 'active',
+            ]);
+
+            $this->assertSame(0, app(PosOperationalDayCloser::class)->closeDueOrders());
+
+            Carbon::setTestNow('2026-06-25 00:00:00');
+
+            $this->assertSame(1, app(PosOperationalDayCloser::class)->closeDueOrders());
+
+            $storedOrder = $order->fresh();
+            $this->assertSame('paid', $storedOrder->status);
+            $this->assertSame('2026-06-25 00:00:00', $storedOrder->completed_at?->format('Y-m-d H:i:s'));
+            $this->assertSame(1, $storedOrder->items()->firstOrFail()->paid_quantity);
+            $this->assertSame('completed', $storedOrder->fishingSession->status);
+            $this->assertSame('2026-06-25 00:00:00', $storedOrder->fishingSession->completed_at?->format('Y-m-d H:i:s'));
+            $this->assertDatabaseHas('payments', [
+                'order_id' => $storedOrder->id,
+                'method' => PosOperationalDayCloser::PAYMENT_METHOD,
+                'amount' => 200000,
+            ]);
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_scheduled_pos_day_close_only_pays_the_remaining_balance_once(): void
+    {
+        $employee = User::factory()->create(['role' => 'employee']);
+        $table = CoffeeTable::create(['label' => 'Bàn chốt ngày']);
+        $coffee = MenuItem::create(['category' => 'Cà phê', 'name' => 'Cà phê chốt ngày', 'price' => 20000, 'is_available' => true]);
+
+        Carbon::setTestNow('2026-06-24 23:58:00');
+
+        try {
+            $created = $this->actingAs($employee)->postJson("/api/v1/coffee/tables/{$table->id}/orders", [
+                'items' => [['menu_item_id' => $coffee->id, 'quantity' => 2]],
+            ])->assertCreated()->json('order');
+            $line = $created['items'][0];
+
+            $partial = $this->postJson("/api/v1/coffee/orders/{$created['id']}/checkout", [
+                'version' => $created['version'],
+                'cash_received' => 20000,
+                'items' => [['order_item_id' => $line['id'], 'quantity' => 1]],
+            ])->assertOk()->assertJsonPath('order.status', 'partially_paid')->json('order');
+
+            Carbon::setTestNow('2026-06-24 23:59:00');
+            Artisan::call('schedule:run');
+            Artisan::call('schedule:run');
+
+            $storedOrder = Order::findOrFail($partial['id']);
+            $this->assertSame('paid', $storedOrder->status);
+            $this->assertNotNull($storedOrder->completed_at);
+            $this->assertSame(2, $storedOrder->items()->firstOrFail()->paid_quantity);
+            $this->assertSame(2, $storedOrder->payments()->count());
+            $this->assertDatabaseHas('payments', [
+                'order_id' => $storedOrder->id,
+                'method' => 'auto_close',
+                'amount' => 20000,
+            ]);
         } finally {
             Carbon::setTestNow();
         }

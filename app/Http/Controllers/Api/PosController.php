@@ -11,8 +11,8 @@ use App\Http\Requests\Api\Pos\MergeCoffeeOrderRequest;
 use App\Http\Requests\Api\Pos\MergeFishingOrderRequest;
 use App\Http\Requests\Api\Pos\ReleaseOrderRequest;
 use App\Http\Requests\Api\Pos\StartFishingSessionRequest;
-use App\Http\Requests\Api\Pos\ToggleFishTakeawayRequest;
 use App\Http\Requests\Api\Pos\UpdateCoffeeOrderRequest;
+use App\Http\Requests\Api\Pos\UpdateFishingDiscountRequest;
 use App\Http\Requests\Api\Pos\UpdateFishingOrderRequest;
 use App\Models\CoffeeTable;
 use App\Models\FishingSpot;
@@ -22,23 +22,23 @@ use App\Models\PaymentQrSetting;
 use App\Models\User;
 use App\Notifications\PosEventNotification;
 use App\Services\CoffeeOrderService;
-use App\Services\FishingSessionExpirationNotifier;
 use App\Services\FishingService;
+use App\Services\FishingSessionExpirationNotifier;
 use App\Services\OrderPresenter;
 use App\Services\PosNotificationMessageFactory;
-use Illuminate\Support\Facades\Notification;
+use App\Services\PosOperationalDayCloser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class PosController extends Controller
 {
-    public function __construct(private readonly PosNotificationMessageFactory $notificationMessages)
-    {
-    }
+    public function __construct(private readonly PosNotificationMessageFactory $notificationMessages) {}
 
-    public function coffeeMap(): JsonResponse
+    public function coffeeMap(PosOperationalDayCloser $dayCloser): JsonResponse
     {
+        $dayCloser->closeDueOrders();
         $tables = CoffeeTable::orderBy('id')->get()->map(function ($table) {
             $order = $table->orders()->activeForPos()->latest('updated_at')->latest('id')->first();
 
@@ -119,7 +119,7 @@ class PosController extends Controller
         $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) ($data['cash_received'] ?? 0), $method);
 
         $freshOrder = $order->fresh();
-        if (!empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
+        if (! empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
             $service->release($freshOrder, $freshOrder->version);
         }
         $freshOrder = $order->fresh();
@@ -128,8 +128,9 @@ class PosController extends Controller
         return response()->json(['message' => 'Thanh toán hoàn tất. Cảm ơn bạn!', 'payment' => $payment, 'order' => OrderPresenter::make($freshOrder)]);
     }
 
-    public function fishingMap(FishingSessionExpirationNotifier $expirationNotifier): JsonResponse
+    public function fishingMap(FishingSessionExpirationNotifier $expirationNotifier, PosOperationalDayCloser $dayCloser): JsonResponse
     {
+        $dayCloser->closeDueOrders();
         $expirationNotifier->sync();
 
         $spots = FishingSpot::orderBy('id')->get()->map(function ($spot) {
@@ -150,7 +151,10 @@ class PosController extends Controller
                 'completed_today' => Order::query()->forCurrentPosOperationalDay()->where('service_type', 'fishing')->where('status', 'paid')->whereNotNull('completed_at')->count(),
             ],
             'session_price' => number_format((float) config('fishing.session_price'), 2, '.', ''),
-            'session_without_fish_price' => number_format((float) config('fishing.session_without_fish_price'), 2, '.', ''),
+            'discount_options' => array_values(array_map(
+                fn ($amount) => number_format((float) $amount, 2, '.', ''),
+                config('fishing.discount_options', [0, 50000, 100000, 150000, 200000]),
+            )),
             'session_minutes' => config('fishing.session_minutes'),
             'hourly_extension_price' => number_format((float) config('fishing.hourly_extension_price'), 2, '.', ''),
             'menu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
@@ -186,15 +190,16 @@ class PosController extends Controller
         return response()->json(['message' => "Đã gia hạn thêm {$extensionText}.", 'order' => OrderPresenter::make($order)]);
     }
 
-    public function toggleFishTakeaway(ToggleFishTakeawayRequest $request, Order $order, FishingService $service): JsonResponse
+    public function updateFishingDiscount(UpdateFishingDiscountRequest $request, Order $order, FishingService $service): JsonResponse
     {
         $data = $request->validated();
+        $discountAmount = (int) $data['discount_amount'];
 
-        $order = $service->toggleFishTakeaway($order, $data['version'], (bool) $data['enabled']);
-        $message = $data['enabled']
-            ? 'Đã áp dụng giá phiên câu có lấy cá.'
-            : 'Đã áp dụng giá phiên câu không lấy cá.';
-        $this->notifyOrderEvent($this->notificationMessages->fishTakeawayUpdated($order), $order);
+        $order = $service->updateDiscount($order, $data['version'], $discountAmount);
+        $message = $discountAmount > 0
+            ? 'Đã áp dụng giảm '.number_format($discountAmount, 0, ',', '.').' ₫ cho phiên câu.'
+            : 'Đã bỏ giảm giá phiên câu.';
+        $this->notifyOrderEvent($this->notificationMessages->fishingDiscountUpdated($order, $discountAmount), $order);
 
         return response()->json([
             'message' => $message,
@@ -211,7 +216,7 @@ class PosController extends Controller
 
         return response()->json([
             'message' => 'Hóa đơn đã được cập nhật.',
-            'order' => OrderPresenter::make($order)
+            'order' => OrderPresenter::make($order),
         ]);
     }
 
@@ -224,7 +229,7 @@ class PosController extends Controller
         $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) ($data['cash_received'] ?? 0), $method);
 
         $freshOrder = $order->fresh();
-        if (!empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
+        if (! empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
             $service->release($freshOrder, $freshOrder->version);
         }
         $freshOrder = $order->fresh();
@@ -243,7 +248,7 @@ class PosController extends Controller
 
         return response()->json([
             'message' => 'Đã gộp hóa đơn thành công.',
-            'order' => OrderPresenter::make($order)
+            'order' => OrderPresenter::make($order),
         ]);
     }
 
@@ -252,9 +257,10 @@ class PosController extends Controller
         $data = $request->validated();
         $order = $service->release($order, $data['version']);
         $this->notifyOrderEvent($this->notificationMessages->coffeeReleased($order), $order);
+
         return response()->json([
             'message' => 'Đã giải phóng bàn thành công.',
-            'order' => OrderPresenter::make($order)
+            'order' => OrderPresenter::make($order),
         ]);
     }
 
@@ -263,9 +269,10 @@ class PosController extends Controller
         $data = $request->validated();
         $order = $service->release($order, $data['version']);
         $this->notifyOrderEvent($this->notificationMessages->fishingReleased($order), $order);
+
         return response()->json([
             'message' => 'Đã giải phóng vị trí chòi thành công.',
-            'order' => OrderPresenter::make($order)
+            'order' => OrderPresenter::make($order),
         ]);
     }
 
@@ -279,7 +286,7 @@ class PosController extends Controller
 
         return response()->json([
             'message' => 'Đã gộp hóa đơn thành công.',
-            'order' => OrderPresenter::make($order)
+            'order' => OrderPresenter::make($order),
         ]);
     }
 
@@ -320,5 +327,4 @@ class PosController extends Controller
             throw ValidationException::withMessages(['payment_method' => 'Phương thức thanh toán này chưa được bật hoặc chưa đủ cấu hình. Bạn chọn phương thức khác hoặc báo quản trị viên cập nhật nhé.']);
         }
     }
-
 }

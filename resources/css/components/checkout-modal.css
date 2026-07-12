@@ -8,6 +8,194 @@ body[data-role="employee"] #modal-root .modal.pos-checkout-modal {
     max-height: calc(100dvh - 48px - var(--modal-keyboard-offset)) !important;
 }
 
+/* Checkout template primitives. Keep static presentation out of generated markup. */
+.pos-checkout-modal .checkout-release-block {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+}
+
+.pos-checkout-modal .checkout-release-label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: auto;
+    margin: 0;
+    color: #526159;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+
+.pos-checkout-modal .checkout-release-label.is-disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.pos-checkout-modal .checkout-release-input {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.pos-checkout-modal .checkout-release-input:disabled {
+    cursor: not-allowed;
+}
+
+.pos-checkout-modal .checkout-cash-label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.pos-checkout-modal .checkout-cash-input-shell {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1px;
+    width: 100%;
+    height: 46px;
+    margin-top: 4px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0 14px;
+    background: var(--white);
+}
+
+.pos-checkout-modal .checkout-cash-input-shell:focus-within {
+    border-color: var(--moss);
+    box-shadow: 0 0 0 3px rgba(69, 92, 65, .1);
+}
+
+.pos-checkout-modal .checkout-cash-input {
+    box-sizing: border-box;
+    field-sizing: content;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: calc(100% - 48px);
+    width: auto !important;
+    height: 44px;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--ink) !important;
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.pos-checkout-modal .checkout-cash-input-shell.is-empty .checkout-cash-input {
+    flex-basis: 0;
+    width: 0 !important;
+}
+
+body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-cash-input,
+body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-cash-input:focus,
+body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-cash-input:focus-visible,
+body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]),
+body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]):focus {
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-family: inherit !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.pos-checkout-modal .checkout-cash-thousands {
+    flex: 0 0 auto;
+    padding: 0;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+.pos-checkout-modal .quick-cash-list {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.pos-checkout-modal .quick-cash-btn {
+    display: grid;
+    flex: 1;
+    place-items: center;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    outline: none;
+    background: var(--white);
+    color: var(--ink);
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.pos-checkout-modal .checkout-change-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.pos-checkout-modal .checkout-change-label {
+    color: var(--muted);
+}
+
+.pos-checkout-modal .checkout-change-value {
+    color: var(--moss);
+    font-weight: 700;
+}
+
+.pos-checkout-modal .checkout-total-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font-family: Georgia, serif;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.pos-checkout-modal .checkout-actions {
+    grid-template-columns: 1fr;
+    margin-top: 10px;
+}
+
+.pos-checkout-modal .checkout-pay-line .is-dimmed {
+    opacity: .4;
+}
+
 body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-modal-layout {
     grid-template-columns: minmax(420px, 1fr) minmax(330px, 360px) !important;
     gap: 0 !important;

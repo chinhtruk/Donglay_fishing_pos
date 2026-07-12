@@ -6,6 +6,111 @@
     max-height: calc(100dvh - 48px)
 }
 
+/* Static presentation hooks used by the POS templates. */
+.pos-stat-icon {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.pos-new-order-icon {
+    margin-right: 4px;
+}
+
+.coffee-pos-layout-single {
+    grid-template-columns: 1fr;
+}
+
+.coffee-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 15px;
+}
+
+.coffee-merge-button {
+    min-height: auto;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+}
+
+.fish-swim.fish-1 {
+    width: 46px;
+    height: 28px;
+    fill: rgba(255, 255, 255, .15);
+}
+
+.fish-swim.fish-2 {
+    width: 38px;
+    height: 23px;
+    fill: rgba(255, 255, 255, .12);
+}
+
+.fish-swim.fish-3 {
+    width: 32px;
+    height: 19px;
+    fill: rgba(255, 255, 255, .14);
+}
+
+.fish-swim.fish-4 {
+    width: 26px;
+    height: 16px;
+    fill: rgba(255, 255, 255, .1);
+}
+
+.water-flora {
+    position: absolute;
+    display: flex;
+    pointer-events: none;
+}
+
+.water-flora.group-top-right {
+    top: 15%;
+    right: 15%;
+    gap: 4px;
+}
+
+.water-flora.group-bottom-left {
+    bottom: 12%;
+    left: 12%;
+}
+
+.water-flora.group-top-left {
+    top: 18%;
+    left: 16%;
+}
+
+.water-flora.group-bottom-right {
+    right: 18%;
+    bottom: 16%;
+}
+
+.flora-leaf-top-primary {
+    transform: rotate(15deg);
+}
+
+.flora-leaf-top-secondary {
+    margin-left: -10px;
+    transform: rotate(-45deg);
+}
+
+.flora-leaf-bottom-primary {
+    transform: rotate(-110deg);
+}
+
+.flora-leaf-bottom-secondary {
+    margin-left: -8px;
+    transform: rotate(30deg);
+}
+
+.flora-leaf-left {
+    transform: rotate(65deg);
+}
+
+.flora-leaf-right {
+    transform: rotate(-140deg);
+}
+
 .pos-order-modal>.modal-head {
     flex: 0 0 auto
 }

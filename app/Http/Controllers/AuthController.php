@@ -28,8 +28,8 @@ class AuthController extends Controller
 
     public function requestOtp(Request $request): JsonResponse
     {
-        $data = $request->validate(['email' => ['required', 'email']]);
-        $user = User::where('email', mb_strtolower($data['email']))->where('role', 'employee')->whereNotNull('email_verified_at')->where('is_active', true)->first();
+        $data = $this->validateEmployeeUsername($request);
+        $user = $this->employeeByUsername($data['username']);
         if ($user) {
             $latest = $user->otpChallenges()->latest()->first();
             if (! $latest || $latest->created_at->lte(now()->subSeconds(60))) {
@@ -39,13 +39,13 @@ class AuthController extends Controller
             }
         }
 
-        return response()->json(['message' => "Nếu email đã được đăng ký, mã sẽ được gửi trong ít phút.\nBạn nhớ kiểm tra cả thư rác nhé."]);
+        return response()->json(['message' => "Nếu tên đăng nhập hợp lệ, mã sẽ được gửi đến email liên kết trong ít phút.\nBạn nhớ kiểm tra cả thư rác nhé."]);
     }
 
     public function verifyOtp(Request $request): JsonResponse
     {
-        $data = $request->validate(['email' => ['required', 'email'], 'code' => ['required', 'digits:6']]);
-        $user = User::where('email', mb_strtolower($data['email']))->where('role', 'employee')->whereNotNull('email_verified_at')->where('is_active', true)->first();
+        $data = $this->validateEmployeeUsername($request, true);
+        $user = $this->employeeByUsername($data['username']);
         $challenge = $user?->otpChallenges()->whereNull('used_at')->latest()->first();
         if (! $user || ! $challenge || $challenge->expires_at->isPast() || $challenge->attempts >= 5 || ! Hash::check($data['code'], $challenge->code_hash)) {
             if ($challenge && $challenge->attempts < 5) {
@@ -72,5 +72,31 @@ class AuthController extends Controller
     public function profile(Request $request): JsonResponse
     {
         return response()->json(['user' => $request->user()->only('id', 'name', 'username', 'email', 'role')]);
+    }
+
+    private function validateEmployeeUsername(Request $request, bool $withCode = false): array
+    {
+        $request->merge([
+            'username' => mb_strtolower(trim((string) $request->input('username'))),
+        ]);
+
+        $rules = [
+            'username' => ['required', 'string', 'max:80', 'regex:/^[a-z0-9._-]+$/'],
+        ];
+        if ($withCode) {
+            $rules['code'] = ['required', 'digits:6'];
+        }
+
+        return $request->validate($rules);
+    }
+
+    private function employeeByUsername(string $username): ?User
+    {
+        return User::where('username', $username)
+            ->where('role', 'employee')
+            ->whereNotNull('email')
+            ->whereNotNull('email_verified_at')
+            ->where('is_active', true)
+            ->first();
     }
 }

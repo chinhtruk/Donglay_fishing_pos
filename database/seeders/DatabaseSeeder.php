@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(['username' => 'admin'], ['name' => 'Quản trị viên', 'email' => 'admin@donglay.local', 'email_verified_at' => now(), 'password' => 'Admin@12345', 'role' => 'admin', 'is_active' => true]);
-        User::updateOrCreate(['email' => 'nhanvien@donglay.local'], ['name' => 'Nhân viên mẫu', 'username' => null, 'email_verified_at' => now(), 'password' => null, 'role' => 'employee', 'is_active' => true]);
+        User::updateOrCreate(['email' => 'nhanvien@donglay.local'], ['name' => 'Nhân viên mẫu', 'username' => 'nhanvien', 'email_verified_at' => now(), 'password' => null, 'role' => 'employee', 'is_active' => true]);
 
         foreach (range(1, 20) as $index) {
             $column = ($index - 1) % 5;

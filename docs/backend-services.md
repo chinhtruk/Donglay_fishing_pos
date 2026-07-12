@@ -48,6 +48,18 @@ Important behavior:
 - Cash checkout rejects insufficient received amount.
 - Payment line quantity cannot exceed unpaid quantity.
 
+## PosOperationalDayCloser
+
+Closes POS work from the previous operational day at the 23:59 boundary.
+
+Important behavior:
+
+- Open and partially paid orders receive one `auto_close` payment for only their remaining quantities.
+- Already-paid orders that were not released are completed without creating another payment.
+- Fishing sessions are completed with their orders.
+- The close timestamp and automatic payment timestamp use the 23:59 boundary even when a delayed scheduler/API request catches up later.
+- Repeated execution is idempotent; `payment_exception` orders remain available for admin reconciliation.
+
 ## AdminDashboardService
 
 Builds the `/api/v1/admin/dashboard` report payload from validated date range input.

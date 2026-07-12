@@ -1,0 +1,93 @@
+/* Admin payment settings and data-management ownership. */
+
+.admin-data-management {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 24px;
+    padding: 22px 0 4px;
+    border-top: 1px solid var(--line, #e5d9cd);
+}
+
+.owner-data-page .admin-data-management {
+    margin-top: 0;
+    padding-top: 8px;
+    border-top: 0;
+}
+
+.admin-data-management-copy {
+    display: grid;
+    gap: 6px;
+    max-width: 680px;
+}
+
+.admin-data-management-copy .eyebrow,
+.admin-data-management-copy h2,
+.admin-data-management-copy p {
+    margin: 0;
+}
+
+.admin-data-management-copy h2 {
+    font-size: 20px;
+}
+
+.admin-data-management-copy>p:not(.eyebrow) {
+    color: var(--muted, #75675d);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.admin-backup-email {
+    color: #4f6f58;
+    font-size: 12px;
+}
+
+.admin-backup-email.is-missing {
+    color: #a14235;
+    font-weight: 700;
+}
+
+.admin-data-management-actions {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+@media(max-width: 900px) {
+    .admin-data-management {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-data-management-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media(min-width: 768px) and (max-width: 1024px) {
+    body[data-role="admin"] .owner-payment-page .payment-method-table {
+        min-width: 100% !important;
+    }
+
+    body[data-role="admin"] .owner-payment-page .payment-method-table th,
+    body[data-role="admin"] .owner-payment-page .payment-method-table td {
+        padding: 12px 10px !important;
+        font-size: 13px !important;
+    }
+
+    body[data-role="admin"] .owner-payment-page .payment-method-table td {
+        word-break: break-word !important;
+    }
+
+    body[data-role="admin"] .owner-payment-page .payment-method-table th {
+        font-size: 11px !important;
+    }
+
+    body[data-role="admin"] .owner-payment-page .payment-method-table .pill {
+        padding: 5px 8px !important;
+        font-size: 10px !important;
+    }
+}

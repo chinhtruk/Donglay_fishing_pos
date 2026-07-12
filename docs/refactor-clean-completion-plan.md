@@ -259,6 +259,30 @@ Recommended next Phase 3 target:
 2. Keep notification polling and drawer tests focused before moving checkout or POS page bodies.
 3. Browser smoke logout confirm, notification drawer, fishing confirm, and one normal page navigation after the next slice.
 
+### Phase 3 Completion
+
+Completed on 2026-07-10:
+
+- Extracted notification drawer, unread badge, polling, toast dispatch, and notification order detail to `resources/js/pages/notifications/index.js`.
+- Extracted employee/admin login interactions to `resources/js/pages/auth/login.js` and shared toast rendering to `resources/js/modules/toast.js`.
+- Extracted shared checkout orchestration to `resources/js/pages/pos/checkout.js`.
+- Extracted coffee map, order modal orchestration, merge workflow, and table/counter actions to `resources/js/pages/pos/coffee.js`.
+- Extracted fishing map, countdown, merge workflow, session detail, and order actions to `resources/js/pages/pos/fishing.js`.
+- Extracted admin/employee order lists, filters, polling, and order detail to `resources/js/pages/orders/list.js`.
+- Extracted admin menu, payment settings, and map workflows to `resources/js/pages/admin/menu.js`, `settings.js`, and `map.js`.
+- Added shared admin pagination/search primitives and shared POS payment-method display helpers.
+- Moved the shared page lifecycle instance to `resources/js/shell/page-lifecycle.js` so page modules register cleanup without depending on the bootstrap.
+- Reduced `resources/js/app.js` from 3436 lines after the shell slice to 78 lines. It now contains only imports, dependency wiring, shell bootstrap, router dispatch, modal fallback cleanup, and app entry selection.
+- Increased JS tests from 17 to 19 with notification classification and payment-method label coverage.
+
+Phase 3 completion verification:
+
+- `npm test`: passed, 19 tests.
+- `npm run build`: passed with `public/build/assets/app-BmcCRcE3.css` and `public/build/assets/app-BENaVWVA.js`.
+- Browser smoke passed on the built asset for admin dashboard, notification drawer, admin orders/menu/settings/map/users, coffee map/order modal, fishing map/start confirm, and logout confirm.
+- Confirm cancel paths left no open dialog or `body.modal-open` state.
+- Browser console had no warning or error logs after the smoke matrix.
+
 ## Phase 4 Progress
 
 Started on 2026-07-01 with the page lifecycle/timer cleanup slice.
@@ -294,7 +318,169 @@ Phase 4 lifecycle-slice browser smoke results:
 - Returning to admin dashboard cleared POS body flags again.
 - Browser console had no error or warning logs after the page-switch sequence.
 
-Remaining Phase 4 work:
+### Phase 4 Completion
 
-- Notification rendering and API orchestration still live in `app.js`; keep module extraction for the notifications slice rather than mixing it into this timer cleanup batch.
-- Future page modules should return `mount(context)` / optional `unmount()` or register their effects through this lifecycle scope.
+Completed on 2026-07-10:
+
+- Added `resources/js/shell/page-runtime.js` with the shared `definePageModule()` contract and active page runtime.
+- Every routed POS/admin page now exports `mount(context)` and `unmount()` through a page module object.
+- Updated the router to unmount the current page before applying the next page shell and mounting its module.
+- Each page mount receives a fresh lifecycle scope; failed mounts immediately run module cleanup and dispose the scope.
+- Added lifecycle-managed DOM listeners for sidebar, profile menu, notification drawer, and live clock setup.
+- Moved Orders/Admin Map polling, fishing countdown, menu/orders search debounce, and POS operational reset onto their owning lifecycle scopes.
+- Removed the shared singleton `resources/js/shell/page-lifecycle.js`.
+- Added tests for listener cleanup, page switch cleanup order, failed mount cleanup, and router unmount-before-mount behavior.
+
+Phase 4 completion verification:
+
+- `php artisan test`: passed, 53 tests, 351 assertions.
+- `npm test`: passed, 23 tests.
+- `npm run build`: passed with `public/build/assets/app-BmcCRcE3.css` and `public/build/assets/app-DmYUUbGq.js`.
+- Browser smoke passed while cycling dashboard, Orders, Admin Map, Coffee, Fishing, and dashboard again across polling/countdown boundaries.
+- Notification drawer, fishing confirm, and logout confirm remained functional and closed without stale modal/drawer state.
+- Browser console had no warning or error logs after the lifecycle smoke matrix.
+
+## Phase 5 Completion
+
+Completed on 2026-07-10:
+
+- Replaced static inline presentation in checkout, coffee POS, fishing POS, order receipts, admin menu forms, and admin map controls with semantic classes.
+- Replaced checkout disabled/dimmed DOM style assignments with `is-disabled` and `is-dimmed` state classes.
+- Replaced the fishing session total color argument with an explicit `paid` tone class.
+- Kept only five data-driven inline declarations: two fishing slot grid coordinates and three dashboard percentage widths.
+- Added a JS contract test proving fishing session total markup uses classes and contains no inline style.
+
+Phase 5 acceptance checks:
+
+- `rg -o 'style=' resources/js | wc -l` must return `5`.
+- Every remaining match must be listed in `docs/frontend-architecture.md` under Dynamic Style Exceptions.
+- `php artisan test`, `npm test`, `npm run build`, `git diff --check`, and desktop/iPad browser smoke must pass before Phase 6 begins.
+
+Phase 5 verification:
+
+- `php artisan test`: passed, 53 tests, 351 assertions.
+- `npm test`: passed, 24 tests.
+- `npm run build`: passed with `public/build/assets/app-BT5D9bj9.css` and `public/build/assets/app-xclCEor3.js`.
+- `git diff --check`: clean; exactly five `style=` matches remain under `resources/js/`.
+- Desktop 1280×720 and iPad portrait 768×1024 smoke checks passed against the built CSS using representative checkout, POS, order-session, admin menu, and admin map markup. No horizontal overflow or browser console warning/error was detected.
+- The authenticated local app smoke could not be repeated because the stored admin password no longer matches the documented seed credential; no account or password data was changed for QA.
+
+## Phase 6A: Admin Map CSS Ownership
+
+Completed on 2026-07-10:
+
+- Split Admin Map base rules from `pages/admin.css` into `pages/admin-map.css` without changing their page-layer position.
+- Moved Admin Map preview, resource modal, toolbar, and occupancy compatibility rules from `legacy-overrides.css` into `pages/admin-map-overrides.css`.
+- Imported the compatibility file immediately after legacy so responsive and late component layers retain their existing priority.
+- Left shared legacy selectors in place when they also own Orders tabs, generic admin surfaces, or employee POS fishing behavior.
+- Reduced `legacy-overrides.css` from 13,868 to 13,632 lines.
+
+Phase 6A verification requirements:
+
+- `php artisan test`, `npm test`, `npm run build`, and `git diff --check` pass.
+- Admin Map toolbar, coffee states, fishing states, resource form, and action footer have no horizontal overflow at desktop, iPad portrait/landscape, and mobile widths.
+- No Admin Map-only resource/modal/state block remains in `legacy-overrides.css`.
+
+Phase 6A verification:
+
+- `php artisan test`: passed, 53 tests, 351 assertions.
+- `npm test`: passed, 24 tests.
+- `npm run build`: passed with `public/build/assets/app-CzXdkx09.css` and `public/build/assets/app-xclCEor3.js`.
+- `git diff --check`: clean.
+- Built-asset smoke passed at desktop 1280×720, iPad portrait 768×1024, iPad landscape 1024×768, and mobile 390×844.
+- Coffee available/occupied/paid/disabled states, the 20-slot fishing map, responsive toolbar, and resource modal stayed within their viewports with no horizontal document overflow.
+- Browser console contained no warning or error. The temporary QA harness was removed after verification.
+
+## Phase 6B: Admin Menu List And Editor CSS
+
+Completed on 2026-07-10:
+
+- Replaced `pages/admin.css` with the explicit `pages/admin-menu.css` ownership file.
+- Moved Admin Menu table images, empty state, list toolbar, search, pagination, and single-item editor rules out of `legacy-overrides.css`.
+- Added `pages/admin-menu-overrides.css` after legacy to preserve the original admin cascade.
+- Kept iPad table rules and broad admin surface selectors in legacy because they still share ownership with generic table/responsive behavior.
+- Kept all batch-create modal rules in legacy for a separate Phase 6C visual slice.
+- Added the missing mobile single-item editor layout: one-column form, horizontal divider, and single-column field grid.
+- Reduced `legacy-overrides.css` from 13,632 to 12,856 lines.
+
+Phase 6B verification:
+
+- `php artisan test`: passed, 53 tests, 351 assertions.
+- `npm test`: passed, 24 tests.
+- `npm run build`: passed with `public/build/assets/app-DzWK6jbm.css` and `public/build/assets/app-xclCEor3.js`.
+- `git diff --check`: clean.
+- Built-asset list/table/pagination smoke passed at desktop 1280×720, iPad portrait 768×1024, and mobile 390×844 with no document-level horizontal overflow.
+- Single-item editor remained two-column at 1024px and switched to a 312px one-column form at 390px without internal horizontal overflow.
+- Browser console contained no warning or error. The temporary QA harness was removed after verification.
+
+## Phase 6C: Admin Menu Batch-Create CSS
+
+Completed on 2026-07-10:
+
+- Moved the batch-create modal, category picker, row editor, image picker, availability toggles, remove action, and price-range rules into `pages/admin-menu-batch.css`.
+- Added `pages/admin-menu-batch-overrides.css` after the Admin Menu list/editor layers to preserve the former legacy priority without broadening selector scope.
+- Moved the Phase 5 batch price-range presentation classes out of `pages/admin-menu.css` so each Admin Menu workflow has one explicit owner.
+- Added a mobile layout below 768px: wider modal shell, image/content row, single-column fields, and a full-width action row.
+- Removed every Admin Menu batch-create selector from `legacy-overrides.css`.
+- Reduced `legacy-overrides.css` from 12,856 to 12,250 lines.
+
+Phase 6C verification:
+
+- `php artisan test`: passed, 53 tests, 351 assertions.
+- `npm test`: passed, 24 tests.
+- `npm run build`: passed with `public/build/assets/app-B_eQUGnT.css` and `public/build/assets/app-xclCEor3.js`.
+- Desktop 1280×720, iPad portrait 768×1024, iPad landscape 1024×768, and mobile 390×844 batch-modal smoke checks passed without document or modal-body horizontal overflow.
+- Mobile rows resolve to an 82px image column and a flexible 244px content column; their fields stack to one column and actions occupy a separate row.
+- Browser console contained no warning or error. The temporary QA harness was removed after verification.
+
+## Phase 6D: Pagination And Staff Order Table CSS
+
+Completed on 2026-07-10:
+
+- Added `components/pagination.css` for the shared paginated workspace, internal data scroll, sticky header, paginator controls, and paginator states.
+- Added `pages/pos-orders-overrides.css` after legacy for the employee Orders bordered scroll container and late sticky-header treatment.
+- Moved order metadata layout to `pages/pos-orders.css` and shared table action icon presentation to `components/table.css`.
+- Preserved the later admin paginator and feature-specific table overrides in their current owners.
+- Kept the broad iPad `:not(.owner-orders-page):not(.owner-menu-page)` selector in legacy for a separate feature-scoped replacement.
+- Reduced `legacy-overrides.css` from 12,250 to 12,061 lines.
+
+Phase 6D verification:
+
+- `php artisan test`: passed, 53 tests, 351 assertions.
+- `npm test`: passed, 24 tests.
+- `npm run build`: passed with `public/build/assets/app-ChbAOJ39.css` and `public/build/assets/app-xclCEor3.js`.
+- Staff Orders and Admin Orders pagination smoke passed at desktop 1280×720, iPad landscape 1024×768, iPad portrait 768×1024, and mobile 390×844.
+- Desktop/iPad table bodies scroll internally, sticky headers remain fixed after a 160px scroll, and the paginator remains outside the scrolling data region.
+- Mobile keeps natural document scrolling, contains horizontal table scrolling within `.paginated-scroll`, and keeps the paginator inside the viewport.
+- Browser console contained no warning or error. The temporary QA harness was removed after verification.
+
+## Phase 6E: Feature-Scoped Tablet Tables
+
+Completed on 2026-07-10:
+
+- Replaced the broad `:not(.owner-orders-page):not(.owner-menu-page)` tablet table selector with explicit Users, Payment Settings, and Staff Orders selectors.
+- Added the first `pages/admin-settings.css` ownership file and imported it before the final mobile/iPad layers.
+- Added Users tablet rules to `pages/admin-users.css` and Staff Orders tablet rules to `pages/pos-orders-overrides.css`.
+- Removed the responsive `.table-actions` branch because none of the three matching table workflows renders table action buttons.
+- Kept Staff Orders selectors below `#id` specificity so `responsive/ipad.css` still changes portrait cell padding from 12px by 10px to 14px by 12px.
+- Reduced `legacy-overrides.css` from 12,061 to 12,021 lines.
+
+Phase 6E verification:
+
+- `php artisan test`: passed, 53 tests, 351 assertions.
+- `npm test`: passed, 25 tests after adding the Fishing order-modal composition regression.
+- `npm run build`: passed with `public/build/assets/app-Cam1b-Pq.css` and `public/build/assets/app-B6BPvgSD.js`.
+- Users, Payment Settings, and Staff Orders table smoke passed at desktop 1280×720, iPad landscape 1024×768, iPad portrait 768×1024, and mobile 390×844.
+- At 1024px all three owners resolve to 12px by 10px cell padding, 11px headers, 13px cells, and 10px pills. Staff Orders portrait correctly resolves to the later 14px by 12px iPad padding.
+- Every checked viewport had zero document-level horizontal overflow; mobile overflow stayed inside each table region.
+- Browser console contained no warning or error. The temporary QA harness was removed after verification.
+
+### Post-Phase 6E Fishing Order Modal Fix
+
+Fixed on 2026-07-11:
+
+- Restored the missing `renderOrderModalBody` import in `pages/pos/fishing.js`; the missing binding caused occupied fishing spots to throw before `openModal()`.
+- Added `fishingOrderModalCatalog()` as a tested composition boundary for ordered menu data, categories, and the shared order-modal body.
+- Added a Node regression test that renders the Fishing modal catalog and verifies the shared modal/product markup.
+- Runtime smoke with the production bundle confirmed an occupied fishing spot opens `Chòi 1 · Đang câu`, an available spot still opens the start confirmation, and an occupied Coffee table still opens its ordering modal.
+- `npm test`: passed, 25 tests. `php artisan test`: passed, 53 tests and 351 assertions. The production build emitted `app-Cam1b-Pq.css` and `app-B6BPvgSD.js`.

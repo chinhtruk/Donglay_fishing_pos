@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Order extends Model
 {
     public const POS_OPERATIONAL_RESET_HOUR = 23;
+
     public const POS_OPERATIONAL_RESET_MINUTE = 59;
 
     protected $fillable = ['order_number', 'service_type', 'coffee_table_id', 'fishing_spot_id', 'opened_by', 'status', 'subtotal', 'total', 'version', 'completed_at', 'voided_at', 'void_reason'];
@@ -44,6 +45,14 @@ class Order extends Model
             'starts_at' => $startAt->toIso8601String(),
             'resets_at' => $resetAt->toIso8601String(),
         ];
+    }
+
+    public static function isPosOperationalClosingMinute(?CarbonInterface $now = null): bool
+    {
+        $moment = $now ?? now();
+
+        return $moment->hour === self::POS_OPERATIONAL_RESET_HOUR
+            && $moment->minute === self::POS_OPERATIONAL_RESET_MINUTE;
     }
 
     public function scopeForCurrentPosOperationalDay(Builder $query): Builder

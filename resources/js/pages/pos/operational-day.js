@@ -1,4 +1,4 @@
-let posOperationalResetTimer = null;
+let posOperationalResetCleanup = null;
 let isResettingPosOperationalUi = false;
 let resetHooks = {
     closeOpenModal: () => {},
@@ -17,7 +17,7 @@ export function currentPosPage() {
     return ['coffee', 'fishing', 'orders'].includes(section) ? section : null;
 }
 
-export function schedulePosOperationalReset(payload = {}) {
+export function schedulePosOperationalReset(payload = {}, lifecycle = null) {
     const page = currentPosPage();
     if (!page) return;
 
@@ -28,24 +28,33 @@ export function schedulePosOperationalReset(payload = {}) {
     const delay = new Date(resetAt).getTime() - new Date(serverTime).getTime();
     if (!Number.isFinite(delay)) return;
 
-    if (posOperationalResetTimer) window.clearTimeout(posOperationalResetTimer);
-    posOperationalResetTimer = window.setTimeout(async () => {
+    posOperationalResetCleanup?.();
+    const reset = async () => {
+        posOperationalResetCleanup = null;
         const activePage = currentPosPage();
         if (!activePage) return;
         if (isResettingPosOperationalUi) return;
         isResettingPosOperationalUi = true;
         try {
             resetHooks.closeOpenModal();
-            resetHooks.toast('POS đã sang ngày vận hành mới. Màn hình đã được làm mới.', 'info');
+            resetHooks.toast('Đã chốt ngày: các đơn còn mở được ghi nhận thanh toán và màn hình POS đã làm mới.', 'info');
             await resetHooks.renderPage(activePage);
         } finally {
             isResettingPosOperationalUi = false;
         }
-    }, Math.max(0, delay + 250));
+    };
+    const timeout = Math.max(0, delay + 250);
+    if (lifecycle?.timeout) {
+        posOperationalResetCleanup = lifecycle.timeout(reset, timeout);
+        return;
+    }
+
+    const timer = window.setTimeout(reset, timeout);
+    posOperationalResetCleanup = () => window.clearTimeout(timer);
 }
 
 export function stopPosOperationalReset() {
-    if (posOperationalResetTimer) window.clearTimeout(posOperationalResetTimer);
-    posOperationalResetTimer = null;
+    posOperationalResetCleanup?.();
+    posOperationalResetCleanup = null;
     isResettingPosOperationalUi = false;
 }

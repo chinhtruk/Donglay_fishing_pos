@@ -1,6 +1,7 @@
 import { api } from '../../modules/api.js';
 import { escapeHtml, money, number } from '../../modules/format.js';
 import { $, $$ } from '../../templates/dom.js';
+import { definePageModule } from '../../shell/page-runtime.js';
 
 function localDateStr(date) {
     const year = date.getFullYear();
@@ -34,6 +35,10 @@ export async function renderDashboard() {
     const data = await api(`/api/v1/admin/dashboard?from=${from}&to=${today}`);
     drawDashboard(data);
 }
+
+export const dashboardPage = definePageModule({
+    mount: () => renderDashboard(),
+});
 
 function drawDashboard(data) {
     window.scrollTo({ top: 0, behavior: 'instant' });

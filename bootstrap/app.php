@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\BlockWritesDuringDataReset;
 use App\Http\Middleware\RequireRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['role' => RequireRole::class]);
+        $middleware->web(append: [BlockWritesDuringDataReset::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

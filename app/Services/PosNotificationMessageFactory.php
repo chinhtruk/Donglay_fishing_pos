@@ -50,9 +50,13 @@ class PosNotificationMessageFactory
         return $this->event('Gia hạn chòi câu', "{$this->resourceLabel($order)} vừa gia hạn thêm {$extensionText} ({$durationText}), kết thúc lúc {$order->fishingSession->ends_at->format('H:i')}.", $order, 'fishing_session_extended');
     }
 
-    public function fishTakeawayUpdated(Order $order): array
+    public function fishingDiscountUpdated(Order $order, int $discountAmount): array
     {
-        return $this->event('Cập nhật giá phiên câu', "{$this->resourceLabel($order)} vừa cập nhật tùy chọn lấy cá mang về.", $order, 'fishing_order_updated');
+        $detail = $discountAmount > 0
+            ? 'áp dụng giảm '.$this->moneyText($discountAmount)
+            : 'bỏ giảm giá';
+
+        return $this->event('Cập nhật giảm giá phiên câu', "{$this->resourceLabel($order)} vừa {$detail}.", $order, 'fishing_order_updated');
     }
 
     public function fishingUpdated(Order $order): array

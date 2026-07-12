@@ -1,6 +1,6 @@
 import { $, $$ } from '../templates/dom.js';
 
-export function setupSidebar({ page }) {
+export function setupSidebar({ page, lifecycle = null }) {
     $$('#sidebar [data-nav]').forEach(link => {
         link.classList.toggle('active', link.dataset.nav === page);
     });
@@ -9,6 +9,11 @@ export function setupSidebar({ page }) {
     const menuToggle = $('#menu-toggle');
     const scrim = $('#sidebar-scrim');
     const collapseButton = $('#sidebar-collapse-toggle');
+    const listen = (target, eventName, callback) => {
+        if (lifecycle?.listen) return lifecycle.listen(target, eventName, callback);
+        target?.addEventListener?.(eventName, callback);
+        return () => target?.removeEventListener?.(eventName, callback);
+    };
 
     const closeSidebar = () => {
         sidebar?.classList.remove('open');
@@ -32,20 +37,22 @@ export function setupSidebar({ page }) {
         collapseButton.title = collapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng';
     };
 
-    collapseButton?.addEventListener('click', () => {
+    const toggleCollapsed = () => {
         const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
         try { localStorage.setItem('donglay.sidebar', collapsed ? 'collapsed' : 'expanded'); } catch (_) {}
         syncCollapseButton();
-    });
+    };
+    const handleResize = () => {
+        if (window.innerWidth > 820) closeSidebar();
+    };
 
     syncCollapseButton();
     menuToggle?.setAttribute('aria-expanded', 'false');
-    menuToggle?.addEventListener('click', toggleSidebar);
-    scrim?.addEventListener('click', closeSidebar);
-    $$('#sidebar nav a').forEach(link => link.addEventListener('click', closeSidebar));
-    window.addEventListener('resize', () => {
-        if (window.innerWidth > 820) closeSidebar();
-    });
+    listen(collapseButton, 'click', toggleCollapsed);
+    listen(menuToggle, 'click', toggleSidebar);
+    listen(scrim, 'click', closeSidebar);
+    $$('#sidebar nav a').forEach(link => listen(link, 'click', closeSidebar));
+    listen(window, 'resize', handleResize);
 
     return { closeSidebar };
 }

@@ -17,7 +17,7 @@ The API URL surface is intentionally stable during the refactor. Controllers may
 
 Current API controllers:
 
-- `AuthController` - admin login, employee OTP login, profile, logout.
+- `AuthController` - admin login; employee login by username with OTP delivered to the linked verified email; profile; logout.
 - `NotificationController` - notification list/read/delete actions.
 - `OrderController` - paginated order list.
 - `Api/PosController` - coffee/fishing POS endpoint orchestration, checkout, merge, release, order detail, and notification side effects.
@@ -59,6 +59,7 @@ Order workflow logic is split across:
 - `OrderNumberGenerator`
 - `OrderPresenter`
 - `FishingSessionExpirationNotifier`
+- `PosOperationalDayCloser`
 - `AdminDashboardService`
 - `AdminMenuService`
 - `AdminPaymentMethodService`
@@ -66,7 +67,7 @@ Order workflow logic is split across:
 - `AdminAuditLogger`
 - `PosNotificationMessageFactory`
 
-The shared order services remove the largest duplicated paid/unpaid, payment, number generation, and total/status behavior between coffee and fishing. `AdminDashboardService` owns dashboard report queries, the admin menu/payment/map services own admin workflow details, and `PosNotificationMessageFactory` owns notification copy/URL construction so controllers do not carry storage, map payload, payment readiness, or notification text implementation.
+The shared order services remove the largest duplicated paid/unpaid, payment, number generation, and total/status behavior between coffee and fishing. `PosOperationalDayCloser` records remaining balances and releases POS resources at the 23:59 boundary. `AdminDashboardService` owns dashboard report queries, the admin menu/payment/map services own admin workflow details, and `PosNotificationMessageFactory` owns notification copy/URL construction so controllers do not carry storage, map payload, payment readiness, or notification text implementation.
 
 ## Current Boundaries
 

@@ -72,12 +72,13 @@ export function fishingSessionNameHtml(name) {
     return escapeHtml(name);
 }
 
-export function fishingSessionMetaHtml(unitPrice, hasFishTakeaway, paid = false) {
-    const fishLabel = hasFishTakeaway ? 'Có lấy cá' : 'Không lấy cá';
-    const fishClass = hasFishTakeaway ? 'has-fish' : 'no-fish';
-    const paidChip = paid ? '<span class="paid-status-chip">✓ Đã trả</span>' : '';
+export function fishingSessionMetaHtml(unitPrice, discountAmount) {
+    const discount = Math.max(0, Number(discountAmount) || 0);
+    const discountChip = discount > 0
+        ? `<span class="session-discount-note has-discount">Giảm ${money(discount)}</span>`
+        : '';
 
-    return `<small class="session-line-meta"><span>${money(unitPrice)} / phiên</span><span class="session-fish-note ${fishClass}">${fishLabel}</span>${paidChip}</small>`;
+    return `<small class="session-line-meta"><span>${money(unitPrice)} / phiên</span>${discountChip}</small>`;
 }
 
 export function fishingSessionMetricDateTime(value) {
@@ -99,19 +100,20 @@ export function fishingSessionMetricDateTime(value) {
     return `${time} ${day}`;
 }
 
-export function fishingSessionLineTotalHtml(unitPrice, quantity, hasFishTakeaway, standardPrice, color = '#785943') {
+export function fishingSessionLineTotalHtml(unitPrice, quantity, discountAmount, standardPrice, tone = 'unpaid') {
     const qty = Number(quantity || 0);
     const currentTotal = Number(unitPrice) * qty;
     const standardTotal = Number(standardPrice || unitPrice) * qty;
+    const toneClass = tone === 'paid' ? ' is-paid' : '';
 
-    if (!hasFishTakeaway && standardTotal > currentTotal) {
-        return `<b class="session-price-stack is-adjusted" style="align-self: center; color: ${color}; text-align:right;">
+    if (Number(discountAmount) > 0 && standardTotal > currentTotal) {
+        return `<b class="session-price-stack is-adjusted${toneClass}">
             <span class="session-price-original">${money(standardTotal)}</span>
             <span class="session-price-current">${money(currentTotal)}</span>
         </b>`;
     }
 
-    return `<b class="session-price-stack" style="align-self: center; color: ${color}; text-align:right;">
+    return `<b class="session-price-stack${toneClass}">
         <span class="session-price-current">${money(currentTotal)}</span>
     </b>`;
 }

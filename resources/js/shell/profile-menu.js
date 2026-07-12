@@ -1,24 +1,29 @@
 import { $ } from '../templates/dom.js';
 
-export function setupProfileMenu({ api, confirmModal, closeNotificationDrawer }) {
+export function setupProfileMenu({ api, confirmModal, closeNotificationDrawer, lifecycle = null }) {
     const button = $('#profile-menu-button');
     const menu = $('#profile-menu');
     const logoutButton = $('#logout-button');
+    const listen = (target, eventName, callback) => {
+        if (lifecycle?.listen) return lifecycle.listen(target, eventName, callback);
+        target?.addEventListener?.(eventName, callback);
+        return () => target?.removeEventListener?.(eventName, callback);
+    };
 
     const closeProfileMenu = () => {
         menu?.classList.add('hidden');
         button?.setAttribute('aria-expanded', 'false');
     };
 
-    button?.addEventListener('click', event => {
+    const toggleProfileMenu = event => {
         event.stopPropagation();
         if (!menu) return;
         const opening = menu.classList.contains('hidden');
         menu.classList.toggle('hidden', !opening);
         button.setAttribute('aria-expanded', String(opening));
-    });
+    };
 
-    logoutButton?.addEventListener('click', async () => {
+    const logout = async () => {
         closeProfileMenu();
         const confirmed = await confirmModal(
             'Đăng xuất khỏi ca làm?',
@@ -28,17 +33,22 @@ export function setupProfileMenu({ api, confirmModal, closeNotificationDrawer })
         if (! confirmed) return;
         const result = await api('/api/v1/logout', { method:'POST' });
         window.location.href = result.redirect;
-    });
+    };
 
-    document.addEventListener('click', event => {
+    const closeFromOutside = event => {
         if (!event.target.closest('.profile-menu-wrap')) closeProfileMenu();
-    });
-    document.addEventListener('keydown', event => {
+    };
+    const closeFromKeyboard = event => {
         if (event.key === 'Escape') {
             closeProfileMenu();
             closeNotificationDrawer?.();
         }
-    });
+    };
+
+    listen(button, 'click', toggleProfileMenu);
+    listen(logoutButton, 'click', logout);
+    listen(document, 'click', closeFromOutside);
+    listen(document, 'keydown', closeFromKeyboard);
 
     return { closeProfileMenu };
 }

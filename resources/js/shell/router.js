@@ -24,18 +24,21 @@ export function applyPageShellFlags(page, role = document.body.dataset.role || '
 
 export async function renderRoutedPage(page, options) {
     const {
-        renderers,
+        modules,
+        runtime,
+        context,
         beforeRender,
         afterRender,
         onError,
         scrollToTop = true,
     } = options;
 
+    await runtime.unmount();
     beforeRender?.(page);
     applyPageShellFlags(page);
 
     try {
-        await renderers[page]?.();
+        await runtime.mount(page, modules[page], context);
     } catch (error) {
         onError?.(error, page);
     }

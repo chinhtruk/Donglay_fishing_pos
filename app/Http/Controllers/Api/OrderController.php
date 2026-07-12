@@ -5,18 +5,20 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderPresenter;
+use App\Services\PosOperationalDayCloser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, PosOperationalDayCloser $dayCloser): JsonResponse
     {
+        $isAdmin = $request->user()->role === 'admin';
+        if (! $isAdmin) {
+            $dayCloser->closeDueOrders();
+        }
         $query = Order::with(['coffeeTable', 'fishingSpot', 'opener:id,name'])
-            ->where('status', '!=', 'void')
-            ->orderByDesc('updated_at')
-            ->orderByDesc('created_at')
-            ->orderByDesc('id');
+            ->where('status', '!=', 'void');
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }
@@ -31,10 +33,12 @@ class OrderController extends Controller
                     ->orWhereHas('fishingSpot', fn ($spot) => $spot->where('label', 'like', "%{$term}%"));
             });
         }
-        $isAdmin = $request->user()->role === 'admin';
-        if (! $isAdmin) {
-            $query->forCurrentPosOperationalDay();
-        }
+        $query = $isAdmin
+            ? $query->orderByDesc('updated_at')->orderByDesc('created_at')->orderByDesc('id')
+            : $query->forCurrentPosOperationalDay()
+                ->withMax('items as latest_item_ordered_at', 'ordered_at')
+                ->orderByRaw('COALESCE(latest_item_ordered_at, orders.created_at) DESC')
+                ->orderByDesc('id');
         $orders = $query->paginate(15);
 
         return response()->json([

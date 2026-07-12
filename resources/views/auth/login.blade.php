@@ -55,18 +55,19 @@
         {{-- ── EMPLOYEE FORM ── --}}
         <form id="employee-login" class="lp-form" novalidate>
 
-            {{-- Bước 1 – Email --}}
-            <div id="employee-email-stage" class="lp-stage">
+            {{-- Bước 1 – Tên đăng nhập --}}
+            <div id="employee-username-stage" class="lp-stage">
                 <header class="lp-intro">
                     <h1 id="login-title">Chào mừng trở lại</h1>
-                    <p>Nhập email được cấp để bắt đầu ca làm việc.</p>
+                    <p>Nhập tên đăng nhập được cấp để bắt đầu ca làm việc.</p>
                 </header>
 
                 <div class="lp-field">
-                    <label for="emp-email">Địa chỉ Email</label>
-                    <input id="emp-email" type="email" name="email"
-                           placeholder="tenban@gmail.com"
-                           autocomplete="email" required>
+                    <label for="emp-username">Tên đăng nhập</label>
+                    <input id="emp-username" name="username"
+                           placeholder="Ví dụ: nhanvien01"
+                           autocomplete="username" autocapitalize="none" spellcheck="false"
+                           maxlength="80" required>
                 </div>
 
                 <button class="lp-btn" type="submit">
@@ -78,15 +79,15 @@
             <div id="employee-otp-stage" class="lp-stage hidden">
                 <header class="lp-intro">
                     <h1>Kiểm tra hộp thư</h1>
-                    <p class="lp-copy-stack"><span>Mã xác minh vừa được gửi đến email của bạn.</span><span>Mã có hiệu lực trong 10 phút.</span></p>
+                    <p class="lp-copy-stack"><span>Mã xác minh vừa được gửi đến email liên kết với tài khoản.</span><span>Mã có hiệu lực trong 10 phút.</span></p>
                 </header>
 
-                {{-- Email summary box (floating label style) --}}
+                {{-- Username summary box (floating label style) --}}
                 <div class="lp-outlined">
-                    <span class="lp-outlined-label">Email</span>
+                    <span class="lp-outlined-label">Tên đăng nhập</span>
                     <div class="lp-outlined-row">
-                        <span id="otp-email-display" class="lp-outlined-val"></span>
-                        <button id="edit-login-email" type="button" class="lp-amber-link">Sửa</button>
+                        <span id="otp-username-display" class="lp-outlined-val"></span>
+                        <button id="edit-login-username" type="button" class="lp-amber-link">Sửa</button>
                     </div>
                 </div>
 

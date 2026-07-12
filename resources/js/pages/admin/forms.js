@@ -29,7 +29,7 @@ export function renderPaymentMethodForm(method = null) {
     form.querySelector('[name="transfer_note"]').value = method?.transfer_note || '';
     form.querySelector('[name="extra_info"]').value = method?.extra_info || '';
 
-    return form.outerHTML;
+    return serializeForm(form);
 }
 
 export function paymentMethodFormFooter() {
@@ -60,14 +60,14 @@ export function renderUserForm(user = null) {
         button.classList.toggle('active', active);
         button.setAttribute('aria-pressed', String(active));
     });
-    form.querySelector('[name="email"]').value = user?.email || '';
+    form.querySelectorAll('[name="email"]').forEach(input => { input.value = user?.email || ''; });
     form.querySelector('#user-email-verified').checked = user ? Boolean(user.email_verified_at) : true;
-    form.querySelector('[name="username"]').value = user?.username || '';
+    form.querySelectorAll('[name="username"]').forEach(input => { input.value = user?.username || ''; });
     form.querySelector('[data-user-password-label]').textContent = user ? 'Mật khẩu mới' : 'Mật khẩu';
     form.querySelector('[name="password"]').placeholder = user ? 'Để trống nếu giữ nguyên' : 'Tối thiểu 8 ký tự';
     form.querySelector('#user-is-active').checked = user?.is_active !== false;
 
-    return form.outerHTML;
+    return serializeForm(form);
 }
 
 export function userFormFooter() {
@@ -76,6 +76,28 @@ export function userFormFooter() {
 
 function userInitial(user = null) {
     return (user?.name || 'T').trim().charAt(0).toUpperCase();
+}
+
+function serializeForm(form) {
+    form.querySelectorAll('input').forEach(input => {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+            input.toggleAttribute('checked', input.checked);
+            return;
+        }
+        if (input.type !== 'file') {
+            input.setAttribute('value', input.value);
+        }
+    });
+    form.querySelectorAll('textarea').forEach(textarea => {
+        textarea.textContent = textarea.value;
+    });
+    form.querySelectorAll('select').forEach(select => {
+        select.querySelectorAll('option').forEach(option => {
+            option.toggleAttribute('selected', option.value === select.value);
+        });
+    });
+
+    return form.outerHTML;
 }
 
 function paymentQrPreview(method = null) {
@@ -136,13 +158,13 @@ function renderUserFormFallback(user = null) {
             <button type="button" class="user-role-tab ${initialRole === 'admin' ? 'active' : ''}" data-user-role="admin" aria-pressed="${initialRole === 'admin'}"><span><svg viewBox="0 0 24 24"><path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7l-8-4Z"></path><path d="m9 12 2 2 4-4"></path></svg></span><strong>Quản trị viên</strong></button>
         </div></fieldset>
         <section class="user-credential-section" data-role-fields="employee">
-            <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Mã OTP sẽ được gửi đến địa chỉ này.</small></div></div>
-            <label class="user-form-field">Địa chỉ email<input type="email" name="email" value="${escapeHtml(user?.email || '')}" placeholder="tennhanvien@gmail.com" autocomplete="email"></label>
+            <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Nhân viên đăng nhập bằng username; OTP được gửi đến email liên kết.</small></div></div>
+            <div class="user-form-grid"><label class="user-form-field">Tên đăng nhập<input name="username" value="${escapeHtml(user?.username || '')}" placeholder="Ví dụ: nhanvien01" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="80" required></label><label class="user-form-field">Email liên kết<input type="email" name="email" value="${escapeHtml(user?.email || '')}" placeholder="tennhanvien@gmail.com" autocomplete="email" maxlength="190" required></label></div>
             <label class="user-toggle-card" for="user-email-verified"><span><strong>Email đã xác minh</strong><small>Cho phép tài khoản nhận OTP và đăng nhập.</small></span><input id="user-email-verified" name="email_verified" type="checkbox" ${user ? (user.email_verified_at ? 'checked' : '') : 'checked'}><i></i></label>
         </section>
         <section class="user-credential-section" data-role-fields="admin">
-            <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Quản trị viên sử dụng tên đăng nhập và mật khẩu.</small></div></div>
-            <div class="user-form-grid"><label class="user-form-field">Tên đăng nhập<input name="username" value="${escapeHtml(user?.username || '')}" placeholder="Ví dụ: quanly" autocomplete="username"></label><label class="user-form-field">${user ? 'Mật khẩu mới' : 'Mật khẩu'}<input type="password" name="password" placeholder="${user ? 'Để trống nếu giữ nguyên' : 'Tối thiểu 8 ký tự'}" autocomplete="new-password"></label></div>
+            <div class="user-section-heading"><div><strong>Thông tin đăng nhập</strong><small>Quản trị viên sử dụng tên đăng nhập, mật khẩu và email để nhận bản sao lưu.</small></div></div>
+            <div class="user-form-grid"><label class="user-form-field">Tên đăng nhập<input name="username" value="${escapeHtml(user?.username || '')}" placeholder="Ví dụ: quanly" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="80" required></label><label class="user-form-field">Email nhận sao lưu<input type="email" name="email" value="${escapeHtml(user?.email || '')}" placeholder="admin@gmail.com" autocomplete="email" maxlength="190" required></label></div><label class="user-form-field">${user ? 'Mật khẩu mới' : 'Mật khẩu'}<input type="password" name="password" placeholder="${user ? 'Để trống nếu giữ nguyên' : 'Tối thiểu 8 ký tự'}" autocomplete="new-password"></label>
         </section>
         <label class="user-toggle-card account-status" for="user-is-active"><span><strong>Tài khoản hoạt động</strong><small>Cho phép thành viên tiếp tục đăng nhập vào hệ thống.</small></span><input id="user-is-active" name="is_active" type="checkbox" ${user?.is_active !== false ? 'checked' : ''}><i></i></label>
     </form>`;
