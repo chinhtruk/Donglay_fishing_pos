@@ -6,6 +6,7 @@ import { formatMoneyInput, formatStoredMoneyInput, number, parseMoneyInput, pars
 import { fallbackConfirmFooterHtml, findInSelfOrDescendant, once, prepareConfirmFooter } from '../modules/modal.js';
 import { keyboardViewportIsOpen, keyboardViewportOffset } from '../modules/keyboard.js';
 import { duration, remaining } from '../modules/timers.js';
+import { shouldRenderToast } from '../modules/toast.js';
 import { paymentMethodFormTitle, renderPaymentMethodForm, renderUserForm, userFormTitle } from '../pages/admin/forms.js';
 import { orderMobileInitialView, orderMobileNavigationHtml, renderCoffeeOrderLines, renderCoffeeOrderPanel } from '../pages/pos/order-modal.js';
 import { checkoutCanSubmit, copyCheckoutText } from '../pages/pos/checkout.js';
@@ -329,9 +330,17 @@ test('notification helpers classify POS events for drawer and toast rendering', 
         icon: '!',
         sticky: true,
         dismissible: true,
+        allowOnEmployeePos: true,
         id: 'fishing-expired-99',
     });
     assert.ok(['Hôm nay', 'Hôm qua', 'Cũ hơn'].includes(notificationDayGroup(new Date().toISOString())));
+});
+
+test('employee POS only renders explicitly allowed fishing expiration toasts', () => {
+    assert.equal(shouldRenderToast({ role: 'employee', pathname: '/pos/coffee' }), false);
+    assert.equal(shouldRenderToast({ role: 'employee', pathname: '/pos/fishing', allowOnEmployeePos: true }), true);
+    assert.equal(shouldRenderToast({ role: 'admin', pathname: '/pos/fishing' }), true);
+    assert.equal(shouldRenderToast({ role: 'employee', pathname: '/login' }), true);
 });
 
 test('payment method labels keep cash and transfer copy stable', () => {

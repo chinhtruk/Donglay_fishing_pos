@@ -35,6 +35,7 @@ export function notificationToastOptions(notification) {
             icon: '!',
             sticky: true,
             dismissible: true,
+            allowOnEmployeePos: true,
             id: `fishing-expired-${notification.data?.session_id || notification.id}`
         };
     }

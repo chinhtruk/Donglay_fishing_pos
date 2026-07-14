@@ -14,7 +14,19 @@ function toastIcon(type) {
     }[type] || 'i';
 }
 
+export function shouldRenderToast({ role = '', pathname = '', allowOnEmployeePos = false } = {}) {
+    const isEmployeePos = role === 'employee' && pathname.startsWith('/pos/');
+
+    return !isEmployeePos || allowOnEmployeePos;
+}
+
 export function toast(message, type = 'success', options = {}) {
+    if (!shouldRenderToast({
+        role: document.body?.dataset.role || '',
+        pathname: globalThis.location?.pathname || '',
+        allowOnEmployeePos: options.allowOnEmployeePos === true,
+    })) return;
+
     const root = $('#toast-root');
     if (!root) return;
     const payload = typeof message === 'object' ? message : { message };

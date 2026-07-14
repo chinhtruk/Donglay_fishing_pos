@@ -66,7 +66,7 @@
 - Modal menu có thanh tìm kiếm phía trên, nhóm món hiển thị đầy đủ theo nhiều hàng.
 - Menu và phiếu bán hàng có vùng cuộn độc lập; tổng tiền và hành động được giữ ở cuối phiếu.
 - Bảng danh sách có header sticky và phân trang dùng chung.
-- Thông báo POS được polling và hiển thị bằng toast.
+- POS nhân viên vẫn polling thông báo và cập nhật trung tâm thông báo, nhưng không hiển thị toast cho thao tác hoặc sự kiện thông thường. Chỉ cảnh báo chòi hết thời gian câu được giữ lại dưới dạng toast sticky để nhân viên xử lý kịp thời.
 - Tiền tệ dùng định dạng Việt Nam, không hiển thị phần thập phân.
 
 ## Vai trò và đăng nhập
