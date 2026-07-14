@@ -180,6 +180,7 @@
         display: flex !important;
         flex-direction: column !important;
         box-sizing: border-box;
+        padding-bottom: calc(58px + env(safe-area-inset-bottom)) !important;
     }
 
     body[data-role="employee"].pos-orders-page #order-results,
@@ -214,33 +215,66 @@
         box-shadow: none !important;
     }
 
-    body[data-role="employee"].pos-orders-page #order-results .admin-pagination {
-        margin-top: auto !important;
-        gap: 6px !important;
-        padding-top: 12px !important;
-        padding-bottom: max(4px, env(safe-area-inset-bottom)) !important;
+    body[data-role="employee"].pos-orders-page #order-results>.admin-pagination {
+        position: fixed;
+        z-index: 35;
+        right: var(--mobile-page-x);
+        bottom: 0;
+        left: var(--mobile-page-x);
+        display: flex !important;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: 46px !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        padding: 7px 0 max(7px, env(safe-area-inset-bottom)) !important;
+        border: 0 !important;
+        background: var(--pos-page, var(--paper)) !important;
+        box-shadow: 0 -8px 20px rgba(64, 43, 30, .06) !important;
+    }
+
+    body[data-role="employee"].pos-orders-page #order-results .pagination-summary {
+        flex: 0 0 auto;
+        width: auto !important;
+        font-size: 10px !important;
+        line-height: 1.2;
+        white-space: nowrap;
     }
 
     body[data-role="employee"].pos-orders-page #order-results .pagination-controls {
+        width: auto !important;
+        min-width: 0 !important;
+        justify-content: flex-end !important;
+        flex: 0 1 auto;
         gap: 2px !important;
-        padding-block: 0 2px !important;
+        padding: 0 !important;
+        overflow: visible !important;
     }
 
     body[data-role="employee"].pos-orders-page #order-results .pagination-nav,
     body[data-role="employee"].pos-orders-page #order-results .pagination-page,
     body[data-role="employee"].pos-orders-page #order-results .pagination-gap {
-        flex: 0 0 34px !important;
-        width: 34px !important;
-        min-width: 34px !important;
-        height: 34px !important;
+        box-sizing: border-box !important;
+        flex: 0 0 28px !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        max-width: 28px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        max-height: 28px !important;
+        aspect-ratio: 1;
         padding: 0 !important;
-        border-radius: 10px !important;
+        border-radius: 50% !important;
         font-size: 10px !important;
+        line-height: 1 !important;
     }
 
     body[data-role="employee"].pos-orders-page #order-results .pagination-nav svg {
-        width: 13px !important;
-        height: 13px !important;
+        width: 12px !important;
+        height: 12px !important;
     }
 
     body[data-role="employee"].pos-orders-page .staff-order-filter-bar,
@@ -254,21 +288,45 @@
         overflow: visible !important;
     }
 
-    body[data-role="employee"].pos-orders-page .staff-order-search,
-    body[data-role="admin"] .owner-orders-page .admin-order-search {
-        order: 1;
+    body[data-role] #page-content :is(.staff-order-search, .admin-order-search, .admin-menu-search) {
+        order: 1 !important;
         width: 100% !important;
         max-width: none !important;
-        min-height: 44px !important;
+        min-height: 34px !important;
+        height: 34px !important;
         flex: none !important;
+        position: relative !important;
     }
 
-    body[data-role="employee"].pos-orders-page .staff-order-search input,
-    body[data-role="admin"] .owner-orders-page .admin-order-search input {
+    body[data-role] #page-content :is(.staff-order-search, .admin-order-search, .admin-menu-search) input[type="search"] {
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
         width: 100% !important;
-        height: 44px !important;
-        min-height: 44px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 6px 10px 6px 30px !important;
         font-size: 16px !important;
+        line-height: 20px !important;
+    }
+
+    body[data-role] #page-content :is(.staff-order-search, .admin-order-search, .admin-menu-search) input[type="search"]::placeholder {
+        font-size: 13px !important;
+        font-weight: 650 !important;
+        line-height: 20px !important;
+    }
+
+    body[data-role] #page-content :is(.staff-order-search, .admin-order-search, .admin-menu-search)>svg {
+        position: absolute !important;
+        left: 9px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        margin-top: 2px !important;
+        width: 13px !important;
+        height: 13px !important;
+        color: var(--pos-muted, var(--muted)) !important;
+        z-index: 2 !important;
+        pointer-events: none !important;
     }
 
     body[data-role="employee"].pos-orders-page .staff-order-status-tabs,
@@ -349,35 +407,7 @@
         font-size: 11px !important;
     }
 
-    body[data-role="admin"] .owner-orders-page .admin-order-search {
-        min-height: 34px !important;
-        height: 34px !important;
-    }
 
-    body[data-role="admin"] .owner-orders-page .admin-order-search>input[type="search"] {
-        min-height: 34px !important;
-        height: 34px !important;
-        padding: 4px 10px 4px 30px !important;
-        font-size: 16px !important;
-        line-height: 1.2 !important;
-    }
-
-    body[data-role="admin"] .owner-orders-page .admin-order-search>input[type="search"]::placeholder {
-        font-size: 13px !important;
-        font-weight: 650 !important;
-        line-height: 1.2 !important;
-    }
-
-    body[data-role="admin"] .owner-orders-page .admin-order-search>span {
-        left: 9px !important;
-        width: 13px !important;
-        height: 13px !important;
-    }
-
-    body[data-role="admin"] .owner-orders-page .admin-order-search>span svg {
-        width: 13px !important;
-        height: 13px !important;
-    }
 
     body[data-role="admin"] #page-content.owner-orders-page {
         padding-bottom: calc(58px + env(safe-area-inset-bottom)) !important;
@@ -676,6 +706,60 @@
         overflow-wrap: anywhere;
         white-space: normal;
         text-align: right;
+    }
+
+    /* Fix admin order service tabs height and button size on mobile to synchronize with other segmented controls */
+    body[data-role="admin"] #page-content.owner-orders-page .admin-order-service-tabs {
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 4px !important;
+        border-radius: 13px !important;
+    }
+
+    body[data-role="admin"] #page-content.owner-orders-page .admin-order-service-tabs .admin-map-tab {
+        height: 44px !important;
+        min-height: 44px !important;
+        padding: 9px 14px !important;
+        border-radius: 10px !important;
+        font-size: 12px !important;
+    }
+
+    /* Style the empty state card and text on mobile with high specificity */
+    body[data-role="admin"] #page-content.owner-orders-page .order-card-list .order-table-empty,
+    body[data-role="employee"].pos-orders-page #order-results .order-card-list .order-table-empty {
+        display: block !important;
+        width: 100% !important;
+        background: var(--pos-card, var(--white)) !important;
+        border: 1px solid var(--pos-line, var(--line)) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 7px 20px rgba(64, 43, 30, .055) !important;
+        overflow: visible !important;
+    }
+
+    body[data-role="admin"] #page-content.owner-orders-page .order-card-list .order-table-empty td,
+    body[data-role="employee"].pos-orders-page #order-results .order-card-list .order-table-empty td {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        min-height: 120px !important;
+        text-align: center !important;
+    }
+
+    body[data-role="admin"] #page-content.owner-orders-page .order-card-list .order-table-empty .empty-state,
+    body[data-role="employee"].pos-orders-page #order-results .order-card-list .order-table-empty .empty-state {
+        display: block !important;
+        width: 100% !important;
+        padding: 40px 20px !important;
+        text-align: center !important;
+        color: var(--pos-muted, var(--muted)) !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 }
 

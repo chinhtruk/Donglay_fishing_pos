@@ -442,39 +442,7 @@ body[data-role="admin"] .owner-menu-page .admin-pagination {
         overflow: visible !important;
     }
 
-    body[data-role="admin"] .owner-menu-page .admin-menu-search {
-        order: 1;
-        width: 100% !important;
-        max-width: none !important;
-        min-height: 34px !important;
-        height: 34px !important;
-        flex: none !important;
-    }
 
-    body[data-role="admin"] .owner-menu-page .admin-menu-search>input[type="search"] {
-        height: 34px !important;
-        min-height: 34px !important;
-        padding: 4px 10px 4px 30px !important;
-        font-size: 16px !important;
-        line-height: 1.2 !important;
-    }
-
-    body[data-role="admin"] .owner-menu-page .admin-menu-search>input[type="search"]::placeholder {
-        font-size: 13px !important;
-        font-weight: 650 !important;
-        line-height: 1.2 !important;
-    }
-
-    body[data-role="admin"] .owner-menu-page .admin-menu-search>span {
-        left: 9px !important;
-        width: 13px !important;
-        height: 13px !important;
-    }
-
-    body[data-role="admin"] .owner-menu-page .admin-menu-search>span svg {
-        width: 13px !important;
-        height: 13px !important;
-    }
 
     body[data-role="admin"] .owner-menu-page .admin-menu-category-tabs {
         order: 2;

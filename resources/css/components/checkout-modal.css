@@ -2,7 +2,7 @@
    Moved from resources/css/app.css:18585-19121. */
 
 /* Checkout modal owns its layout even though it reuses order-slip classes. */
-body[data-role="employee"] #modal-root .modal.pos-checkout-modal {
+body[data-role] #modal-root .modal.pos-checkout-modal {
     width: min(1120px, calc(100vw - 36px)) !important;
     height: min(820px, calc(100dvh - 48px - var(--modal-keyboard-offset))) !important;
     max-height: calc(100dvh - 48px - var(--modal-keyboard-offset)) !important;
@@ -110,11 +110,11 @@ body[data-role="employee"] #modal-root .modal.pos-checkout-modal {
     width: 0 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-cash-input,
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-cash-input:focus,
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-cash-input:focus-visible,
-body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]),
-body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]):focus {
+body[data-role] #modal-root .pos-checkout-modal .checkout-cash-input,
+body[data-role] #modal-root .pos-checkout-modal .checkout-cash-input:focus,
+body[data-role] #modal-root .pos-checkout-modal .checkout-cash-input:focus-visible,
+body[data-role] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]),
+body[data-role] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]):focus {
     border: 0 !important;
     border-radius: 0 !important;
     outline: 0 !important;
@@ -199,52 +199,52 @@ body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-
     opacity: .4;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-modal-layout {
+body[data-role] #modal-root .pos-checkout-modal .checkout-modal-layout {
     grid-template-columns: minmax(420px, 1fr) minmax(330px, 360px) !important;
     gap: 0 !important;
     justify-content: stretch !important;
     padding: 0 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-receipt-aside {
+body[data-role] #modal-root .pos-checkout-modal .checkout-receipt-aside {
     grid-column: 2 !important;
     justify-self: stretch !important;
     width: 100% !important;
 }
 
 @media(max-width: 900px) {
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal {
+    body[data-role] #modal-root .modal.pos-checkout-modal {
         width: min(680px, calc(100vw - 36px)) !important;
         height: min(820px, calc(100dvh - 48px - var(--modal-keyboard-offset))) !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-modal-layout {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-modal-layout {
         grid-template-columns: 1fr !important;
         grid-template-rows: minmax(0, 1fr) auto !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-receipt-aside {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-receipt-aside {
         grid-column: 1 !important;
     }
 }
 
 /* Checkout modal final tuning: narrower flow, lighter QR info, and order-slip footer parity. */
-body[data-role="employee"] #modal-root .modal.pos-checkout-modal {
+body[data-role] #modal-root .modal.pos-checkout-modal {
     width: min(980px, calc(100vw - 44px)) !important;
     height: min(760px, calc(100dvh - 52px - var(--modal-keyboard-offset))) !important;
     max-height: calc(100dvh - 52px - var(--modal-keyboard-offset)) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-modal-layout {
+body[data-role] #modal-root .pos-checkout-modal .checkout-modal-layout {
     grid-template-columns: minmax(0, 1fr) minmax(330px, 340px) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-payment-section {
+body[data-role] #modal-root .pos-checkout-modal .checkout-payment-section {
     padding: 20px 22px !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line,
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line,
+body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
     grid-template-columns: 22px minmax(0, 1fr) minmax(82px, auto) !important;
     gap: 7px 10px !important;
     align-items: center !important;
@@ -254,14 +254,14 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-it
     box-shadow: none !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-check {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-check {
     width: 22px !important;
     height: 22px !important;
     display: grid !important;
     place-items: center !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-check input {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-check input {
     position: static !important;
     width: 18px !important;
     height: 18px !important;
@@ -271,45 +271,45 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-check i
     accent-color: var(--pos-brand, #5b3a2c) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-check span {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-check span {
     display: none !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title strong {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title strong {
     font-size: 13px !important;
     line-height: 1.15 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title small {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title small {
     font-size: 10px !important;
     text-align: left !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
+body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
     min-width: 82px !important;
     font-size: 12px !important;
     color: var(--pos-brand, #5b3a2c) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .order-total-breakdown {
+body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .order-total-breakdown {
     gap: 6px !important;
     margin-bottom: 8px !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .order-total-breakdown span {
+body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .order-total-breakdown span {
     min-height: 24px !important;
     padding: 4px 8px !important;
     font-size: 9px !important;
     font-weight: 750 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .order-total-breakdown b {
+body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .order-total-breakdown b {
     font-size: 9.5px !important;
     font-weight: 900 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total {
+body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total {
     margin-top: 4px !important;
     padding-top: 7px !important;
     color: var(--pos-ink, #2d211b) !important;
@@ -318,43 +318,43 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .s
     line-height: 1.2 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total span,
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total strong,
-body[data-role="employee"] #modal-root .pos-checkout-modal #checkout-total {
+body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total span,
+body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total strong,
+body[data-role] #modal-root .pos-checkout-modal #checkout-total {
     color: var(--pos-ink, #2d211b) !important;
     font-size: 16px !important;
     font-weight: 900 !important;
     line-height: 1.15 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .order-total-count {
+body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .order-total-count {
     color: var(--pos-muted, #7f6b5d) !important;
     font-size: 10px !important;
     font-weight: 750 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-actions .button {
+body[data-role] #modal-root .pos-checkout-modal .checkout-actions .button {
     min-height: 40px !important;
     font-size: 12px !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-panel {
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-panel {
     gap: 10px !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-image {
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-image {
     width: min(252px, 70%, 34dvh) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account {
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account {
     width: min(250px, 76%) !important;
     gap: 2px !important;
     padding-top: 9px !important;
     border-top: 1px dashed rgba(114, 95, 80, .2) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account strong,
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account b {
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account strong,
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account b {
     color: rgba(45, 33, 27, .82) !important;
     font-size: 13px !important;
     font-weight: 800 !important;
@@ -362,55 +362,55 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
     letter-spacing: 0 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account b {
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account b {
     color: rgba(91, 58, 44, .9) !important;
     font-size: 14px !important;
     font-weight: 850 !important;
 }
 
 @media(max-width: 900px) {
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal {
+    body[data-role] #modal-root .modal.pos-checkout-modal {
         width: min(640px, calc(100vw - 32px)) !important;
         height: min(760px, calc(100dvh - 44px - var(--modal-keyboard-offset))) !important;
     }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-modal-layout {
+body[data-role] #modal-root .pos-checkout-modal .checkout-modal-layout {
     grid-template-columns: 1fr !important;
 }
 }
 
 /* Checkout modal refinement: compact width, clearer payable rows, lighter bank details. */
-body[data-role="employee"] #modal-root .modal.pos-checkout-modal {
+body[data-role] #modal-root .modal.pos-checkout-modal {
     width: min(920px, calc(100vw - 48px)) !important;
     height: min(740px, calc(100dvh - 56px - var(--modal-keyboard-offset))) !important;
     max-height: calc(100dvh - 56px - var(--modal-keyboard-offset)) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-modal-layout {
+body[data-role] #modal-root .pos-checkout-modal .checkout-modal-layout {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 332px) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-payment-section {
+body[data-role] #modal-root .pos-checkout-modal .checkout-payment-section {
     padding: 20px !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-payment-heading {
+body[data-role] #modal-root .pos-checkout-modal .checkout-payment-heading {
     gap: 6px !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-heading-row {
+body[data-role] #modal-root .pos-checkout-modal .checkout-heading-row {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     gap: 12px !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-heading-row h3 {
+body[data-role] #modal-root .pos-checkout-modal .checkout-heading-row h3 {
     min-width: 0 !important;
     margin: 0 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-method-chip {
+body[data-role] #modal-root .pos-checkout-modal .checkout-method-chip {
     flex: 0 0 auto !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -427,29 +427,29 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-method-chip
     white-space: nowrap !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line,
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line,
+body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
     grid-template-columns: 22px minmax(0, 1fr) minmax(76px, auto) !important;
     gap: 7px 9px !important;
     padding: 12px 0 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title,
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>.order-line-title {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title,
+body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>.order-line-title {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
     gap: 3px !important;
     align-items: start !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title strong {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title strong {
     display: block !important;
     overflow-wrap: anywhere !important;
     font-size: 12.8px !important;
     line-height: 1.12 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title small {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title small {
     display: block !important;
     color: var(--pos-muted, #7f6b5d) !important;
     font-size: 9.5px !important;
@@ -458,7 +458,7 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>.o
     white-space: normal !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-line-note {
+body[data-role] #modal-root .pos-checkout-modal .checkout-line-note {
     display: block !important;
     margin-top: 1px !important;
     color: #9a6d50 !important;
@@ -468,13 +468,13 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-line-note {
     line-height: 1.18 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
-body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
+body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
+body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
     min-width: 76px !important;
     font-size: 12px !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-change-row {
+body[data-role] #modal-root .pos-checkout-modal .checkout-change-row {
     min-height: 52px !important;
     align-items: center !important;
     margin-top: auto !important;
@@ -484,80 +484,80 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-change-row 
     font-size: 13px !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-change-row span:first-child {
+body[data-role] #modal-root .pos-checkout-modal .checkout-change-row span:first-child {
     color: var(--pos-muted, #7f6b5d) !important;
     font-size: 13px !important;
     font-weight: 800 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal #change-due {
+body[data-role] #modal-root .pos-checkout-modal #change-due {
     color: var(--pos-brand, #5b3a2c) !important;
     font-size: 15px !important;
     font-weight: 900 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-payment-panel {
+body[data-role] #modal-root .pos-checkout-modal .checkout-payment-panel {
     flex: 0 1 auto !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-panel {
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-panel {
     flex: 0 1 auto !important;
     justify-content: flex-start !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-change-row+div {
+body[data-role] #modal-root .pos-checkout-modal .checkout-change-row+div {
     min-height: 50px !important;
     margin-top: 0 !important;
     padding-top: 0 !important;
     border-top: 1px dashed rgba(114, 95, 80, .24) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-change-row+div label {
+body[data-role] #modal-root .pos-checkout-modal .checkout-change-row+div label {
     min-height: 50px !important;
     align-items: center !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account {
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account {
     width: min(232px, 72%) !important;
     gap: 1px !important;
     padding-top: 8px !important;
     border-top-color: rgba(114, 95, 80, .16) !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account strong,
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account b {
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account strong,
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account b {
     color: rgba(45, 33, 27, .68) !important;
     font-size: 12px !important;
     font-weight: 650 !important;
     line-height: 1.2 !important;
 }
 
-body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account b {
+body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account b {
     color: rgba(91, 58, 44, .74) !important;
     font-size: 12.5px !important;
     font-weight: 700 !important;
 }
 
 @media(max-width: 900px) {
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal {
+    body[data-role] #modal-root .modal.pos-checkout-modal {
         width: min(620px, calc(100vw - 30px)) !important;
         height: min(740px, calc(100dvh - 42px - var(--modal-keyboard-offset))) !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-modal-layout {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-modal-layout {
         grid-template-columns: 1fr !important;
     }
 }
 
 @media(min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
     /* iPad portrait: keep the checkout modal in a two-column dock layout like the order modal. */
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal {
+    body[data-role] #modal-root .modal.pos-checkout-modal {
         width: min(760px, calc(100vw - 40px)) !important;
         height: min(900px, calc(100dvh - 40px)) !important;
         max-height: calc(100dvh - 40px) !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal>.modal-body {
+    body[data-role] #modal-root .pos-checkout-modal>.modal-body {
         display: flex !important;
         flex: 1 1 auto !important;
         min-height: 0 !important;
@@ -565,7 +565,7 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         padding: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-modal-layout {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-modal-layout {
         flex: 1 1 auto !important;
         width: 100% !important;
         grid-template-columns: minmax(0, 1fr) minmax(330px, .95fr) !important;
@@ -578,7 +578,7 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         padding: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-payment-section {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-payment-section {
         grid-column: 1 !important;
         grid-row: 1 !important;
         order: 0 !important;
@@ -593,7 +593,7 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         overflow: hidden !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-receipt-aside {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-receipt-aside {
         grid-column: 2 !important;
         grid-row: 1 !important;
         order: 0 !important;
@@ -603,17 +603,17 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         border-bottom: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-order-panel {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-order-panel {
         height: 100% !important;
         min-height: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal .order-line-paid-row {
+    body[data-role] #modal-root .pos-order-modal .order-line-paid-row {
         grid-template-columns: minmax(0, 1fr) auto minmax(74px, auto) !important;
         gap: 6px 8px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal .order-line-paid-row .order-line-paid-note:not(.is-empty) {
+    body[data-role] #modal-root .pos-order-modal .order-line-paid-row .order-line-paid-note:not(.is-empty) {
         width: fit-content !important;
         max-width: min(190px, 100%) !important;
         height: auto !important;
@@ -623,52 +623,52 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         white-space: normal !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal .order-line-paid-row>b {
+    body[data-role] #modal-root .pos-order-modal .order-line-paid-row>b {
         min-width: 74px !important;
         font-size: 11.8px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-order-lines {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-order-lines {
         padding: 0 14px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line,
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line,
+    body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
         grid-template-columns: 22px minmax(0, 1fr) minmax(74px, auto) !important;
         gap: 6px 8px !important;
         align-items: start !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-check {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-check {
         align-self: start !important;
         margin-top: 2px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title small {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title small {
         text-align: left !important;
         white-space: normal !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-line-note {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-line-note {
         max-width: 100% !important;
         overflow: visible !important;
         overflow-wrap: anywhere !important;
         white-space: normal !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
+    body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
         min-width: 74px !important;
         font-size: 11.8px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-row {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-row {
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) auto minmax(74px, auto) !important;
         gap: 6px 8px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-note:not(.is-empty) {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-note:not(.is-empty) {
         grid-column: 1 / 2 !important;
         grid-row: 1 !important;
         width: fit-content !important;
@@ -680,48 +680,48 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         white-space: normal !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-row .quantity {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-row .quantity {
         grid-column: 2 !important;
         grid-row: 1 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-row>b {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-row>b {
         grid-column: 3 !important;
         grid-row: 1 !important;
         min-width: 74px !important;
         font-size: 11.8px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-note.is-empty~.quantity,
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-note.is-empty~b {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-note.is-empty~.quantity,
+    body[data-role] #modal-root .pos-checkout-modal .checkout-paid-line .order-line-paid-note.is-empty~b {
         grid-row: 1 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-change-row {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-change-row {
         min-height: 46px !important;
         margin-top: auto !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-change-row+div,
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-change-row+div label {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-change-row+div,
+    body[data-role] #modal-root .pos-checkout-modal .checkout-change-row+div label {
         min-height: 46px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-panel {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-qr-panel {
         justify-content: flex-start !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-image {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-qr-image {
         width: min(226px, 70%, 30dvh) !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account {
         width: min(232px, 78%) !important;
     }
 
     /* Keep checkout and order modals on the exact same iPad portrait shell. */
-    body[data-role="employee"] #modal-root .modal.pos-order-modal,
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal.pos-order-modal {
+    body[data-role] #modal-root .modal.pos-order-modal,
+    body[data-role] #modal-root .modal.pos-checkout-modal.pos-order-modal {
         width: min(760px, calc(100vw - 40px)) !important;
         height: min(900px, calc(100dvh - 40px)) !important;
         min-height: 0 !important;
@@ -775,7 +775,7 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
 }
 
 @media(max-width:767px) {
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal.pos-order-modal {
+    body[data-role] #modal-root .modal.pos-checkout-modal.pos-order-modal {
         width: 100vw !important;
         max-width: none !important;
         height: calc(100dvh - var(--modal-keyboard-offset)) !important;
@@ -786,14 +786,14 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         box-shadow: none !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal>.modal-head {
+    body[data-role] #modal-root .modal.pos-order-modal.pos-checkout-modal>.modal-head {
         flex: 0 0 auto !important;
         min-height: calc(58px + env(safe-area-inset-top)) !important;
         padding: env(safe-area-inset-top) 14px 0 !important;
         border-radius: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal>.modal-head h2 {
+    body[data-role] #modal-root .modal.pos-order-modal.pos-checkout-modal>.modal-head h2 {
         min-width: 0;
         overflow: hidden;
         font-size: 16px !important;
@@ -801,47 +801,49 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         white-space: nowrap;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal>.modal-body {
-        display: block !important;
+    body[data-role] #modal-root .modal.pos-order-modal.pos-checkout-modal>.modal-body {
+        display: flex !important;
         flex: 1 1 auto !important;
+        flex-direction: column !important;
         min-height: 0 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+    }
+
+    body[data-role] #modal-root .pos-checkout-modal .checkout-modal-layout {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         overflow-x: hidden !important;
         overflow-y: auto !important;
-        padding: 0 !important;
+        background: var(--white) !important;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-modal-layout {
-        display: flex !important;
-        flex-direction: column !important;
-        width: 100% !important;
-        height: auto !important;
-        min-height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-        background: var(--white) !important;
-    }
-
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-receipt-aside,
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-order-panel {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-receipt-aside,
+    body[data-role] #modal-root .pos-checkout-modal .checkout-order-panel {
         display: contents !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-head {
+    body[data-role] #modal-root .pos-checkout-modal .order-dock-head {
         order: 1 !important;
         padding: 14px !important;
         border-bottom: 1px solid var(--pos-line, var(--line)) !important;
         background: #fffdf9 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-head h2 {
+    body[data-role] #modal-root .pos-checkout-modal .order-dock-head h2 {
         font-size: 15px !important;
         line-height: 1.3 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-order-lines {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-order-lines {
         order: 2 !important;
         flex: none !important;
         min-height: 0 !important;
@@ -850,9 +852,10 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         background: #fffdf9 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-payment-section {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-payment-section {
         order: 3 !important;
         display: flex !important;
+        flex: 0 0 auto !important;
         flex-direction: column !important;
         gap: 12px !important;
         max-height: none !important;
@@ -866,26 +869,26 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         overflow: visible !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-payment-heading {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-payment-heading {
         padding-bottom: 10px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-heading-row {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-heading-row {
         align-items: flex-start !important;
         flex-direction: column !important;
         gap: 7px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-heading-row h3 {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-heading-row h3 {
         font-size: 18px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-method-chip {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-method-chip {
         min-height: 26px !important;
         white-space: normal !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-method-tabs {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-method-tabs {
         display: flex !important;
         gap: 7px !important;
         margin: 0 !important;
@@ -894,22 +897,22 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         scrollbar-width: none;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-method-tabs::-webkit-scrollbar {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-method-tabs::-webkit-scrollbar {
         display: none;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-method-tabs button {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-method-tabs button {
         flex: 1 0 max-content !important;
         min-height: 44px !important;
         padding: 9px 14px !important;
         scroll-snap-align: start;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-payment-panel {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-payment-panel {
         min-height: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-cash-input-shell {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-cash-input-shell {
         height: 56px !important;
         padding-inline: 15px !important;
         font-size: 22px !important;
@@ -917,50 +920,50 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         line-height: 1 !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]),
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-thousands {
+    body[data-role] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]),
+    body[data-role] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-thousands {
         font: inherit !important;
         letter-spacing: 0 !important;
         font-variant-numeric: tabular-nums;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]) {
+    body[data-role] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]) {
         height: 54px !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-thousands {
+    body[data-role] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-thousands {
         align-self: stretch;
         height: auto !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .quick-cash-list {
+    body[data-role] #modal-root .pos-checkout-modal .quick-cash-list {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 8px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .quick-cash-btn {
+    body[data-role] #modal-root .pos-checkout-modal .quick-cash-btn {
         min-height: 44px !important;
         height: 44px !important;
         font-size: 13px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-change-row {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-change-row {
         min-height: 54px !important;
         margin-top: 0 !important;
         padding: 10px 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal #change-due {
+    body[data-role] #modal-root .pos-checkout-modal #change-due {
         font-size: 18px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-release-block {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-release-block {
         margin: 0 !important;
         padding: 0 !important;
         border-top: 1px dashed rgba(114, 95, 80, .24) !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-release-label {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-release-label {
         align-items: center !important;
         width: 100% !important;
         min-height: 58px !important;
@@ -969,114 +972,115 @@ body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account 
         font-size: 13px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-release-input {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-release-input {
         flex: 0 0 auto;
         width: 24px !important;
         height: 24px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-release-reason {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-release-reason {
         font-size: 11px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-panel {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-qr-panel {
         justify-content: flex-start !important;
         gap: 12px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-image {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-qr-image {
         width: min(244px, 72vw, 34dvh) !important;
         padding: 8px !important;
         border-radius: 14px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account {
         width: min(280px, 92%) !important;
         gap: 4px !important;
         padding-top: 10px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account strong,
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-qr-account b {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account strong,
+    body[data-role] #modal-root .pos-checkout-modal .checkout-qr-account b {
         overflow-wrap: anywhere;
         font-size: 14px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-copy-button {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-copy-button {
         min-height: 44px !important;
         font-size: 12px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line,
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line,
+    body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
         grid-template-columns: 44px minmax(0, 1fr) minmax(72px, auto) !important;
         gap: 7px 8px !important;
         min-height: 68px !important;
         padding: 11px 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-check {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-check {
         width: 44px !important;
         height: 44px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-check input {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-check input {
         width: 22px !important;
         height: 22px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title strong {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>.order-line-title strong {
         font-size: 13px !important;
         line-height: 1.25 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
+    body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
         min-width: 72px !important;
         font-size: 12px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-paid-line {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-paid-line {
         padding-block: 11px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer {
+    body[data-role] #modal-root .pos-checkout-modal .order-dock-footer {
         position: sticky !important;
         bottom: 0 !important;
         z-index: 9 !important;
         order: 4 !important;
         flex: 0 0 auto !important;
+        margin-top: auto !important;
         padding: 12px 14px max(12px, env(safe-area-inset-bottom)) !important;
         border-top: 1px solid var(--pos-line, var(--line)) !important;
         background: var(--white) !important;
         box-shadow: 0 -12px 28px rgba(45, 33, 27, .1) !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total,
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total span,
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total strong,
-    body[data-role="employee"] #modal-root .pos-checkout-modal #checkout-total {
+    body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total,
+    body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total span,
+    body[data-role] #modal-root .pos-checkout-modal .order-dock-footer .summary-row.total strong,
+    body[data-role] #modal-root .pos-checkout-modal #checkout-total {
         font-size: 18px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-actions .button {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-actions .button {
         min-height: 52px !important;
         font-size: 14px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal.checkout-submitting .checkout-actions .button {
+    body[data-role] #modal-root .pos-checkout-modal.checkout-submitting .checkout-actions .button {
         cursor: wait;
     }
 }
 
 @media(max-width:359px) {
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line,
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line,
+    body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item) {
         grid-template-columns: 44px minmax(0, 1fr) !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
-    body[data-role="employee"] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
+    body[data-role] #modal-root .pos-checkout-modal .checkout-pay-line>b[id^="pay-line-total-"],
+    body[data-role] #modal-root .pos-checkout-modal .order-line.unpaid-item.checkout-pay-line:not(.session-item)>b[id^="pay-line-total-"] {
         grid-column: 2 !important;
         grid-row: 2 !important;
         min-width: 0 !important;

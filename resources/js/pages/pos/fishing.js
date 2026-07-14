@@ -616,6 +616,7 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                                 let selectedChoice = extendChoices[0];
                                 openModal({
                                     title: 'Gia hạn phiên câu',
+                                    className: 'merge-target-modal',
                                     body: `<div class="merge-target-panel extend-session-panel"><div class="merge-target-label">Chọn thời lượng gia hạn</div><div class="merge-target-grid extend-session-grid">${extendOptions}</div></div><p class="merge-target-note extend-session-note">Có thể gia hạn trọn ${durationText(1)} hoặc theo giờ với giá ${money(hourlyPrice)} / giờ. Tiền gia hạn sẽ được cộng vào phiếu bán hàng hiện tại.</p>`,
                                     footer: `<span></span><div><button class="button primary" id="confirm-extend-btn">Xác nhận</button></div>`,
                                     onReady(subModal, subClose) {

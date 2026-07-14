@@ -1,6 +1,6 @@
 /* Phone layout for coffee-table and fishing-spot merge flows. */
 @media(max-width: 767px) {
-    body[data-role="employee"] #modal-root .modal-backdrop:has(.modal.merge-target-modal) {
+    body[data-role] #modal-root .modal-backdrop:has(.modal.merge-target-modal) {
         width: 100vw !important;
         height: 100dvh !important;
         align-items: stretch !important;
@@ -8,7 +8,7 @@
         overflow: hidden !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal {
+    body[data-role] #modal-root .modal.merge-target-modal {
         width: 100vw !important;
         max-width: none !important;
         height: calc(100dvh - var(--modal-keyboard-offset)) !important;
@@ -19,13 +19,13 @@
         box-shadow: none !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal>.modal-head {
+    body[data-role] #modal-root .modal.merge-target-modal>.modal-head {
         flex: 0 0 auto !important;
         min-height: calc(60px + env(safe-area-inset-top)) !important;
         padding: env(safe-area-inset-top) var(--mobile-page-x) 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal>.modal-head h2 {
+    body[data-role] #modal-root .modal.merge-target-modal>.modal-head h2 {
         min-width: 0 !important;
         padding: 12px 10px 12px 0 !important;
         overflow-wrap: anywhere;
@@ -33,14 +33,14 @@
         line-height: 1.25 !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal>.modal-head .modal-close {
+    body[data-role] #modal-root .modal.merge-target-modal>.modal-head .modal-close {
         width: var(--mobile-touch-target) !important;
         height: var(--mobile-touch-target) !important;
         flex: 0 0 var(--mobile-touch-target) !important;
         border-radius: 12px !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal>.modal-body {
+    body[data-role] #modal-root .modal.merge-target-modal>.modal-body {
         display: grid !important;
         flex: 1 1 auto !important;
         grid-template-rows: minmax(0, 1fr) auto !important;
@@ -50,14 +50,14 @@
         overflow: hidden !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal .merge-target-panel {
+    body[data-role] #modal-root .modal.merge-target-modal .merge-target-panel {
         display: grid !important;
         grid-template-rows: auto minmax(0, 1fr) !important;
         gap: 10px !important;
         min-height: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal .merge-target-grid {
+    body[data-role] #modal-root .modal.merge-target-modal .merge-target-grid {
         align-content: start;
         max-height: none !important;
         min-height: 0 !important;
@@ -68,11 +68,11 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal .merge-target-chip {
+    body[data-role] #modal-root .modal.merge-target-modal .merge-target-chip {
         min-height: 56px !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal .merge-target-note {
+    body[data-role] #modal-root .modal.merge-target-modal .merge-target-note {
         margin: 0 !important;
         padding-top: 12px !important;
         border-top: 1px solid var(--pos-line, var(--line)) !important;
@@ -80,7 +80,7 @@
         line-height: 1.5 !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal>.modal-foot {
+    body[data-role] #modal-root .modal.merge-target-modal>.modal-foot {
         position: relative;
         z-index: 2;
         flex: 0 0 auto !important;
@@ -89,16 +89,16 @@
         box-shadow: 0 -10px 28px rgba(44, 30, 21, .07) !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal>.modal-foot>span:empty {
+    body[data-role] #modal-root .modal.merge-target-modal>.modal-foot>span:empty {
         display: none !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal>.modal-foot>div,
-    body[data-role="employee"] #modal-root .modal.merge-target-modal>.modal-foot .button {
+    body[data-role] #modal-root .modal.merge-target-modal>.modal-foot>div,
+    body[data-role] #modal-root .modal.merge-target-modal>.modal-foot .button {
         width: 100% !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.merge-target-modal>.modal-foot .button {
+    body[data-role] #modal-root .modal.merge-target-modal>.modal-foot .button {
         min-height: 48px !important;
         font-size: 14px !important;
     }

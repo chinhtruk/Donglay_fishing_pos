@@ -88,7 +88,7 @@
     }
 
     .paginated-scroll .data-table thead th,
-    body[data-role="employee"].pos-orders-page #order-results .staff-order-table thead th,
+    body[data-role].pos-orders-page #order-results .staff-order-table thead th,
     body[data-role="admin"] .owner-orders-page .admin-order-table thead th,
     body[data-role="admin"] .owner-menu-page .menu-admin-table thead th {
         position: sticky !important;
@@ -97,7 +97,7 @@
     }
 
     body[data-role="admin"] .data-table-wrap,
-    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll {
+    body[data-role].pos-orders-page #order-results .paginated-scroll {
         background-clip: padding-box;
     }
 
@@ -211,7 +211,7 @@
     }
 
     body[data-role="admin"] .admin-fishing-preview .fishing-lake-plan,
-    body[data-role="employee"].pos-fishing-page .fishing-lake-plan {
+    body[data-role].pos-fishing-page .fishing-lake-plan {
         display: grid !important;
         grid-template-columns: minmax(210px, 1fr) minmax(150px, .82fr) minmax(210px, 1fr) !important;
         grid-template-rows: repeat(10, minmax(64px, 1fr)) !important;
@@ -225,20 +225,20 @@
     }
 
     body[data-role="admin"] .admin-fishing-preview .lake-water,
-    body[data-role="employee"].pos-fishing-page .lake-water {
+    body[data-role].pos-fishing-page .lake-water {
         display: flex !important;
     }
 
     body[data-role="admin"] .admin-fishing-preview .fishing-slot,
     body[data-role="admin"] .admin-fishing-preview .fishing-slot.side-right,
-    body[data-role="employee"].pos-fishing-page .fishing-slot,
-    body[data-role="employee"].pos-fishing-page .fishing-slot.side-right {
+    body[data-role].pos-fishing-page .fishing-slot,
+    body[data-role].pos-fishing-page .fishing-slot.side-right {
         min-height: 64px !important;
         padding: 9px 10px !important;
     }
 
     body[data-role="admin"] .admin-fishing-preview .fishing-slot-number,
-    body[data-role="employee"].pos-fishing-page .fishing-slot-number {
+    body[data-role].pos-fishing-page .fishing-slot-number {
         height: 40px !important;
         min-width: 50px !important;
         padding: 0 9px !important;
@@ -246,7 +246,7 @@
         font-size: 13px !important;
     }
 
-    body[data-role="employee"].pos-coffee-page .pos-online {
+    body[data-role].pos-coffee-page .pos-online {
         display: inline-flex !important;
     }
 
@@ -259,19 +259,19 @@
         padding-inline: 14px !important;
     }
 
-    body[data-role="employee"] #order-results {
+    body[data-role] #order-results {
         min-height: 0;
     }
 
-    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll {
+    body[data-role].pos-orders-page #order-results .paginated-scroll {
         max-height: none;
     }
 
-    body[data-role="employee"] #modal-root .modal:not(.pos-order-modal) {
+    body[data-role] #modal-root .modal:not(.pos-order-modal) {
         max-height: calc(100dvh - 44px - var(--modal-keyboard-offset)) !important;
     }
 
-    body[data-role="employee"] #modal-root .checkout-modal-layout {
+    body[data-role] #modal-root .checkout-modal-layout {
         padding-top: 16px !important;
     }
 }
@@ -311,8 +311,8 @@
     html.sidebar-collapsed .pos-coffee-page .brand>span:last-child,
     html.sidebar-collapsed body[data-role="admin"] .brand-copy,
     html.sidebar-collapsed body[data-role="admin"] .nav-label,
-    html.sidebar-collapsed body[data-role="employee"] .brand-copy,
-    html.sidebar-collapsed body[data-role="employee"] .nav-label {
+    html.sidebar-collapsed body[data-role] .brand-copy,
+    html.sidebar-collapsed body[data-role] .nav-label {
         display: none !important;
     }
 
@@ -336,7 +336,7 @@
     .workspace,
     .pos-coffee-page .workspace,
     body[data-role="admin"] .workspace,
-    body[data-role="employee"] .workspace {
+    body[data-role] .workspace {
         grid-column: 2 !important;
     }
 
@@ -354,7 +354,7 @@
         padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
     }
 
-    body[data-role="employee"].pos-coffee-page .page-content:not(.paginated-page) {
+    body[data-role].pos-coffee-page .page-content:not(.paginated-page) {
         height: calc(100dvh - 72px) !important;
         overflow: hidden !important;
     }
@@ -376,13 +376,13 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    body[data-role="employee"].pos-coffee-page .coffee-pos-main,
-    body[data-role="employee"].pos-coffee-page .pos-section {
+    body[data-role].pos-coffee-page .coffee-pos-main,
+    body[data-role].pos-coffee-page .pos-section {
         width: 100% !important;
         max-width: none !important;
     }
 
-    body[data-role="employee"].pos-coffee-page .pos-table-grid {
+    body[data-role].pos-coffee-page .pos-table-grid {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
     }
 
@@ -507,15 +507,15 @@
 
     body[data-role="admin"] .owner-orders-page .admin-order-table,
     body[data-role="admin"] .owner-menu-page .menu-admin-table,
-    body[data-role="employee"].pos-orders-page .staff-order-table {
+    body[data-role].pos-orders-page .staff-order-table {
         table-layout: fixed !important;
         min-width: 100% !important;
     }
 
     body[data-role="admin"] .owner-orders-page .admin-order-table th,
     body[data-role="admin"] .owner-orders-page .admin-order-table td,
-    body[data-role="employee"].pos-orders-page .staff-order-table th,
-    body[data-role="employee"].pos-orders-page .staff-order-table td {
+    body[data-role].pos-orders-page .staff-order-table th,
+    body[data-role].pos-orders-page .staff-order-table td {
         padding: 14px 12px !important;
     }
 
@@ -548,7 +548,7 @@
     }
 
     body[data-role="admin"] .admin-fishing-preview .fishing-lake-plan,
-    body[data-role="employee"].pos-fishing-page .fishing-lake-plan {
+    body[data-role].pos-fishing-page .fishing-lake-plan {
         grid-template-columns: minmax(180px, 1fr) minmax(92px, .62fr) minmax(180px, 1fr) !important;
         min-height: 760px !important;
     }
@@ -577,7 +577,7 @@
         height: calc(100dvh - 78px) !important;
     }
 
-    body[data-role="employee"].pos-coffee-page .page-content:not(.paginated-page) {
+    body[data-role].pos-coffee-page .page-content:not(.paginated-page) {
         min-height: calc(100dvh - 78px);
     }
 
@@ -587,13 +587,13 @@
         width: 100% !important;
     }
 
-    body[data-role="employee"].pos-coffee-page .coffee-pos-main,
-    body[data-role="employee"].pos-coffee-page .pos-section {
+    body[data-role].pos-coffee-page .coffee-pos-main,
+    body[data-role].pos-coffee-page .pos-section {
         width: 100% !important;
         max-width: none !important;
     }
 
-    body[data-role="employee"].pos-coffee-page .pos-table-grid {
+    body[data-role].pos-coffee-page .pos-table-grid {
         grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
     }
 
@@ -657,7 +657,7 @@
     }
 
     body[data-role="admin"] .admin-fishing-preview .fishing-lake-plan,
-    body[data-role="employee"].pos-fishing-page .fishing-lake-plan {
+    body[data-role].pos-fishing-page .fishing-lake-plan {
         grid-template-columns: minmax(250px, 1fr) minmax(190px, .9fr) minmax(250px, 1fr) !important;
         min-height: 820px !important;
     }
@@ -683,7 +683,7 @@
     }
 
     body[data-role="admin"] .admin-fishing-preview .fishing-lake-plan,
-    body[data-role="employee"].pos-fishing-page .fishing-lake-plan {
+    body[data-role].pos-fishing-page .fishing-lake-plan {
         grid-template-columns: minmax(280px, 1fr) minmax(240px, .98fr) minmax(280px, 1fr) !important;
     }
 }

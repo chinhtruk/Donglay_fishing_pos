@@ -1298,7 +1298,7 @@
     }
 
     body[data-role] #modal-root .modal.pos-receipt-modal,
-    body[data-role="employee"] #modal-root .modal.staff-order-detail-modal.pos-receipt-modal,
+    body[data-role] #modal-root .modal.staff-order-detail-modal.pos-receipt-modal,
     body[data-role="admin"] #modal-root .modal.order-detail-modal.pos-receipt-modal {
         width: 100vw !important;
         max-width: none !important;
@@ -1341,7 +1341,7 @@
     }
 
     body[data-role] #modal-root .pos-receipt-modal .pos-receipt,
-    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt {
+    body[data-role] #modal-root .staff-order-detail-modal .staff-receipt {
         display: flex !important;
         flex: 1 1 auto !important;
         flex-direction: column !important;
@@ -1391,7 +1391,7 @@
     }
 
     body[data-role] #modal-root .pos-receipt-modal .pos-receipt-meta,
-    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-meta {
+    body[data-role] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-meta {
         flex: 0 0 auto !important;
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         gap: 0 !important;
@@ -1425,7 +1425,7 @@
     }
 
     body[data-role] #modal-root .pos-receipt-modal .pos-receipt-section,
-    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-section {
+    body[data-role] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-section {
         display: block !important;
         flex: 0 0 auto !important;
         min-height: 0 !important;
@@ -1435,7 +1435,7 @@
 
     body[data-role] #modal-root .pos-receipt-modal .pos-receipt-section>header,
     body[data-role] #modal-root .pos-receipt-modal .pos-receipt-payments>header,
-    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-section>header {
+    body[data-role] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-section>header {
         position: sticky;
         top: 0;
         z-index: 4;
@@ -1460,14 +1460,14 @@
     }
 
     body[data-role] #modal-root .pos-receipt-modal .pos-receipt-lines,
-    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-lines {
+    body[data-role] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-lines {
         max-height: none !important;
         overflow: visible !important;
         padding: 0 14px !important;
     }
 
     body[data-role] #modal-root .pos-receipt-modal .pos-receipt-line,
-    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line {
+    body[data-role] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line {
         grid-template-columns: 38px minmax(0, 1fr) auto !important;
         gap: 9px !important;
         min-height: 68px !important;
@@ -1475,7 +1475,7 @@
     }
 
     body[data-role] #modal-root .pos-receipt-modal .receipt-quantity,
-    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .staff-item-quantity {
+    body[data-role] #modal-root .staff-order-detail-modal .staff-receipt .staff-item-quantity {
         width: 36px !important;
         min-width: 36px !important;
         height: 36px !important;
@@ -1485,14 +1485,14 @@
     }
 
     body[data-role] #modal-root .pos-receipt-modal .pos-receipt-line div>strong,
-    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line div>strong {
+    body[data-role] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line div>strong {
         overflow-wrap: anywhere;
         font-size: 13.5px !important;
         line-height: 1.3 !important;
     }
 
     body[data-role] #modal-root .pos-receipt-modal .pos-receipt-line div>small,
-    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line div>small {
+    body[data-role] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line div>small {
         font-size: 10.5px !important;
         line-height: 1.4 !important;
     }

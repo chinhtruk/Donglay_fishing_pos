@@ -359,11 +359,11 @@
 /* Phase 3 phone contract for the two operational POS maps. The transactional
    order and checkout dialogs remain owned by Phase 4. */
 @media(max-width:767px) {
-    body[data-role="employee"].pos-coffee-page #page-content {
+    body[data-role].pos-coffee-page #page-content {
         overflow: visible !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-stats {
+    body[data-role].pos-coffee-page #page-content .pos-stats {
         width: 100%;
         min-width: 0;
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -371,7 +371,7 @@
         margin-bottom: 12px !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-stat {
+    body[data-role].pos-coffee-page #page-content .pos-stat {
         min-width: 0;
         min-height: 72px !important;
         gap: 7px !important;
@@ -379,29 +379,29 @@
         border-radius: 12px !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-stat>span {
+    body[data-role].pos-coffee-page #page-content .pos-stat>span {
         width: 30px !important;
         height: 30px !important;
         flex: 0 0 30px;
         border-radius: 9px !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-stat>div {
+    body[data-role].pos-coffee-page #page-content .pos-stat>div {
         min-width: 0
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-stat small {
+    body[data-role].pos-coffee-page #page-content .pos-stat small {
         margin-bottom: 3px !important;
         font-size: 9px !important;
         line-height: 1.25
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-stat strong {
+    body[data-role].pos-coffee-page #page-content .pos-stat strong {
         font-size: 13px !important;
         line-height: 1.2
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .coffee-pos-stats .pos-new-order-btn {
+    body[data-role].pos-coffee-page #page-content .coffee-pos-stats .pos-new-order-btn {
         grid-column: 1 / -1;
         min-height: var(--mobile-touch-target) !important;
         height: var(--mobile-touch-target) !important;
@@ -410,25 +410,25 @@
         touch-action: manipulation
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .coffee-pos-layout,
-    body[data-role="employee"].pos-coffee-page #page-content .coffee-pos-main,
-    body[data-role="employee"].pos-coffee-page #page-content .pos-section {
+    body[data-role].pos-coffee-page #page-content .coffee-pos-layout,
+    body[data-role].pos-coffee-page #page-content .coffee-pos-main,
+    body[data-role].pos-coffee-page #page-content .pos-section {
         width: 100% !important;
         min-width: 0 !important;
         height: auto !important;
         min-height: 0 !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .coffee-pos-layout {
+    body[data-role].pos-coffee-page #page-content .coffee-pos-layout {
         display: block !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-section {
+    body[data-role].pos-coffee-page #page-content .pos-section {
         padding: 10px !important;
         border-radius: 16px !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-section-head {
+    body[data-role].pos-coffee-page #page-content .pos-section-head {
         min-width: 0;
         align-items: stretch !important;
         flex-direction: column !important;
@@ -436,8 +436,8 @@
         margin-bottom: 10px !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .coffee-header-actions,
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-header-actions {
+    body[data-role].pos-coffee-page #page-content .coffee-header-actions,
+    body[data-role].pos-fishing-page #page-content .fishing-header-actions {
         width: 100%;
         min-width: 0;
         display: flex;
@@ -447,22 +447,22 @@
         margin: 0 !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .coffee-header-actions .button,
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-header-actions .button {
+    body[data-role].pos-coffee-page #page-content .coffee-header-actions .button,
+    body[data-role].pos-fishing-page #page-content .fishing-header-actions .button {
         min-height: var(--mobile-touch-target) !important;
         padding: 0 13px !important;
         font-size: 11px !important;
         touch-action: manipulation
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-merge-status {
+    body[data-role].pos-coffee-page #page-content .pos-merge-status {
         display: block;
         width: 100%;
         padding: 2px 1px 0
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .is-merge-mode .coffee-header-actions,
-    body[data-role="employee"].pos-fishing-page #page-content .is-merge-mode .fishing-header-actions {
+    body[data-role].pos-coffee-page #page-content .is-merge-mode .coffee-header-actions,
+    body[data-role].pos-fishing-page #page-content .is-merge-mode .fishing-header-actions {
         position: sticky;
         top: calc(var(--mobile-topbar-height) + env(safe-area-inset-top) + 8px);
         z-index: 12;
@@ -475,8 +475,8 @@
         -webkit-backdrop-filter: blur(12px)
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-section-head .legend,
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-map-header>.legend {
+    body[data-role].pos-coffee-page #page-content .pos-section-head .legend,
+    body[data-role].pos-fishing-page #page-content .fishing-map-header>.legend {
         width: 100% !important;
         min-width: 0;
         min-height: var(--mobile-touch-target);
@@ -495,24 +495,24 @@
         -webkit-overflow-scrolling: touch
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .legend::-webkit-scrollbar {
+    body[data-role].pos-coffee-page #page-content .legend::-webkit-scrollbar {
         display: none
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .legend span {
+    body[data-role].pos-coffee-page #page-content .legend span {
         min-height: var(--mobile-touch-target);
         flex: 0 0 auto;
         white-space: nowrap
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-table-grid {
+    body[data-role].pos-coffee-page #page-content .pos-table-grid {
         width: 100%;
         min-width: 0;
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 10px !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-table-card {
+    body[data-role].pos-coffee-page #page-content .pos-table-card {
         min-width: 0;
         min-height: 96px !important;
         display: grid;
@@ -525,7 +525,7 @@
         touch-action: manipulation
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-table-card .table-state {
+    body[data-role].pos-coffee-page #page-content .pos-table-card .table-state {
         position: static !important;
         width: max-content;
         max-width: 100%;
@@ -537,14 +537,14 @@
         text-overflow: ellipsis
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-table-card strong {
+    body[data-role].pos-coffee-page #page-content .pos-table-card strong {
         margin: 0 !important;
         overflow-wrap: anywhere;
         font-size: 14px !important;
         line-height: 1.25
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-table-card small {
+    body[data-role].pos-coffee-page #page-content .pos-table-card small {
         align-self: end;
         margin: 0 !important;
         overflow: visible;
@@ -554,18 +554,18 @@
         text-overflow: clip
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-table-card:focus-visible,
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot:focus-visible {
+    body[data-role].pos-coffee-page #page-content .pos-table-card:focus-visible,
+    body[data-role].pos-fishing-page #page-content .fishing-slot:focus-visible {
         outline: 3px solid rgba(86, 57, 42, .22);
         outline-offset: 2px
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-table-card.selected-for-merge,
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot.selected-for-merge {
+    body[data-role].pos-coffee-page #page-content .pos-table-card.selected-for-merge,
+    body[data-role].pos-fishing-page #page-content .fishing-slot.selected-for-merge {
         transform: none !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .counter-order-strip {
+    body[data-role].pos-coffee-page #page-content .counter-order-strip {
         width: 100%;
         min-width: 0;
         grid-template-columns: minmax(0, 1fr) !important;
@@ -575,7 +575,7 @@
         padding-top: 12px !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .counter-order-list {
+    body[data-role].pos-coffee-page #page-content .counter-order-list {
         width: 100%;
         min-width: 0;
         gap: 8px;
@@ -584,22 +584,22 @@
         -webkit-overflow-scrolling: touch
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .counter-order-chip {
+    body[data-role].pos-coffee-page #page-content .counter-order-chip {
         min-height: 56px;
         padding: 9px 11px !important;
         border-radius: 12px !important;
         touch-action: manipulation
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .counter-order-chip strong {
+    body[data-role].pos-coffee-page #page-content .counter-order-chip strong {
         font-size: 11px !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .counter-order-chip span {
+    body[data-role].pos-coffee-page #page-content .counter-order-chip span {
         font-size: 10px !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-map-shell {
+    body[data-role].pos-fishing-page #page-content .fishing-map-shell {
         width: 100%;
         min-width: 0;
         padding: 10px !important;
@@ -607,7 +607,7 @@
         border-radius: 16px !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-map-header {
+    body[data-role].pos-fishing-page #page-content .fishing-map-header {
         min-width: 0;
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) !important;
@@ -617,18 +617,18 @@
         padding: 0 0 8px !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-header-actions,
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-map-header>.legend {
+    body[data-role].pos-fishing-page #page-content .fishing-header-actions,
+    body[data-role].pos-fishing-page #page-content .fishing-map-header>.legend {
         grid-column: 1 !important;
         grid-row: auto !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .pos-merge-status {
+    body[data-role].pos-fishing-page #page-content .pos-merge-status {
         width: 100%;
         padding: 2px 1px 0
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-lake-plan {
+    body[data-role].pos-fishing-page #page-content .fishing-lake-plan {
         width: 100%;
         min-width: 0;
         height: auto !important;
@@ -646,7 +646,7 @@
         box-shadow: none !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .lake-water {
+    body[data-role].pos-fishing-page #page-content .lake-water {
         grid-column: 2 !important;
         grid-row: 1 / 11 !important;
         min-width: 0;
@@ -655,13 +655,13 @@
         border-radius: 999px !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .lake-title small,
-    body[data-role="employee"].pos-fishing-page #page-content .fish-swim,
-    body[data-role="employee"].pos-fishing-page #page-content .water-flora {
+    body[data-role].pos-fishing-page #page-content .lake-title small,
+    body[data-role].pos-fishing-page #page-content .fish-swim,
+    body[data-role].pos-fishing-page #page-content .water-flora {
         display: none !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .lake-title strong {
+    body[data-role].pos-fishing-page #page-content .lake-title strong {
         font-size: 9px !important;
         letter-spacing: .12em !important;
         line-height: 1;
@@ -669,8 +669,8 @@
         text-orientation: upright
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot,
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot.side-right {
+    body[data-role].pos-fishing-page #page-content .fishing-slot,
+    body[data-role].pos-fishing-page #page-content .fishing-slot.side-right {
         width: 100% !important;
         min-width: 0;
         min-height: 80px !important;
@@ -684,17 +684,17 @@
         touch-action: manipulation
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot {
+    body[data-role].pos-fishing-page #page-content .fishing-slot {
         grid-template-columns: minmax(0, 1fr) 7px !important;
         grid-template-rows: auto auto !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot.side-right {
+    body[data-role].pos-fishing-page #page-content .fishing-slot.side-right {
         grid-template-columns: 7px minmax(0, 1fr) !important;
         text-align: right !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot-number {
+    body[data-role].pos-fishing-page #page-content .fishing-slot-number {
         grid-column: 1 !important;
         grid-row: 1 !important;
         width: max-content;
@@ -709,20 +709,20 @@
         text-overflow: ellipsis
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot.side-right .fishing-slot-number {
+    body[data-role].pos-fishing-page #page-content .fishing-slot.side-right .fishing-slot-number {
         grid-column: 2 !important;
         justify-self: end
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot>span:nth-child(2),
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot.side-right>span:nth-child(2) {
+    body[data-role].pos-fishing-page #page-content .fishing-slot>span:nth-child(2),
+    body[data-role].pos-fishing-page #page-content .fishing-slot.side-right>span:nth-child(2) {
         grid-column: 1 / -1 !important;
         grid-row: 2 !important;
         min-width: 0;
         text-align: inherit !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot>i {
+    body[data-role].pos-fishing-page #page-content .fishing-slot>i {
         grid-column: 2 !important;
         grid-row: 1 !important;
         width: 7px !important;
@@ -730,25 +730,25 @@
         justify-self: end
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot.side-right>i {
+    body[data-role].pos-fishing-page #page-content .fishing-slot.side-right>i {
         grid-column: 1 !important;
         justify-self: start
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot strong,
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot small {
+    body[data-role].pos-fishing-page #page-content .fishing-slot strong,
+    body[data-role].pos-fishing-page #page-content .fishing-slot small {
         display: block !important;
         overflow: visible !important;
         white-space: normal !important;
         text-overflow: clip !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot strong {
+    body[data-role].pos-fishing-page #page-content .fishing-slot strong {
         font-size: 11px !important;
         line-height: 1.25
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot small {
+    body[data-role].pos-fishing-page #page-content .fishing-slot small {
         min-height: 1.25em;
         margin-top: 2px !important;
         font-size: 9px !important;
@@ -758,28 +758,28 @@
 }
 
 @media(max-width:359px) {
-    body[data-role="employee"].pos-coffee-page #page-content .pos-stats {
+    body[data-role].pos-coffee-page #page-content .pos-stats {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-stats .pos-stat:nth-child(3),
-    body[data-role="employee"].pos-coffee-page #page-content .coffee-pos-stats .pos-new-order-btn {
+    body[data-role].pos-coffee-page #page-content .pos-stats .pos-stat:nth-child(3),
+    body[data-role].pos-coffee-page #page-content .coffee-pos-stats .pos-new-order-btn {
         grid-column: 1 / -1
     }
 
-    body[data-role="employee"].pos-coffee-page #page-content .pos-table-grid {
+    body[data-role].pos-coffee-page #page-content .pos-table-grid {
         grid-template-columns: minmax(0, 1fr) !important
     }
 
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-lake-plan {
+    body[data-role].pos-fishing-page #page-content .fishing-lake-plan {
         grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) !important;
         column-gap: 5px !important
     }
 }
 
 @media(max-width:767px) and (prefers-reduced-motion:reduce) {
-    body[data-role="employee"].pos-coffee-page #page-content .pos-table-card,
-    body[data-role="employee"].pos-fishing-page #page-content .fishing-slot {
+    body[data-role].pos-coffee-page #page-content .pos-table-card,
+    body[data-role].pos-fishing-page #page-content .fishing-slot {
         transition: none !important
     }
 }
@@ -804,13 +804,13 @@
 }
 
 @media(max-width:767px) {
-    body[data-role="employee"] #modal-root .modal-backdrop:has(.modal.pos-order-modal) {
+    body[data-role] #modal-root .modal-backdrop:has(.modal.pos-order-modal) {
         align-items: stretch !important;
         justify-content: stretch !important;
         padding: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal) {
+    body[data-role] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal) {
         width: 100vw !important;
         max-width: none !important;
         height: calc(100dvh - var(--modal-keyboard-offset)) !important;
@@ -821,14 +821,14 @@
         box-shadow: none !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal)>.modal-head {
+    body[data-role] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal)>.modal-head {
         flex: 0 0 auto !important;
         min-height: calc(58px + env(safe-area-inset-top)) !important;
         padding: env(safe-area-inset-top) 14px 0 !important;
         border-radius: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal)>.modal-head h2 {
+    body[data-role] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal)>.modal-head h2 {
         min-width: 0;
         overflow: hidden;
         font-size: 16px !important;
@@ -836,7 +836,7 @@
         white-space: nowrap;
     }
 
-    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal)>.modal-body {
+    body[data-role] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal)>.modal-body {
         position: relative;
         display: flex !important;
         flex: 1 1 auto !important;
@@ -846,7 +846,7 @@
         padding: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-navigation {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-navigation {
         display: block;
         flex: 0 0 auto;
         padding: 8px 12px;
@@ -854,7 +854,7 @@
         background: var(--white);
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-tabs {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-tabs {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 4px;
@@ -863,7 +863,7 @@
         background: var(--soft, #f4efe9);
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-tabs button {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-tabs button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -879,13 +879,13 @@
         font-weight: 800;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-tabs button[aria-selected="true"] {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-tabs button[aria-selected="true"] {
         background: var(--white);
         color: var(--pos-brand, var(--moss));
         box-shadow: 0 2px 8px rgba(45, 33, 27, .09);
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) [data-order-mobile-count] {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) [data-order-mobile-count] {
         display: inline-grid;
         min-width: 22px;
         height: 22px;
@@ -898,7 +898,7 @@
         font-variant-numeric: tabular-nums;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .modal-pos-layout {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .modal-pos-layout {
         display: grid !important;
         flex: 1 1 auto !important;
         grid-template-columns: minmax(0, 1fr) !important;
@@ -909,20 +909,20 @@
         overflow: hidden !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal).mobile-order-view-menu .pos-menu-section {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal).mobile-order-view-menu .pos-menu-section {
         display: flex !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal).mobile-order-view-menu .modal-order-dock-aside,
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal).mobile-order-view-receipt .pos-menu-section {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal).mobile-order-view-menu .modal-order-dock-aside,
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal).mobile-order-view-receipt .pos-menu-section {
         display: none !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal).mobile-order-view-receipt .modal-order-dock-aside {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal).mobile-order-view-receipt .modal-order-dock-aside {
         display: flex !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-menu-section {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-menu-section {
         flex-direction: column !important;
         width: 100% !important;
         min-width: 0 !important;
@@ -931,7 +931,7 @@
         border-radius: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-menu-section>.pos-section-head {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-menu-section>.pos-section-head {
         position: sticky;
         top: 0;
         z-index: 3;
@@ -940,12 +940,12 @@
         background: var(--white);
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search {
         min-height: 36px !important;
         height: 36px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search input {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search input {
         min-height: 36px !important;
         height: 36px !important;
         padding: 5px 10px 5px 32px !important;
@@ -953,29 +953,29 @@
         line-height: 1.25 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search input::placeholder {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search input::placeholder {
         font-size: 14px !important;
         font-weight: 650 !important;
         line-height: 1.25 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search>span {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search>span {
         left: 10px !important;
         width: 14px !important;
         height: 14px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search>span svg {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-search>span svg {
         width: 14px !important;
         height: 14px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .category-tabs {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .category-tabs {
         gap: 5px !important;
         scroll-padding-inline: 40%;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .category-tabs button {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .category-tabs button {
         min-height: 36px !important;
         height: 36px !important;
         padding: 0 10px !important;
@@ -984,43 +984,43 @@
         touch-action: manipulation;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-menu-section>.pos-product-grid {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-menu-section>.pos-product-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 9px !important;
         padding: 2px 0 calc(84px + env(safe-area-inset-bottom)) !important;
         scrollbar-gutter: auto;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-product-card,
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-product-card,
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main {
         min-height: 190px !important;
         border-radius: 13px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-art {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-art {
         flex-basis: 110px !important;
         height: 110px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main strong {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main strong {
         min-height: 42px !important;
         padding: 8px 42px 3px 10px !important;
         font-size: 12.5px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main b {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main b {
         padding: 3px 42px 10px 10px !important;
         font-size: 11.5px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main em {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main em {
         right: 8px !important;
         bottom: 8px !important;
         width: 44px !important;
         height: 44px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-receipt-cta:not(.hidden):not(.is-view-hidden) {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-mobile-receipt-cta:not(.hidden):not(.is-view-hidden) {
         position: absolute;
         right: 12px;
         bottom: max(10px, env(safe-area-inset-bottom));
@@ -1041,7 +1041,7 @@
         box-shadow: 0 8px 24px rgba(45, 33, 27, .24);
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) [data-order-mobile-cta-count] {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) [data-order-mobile-cta-count] {
         display: inline-grid;
         min-width: 24px;
         height: 24px;
@@ -1051,8 +1051,8 @@
         background: rgba(255, 255, 255, .18);
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .modal-order-dock-aside,
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) #modal-order-panel {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .modal-order-dock-aside,
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) #modal-order-panel {
         flex: 1 1 auto !important;
         flex-direction: column !important;
         width: 100% !important;
@@ -1061,27 +1061,27 @@
         border-radius: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-dock-head {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-dock-head {
         padding: 12px 14px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-resource-select {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-resource-select {
         margin: 10px 12px !important;
         padding: 10px 12px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-lines {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-lines {
         padding: 0 12px 18px !important;
         scroll-padding-bottom: 110px;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row {
         grid-template-columns: minmax(84px, 1fr) auto minmax(76px, auto) !important;
         align-items: center !important;
         gap: 6px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row input[data-modal-note] {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row input[data-modal-note] {
         grid-column: auto !important;
         min-width: 0 !important;
         width: 100% !important;
@@ -1091,11 +1091,11 @@
         font-size: 16px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row .quantity {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row .quantity {
         gap: 3px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row .quantity button {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row .quantity button {
         width: 36px !important;
         min-width: 36px !important;
         height: 36px !important;
@@ -1103,27 +1103,27 @@
         padding: 0 !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row .quantity b {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row .quantity b {
         min-width: 15px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row>b {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line-note-row>b {
         min-width: 76px !important;
         font-size: 12px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-actions .button {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-actions .button {
         min-width: 44px !important;
         min-height: 44px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line.session-item {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-line.session-item {
         grid-template-columns: minmax(0, 1fr) auto !important;
         gap: 8px !important;
         padding-block: 12px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-dock-footer {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-dock-footer {
         position: sticky !important;
         bottom: 0 !important;
         flex: 0 0 auto !important;
@@ -1132,27 +1132,27 @@
         box-shadow: 0 -12px 28px rgba(45, 33, 27, .08) !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-actions {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-actions {
         gap: 8px !important;
     }
 }
 
 @media(max-width:359px) {
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-menu-section>.pos-product-grid {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-menu-section>.pos-product-grid {
         grid-template-columns: minmax(0, 1fr) !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-product-card,
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .pos-product-card,
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-main {
         min-height: 204px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-art {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .product-art {
         flex-basis: 126px !important;
         height: 126px !important;
     }
 
-    body[data-role="employee"] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-actions {
+    body[data-role] #modal-root .pos-order-modal:not(.pos-checkout-modal) .order-actions {
         grid-template-columns: minmax(0, 1fr) !important;
     }
 }

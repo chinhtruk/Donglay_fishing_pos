@@ -30,11 +30,12 @@
     .workspace,
     .pos-coffee-page .workspace,
     body[data-role="admin"] .workspace,
-    body[data-role="employee"] .workspace {
+    body[data-role] .workspace {
         width: 100%;
         min-width: 0;
         grid-column: 1 !important;
-        overflow-x: hidden;
+        overflow: visible !important;
+        padding-top: calc(var(--mobile-topbar-height) + env(safe-area-inset-top)) !important;
     }
 
     html:not(.sidebar-collapsed) .sidebar,
@@ -192,7 +193,10 @@
     }
 
     .topbar {
-        width: 100%;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
         min-width: 0;
         height: calc(var(--mobile-topbar-height) + env(safe-area-inset-top));
         min-height: calc(var(--mobile-topbar-height) + env(safe-area-inset-top));
@@ -323,7 +327,7 @@
 
     body[data-role="admin"] .owner-orders-page .paginated-scroll,
     body[data-role="admin"] .owner-menu-page .paginated-scroll,
-    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll {
+    body[data-role].pos-orders-page #order-results .paginated-scroll {
         max-width: 100%;
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
@@ -331,18 +335,18 @@
 
     body[data-role="admin"] .owner-orders-page .paginated-scroll>.data-table-wrap,
     body[data-role="admin"] .owner-menu-page .paginated-scroll>.data-table-wrap,
-    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll>.data-table-wrap {
+    body[data-role].pos-orders-page #order-results .paginated-scroll>.data-table-wrap {
         min-width: 720px;
         overflow: visible !important;
     }
 
     body[data-role="admin"] .owner-orders-page .paginated-scroll,
-    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll {
+    body[data-role].pos-orders-page #order-results .paginated-scroll {
         overflow: visible !important;
     }
 
     body[data-role="admin"] .owner-orders-page .paginated-scroll>.data-table-wrap.is-mobile-card-list,
-    body[data-role="employee"].pos-orders-page #order-results .paginated-scroll>.data-table-wrap.is-mobile-card-list {
+    body[data-role].pos-orders-page #order-results .paginated-scroll>.data-table-wrap.is-mobile-card-list {
         min-width: 0;
     }
 

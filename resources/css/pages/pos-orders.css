@@ -593,9 +593,9 @@
     text-align: right;
 }
 
-body[data-role="employee"] #modal-root .variable-price-input-wrap input[data-variable-price-input],
-body[data-role="employee"] #modal-root .variable-price-input-wrap input[data-variable-price-input]:focus,
-body[data-role="employee"] #modal-root .variable-price-input-wrap input[data-variable-price-input]:focus-visible {
+body[data-role] #modal-root .variable-price-input-wrap input[data-variable-price-input],
+body[data-role] #modal-root .variable-price-input-wrap input[data-variable-price-input]:focus,
+body[data-role] #modal-root .variable-price-input-wrap input[data-variable-price-input]:focus-visible {
     width: 100% !important;
     min-height: 0 !important;
     height: auto !important;
