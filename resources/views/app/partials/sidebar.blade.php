@@ -1,4 +1,4 @@
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar" id="sidebar" aria-label="Điều hướng chính">
     <div class="sidebar-brand-row">
         <a class="brand" href="{{ auth()->user()->isAdmin() ? '/admin/dashboard' : '/pos/coffee' }}">
             <span class="brand-mark" aria-hidden="true">
@@ -9,6 +9,9 @@
             </span>
             <span class="brand-copy"><strong>Đồng lầy</strong><small>Fishing</small></span>
         </a>
+        <button id="sidebar-mobile-close" class="sidebar-mobile-close mobile-only" type="button" aria-label="Đóng menu">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+        </button>
     </div>
     <nav>
         @if(auth()->user()->isAdmin())
@@ -32,4 +35,4 @@
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
 </aside>
-<button id="sidebar-scrim" class="sidebar-scrim" type="button" aria-label="Đóng menu"></button>
+<button id="sidebar-scrim" class="sidebar-scrim" type="button" aria-label="Đóng menu" aria-hidden="true" tabindex="-1"></button>

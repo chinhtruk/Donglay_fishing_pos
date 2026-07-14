@@ -31,8 +31,8 @@
 
         {{-- ── Role switch ── --}}
         <div class="lp-tabs" role="tablist" aria-label="Chọn vai trò">
-            <button class="lp-tab lp-tab--active" type="button" role="tab"
-                    aria-selected="true" data-login-tab="employee">
+            <button id="login-tab-employee" class="lp-tab lp-tab--active" type="button" role="tab"
+                    aria-selected="true" aria-controls="employee-login" tabindex="0" data-login-tab="employee">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
@@ -41,8 +41,8 @@
                 </svg>
                 Nhân viên
             </button>
-            <button class="lp-tab" type="button" role="tab"
-                    aria-selected="false" data-login-tab="admin">
+            <button id="login-tab-admin" class="lp-tab" type="button" role="tab"
+                    aria-selected="false" aria-controls="admin-login" tabindex="-1" data-login-tab="admin">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
@@ -53,7 +53,7 @@
         </div>
 
         {{-- ── EMPLOYEE FORM ── --}}
-        <form id="employee-login" class="lp-form" novalidate>
+        <form id="employee-login" class="lp-form" role="tabpanel" aria-labelledby="login-tab-employee" novalidate>
 
             {{-- Bước 1 – Tên đăng nhập --}}
             <div id="employee-username-stage" class="lp-stage">
@@ -112,7 +112,7 @@
         </form>
 
         {{-- ── ADMIN FORM ── --}}
-        <form id="admin-login" class="lp-form hidden" novalidate>
+        <form id="admin-login" class="lp-form hidden" role="tabpanel" aria-labelledby="login-tab-admin" novalidate>
             <header class="lp-intro">
                 <h1>Đăng nhập quản trị</h1>
                 <p>Sử dụng tài khoản quản trị để tiếp tục.</p>

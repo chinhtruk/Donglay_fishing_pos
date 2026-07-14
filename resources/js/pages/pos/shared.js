@@ -260,7 +260,7 @@ export function requestVariablePrice(modal, item) {
 
 export function productMedia(item, index = 0) {
     if (item.image_url) {
-        return `<span class="product-art has-image"><img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}" loading="lazy"></span>`;
+        return `<span class="product-art has-image"><img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async"></span>`;
     }
 
     return `<span class="product-art art-${index % 4}"><i><svg viewBox="0 0 64 64" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="12" y="15" width="34" height="34" rx="7"></rect><path d="m17 42 9-10 7 7 5-5 8 8"></path><circle cx="37" cy="25" r="4"></circle></svg></i></span>`;

@@ -1,4 +1,5 @@
 import { api } from '../../modules/api.js';
+import { runButtonAction } from '../../modules/action.js';
 import { toast } from '../../modules/toast.js';
 import { escapeHtml } from '../../modules/format.js';
 import { openModal } from '../../modules/modal.js';
@@ -25,15 +26,15 @@ export async function renderSettingsAdmin() {
 
     $('#page-content').classList.add('owner-settings-page', 'owner-payment-page');
     $('#page-content').innerHTML = pageHead('THANH TOÁN', 'Quản lý thanh toán', '', '<button class="button primary" id="add-payment-method"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Thêm phương thức</button>') + `
-        <div class="data-table-wrap payment-method-table-wrap">
+        <div class="data-table-wrap is-mobile-card-list payment-method-table-wrap">
             <table class="data-table payment-method-table">
                 <thead><tr><th>PHƯƠNG THỨC</th><th>LOẠI</th><th>THÔNG TIN NHẬN TIỀN</th><th>TRẠNG THÁI</th></tr></thead>
                 <tbody>
                     ${methods.length ? methods.map(method => `<tr class="payment-method-row" data-payment-method-row="${method.id}" tabindex="0" role="button" aria-label="Chỉnh sửa phương thức ${escapeHtml(method.name)}">
-                        <td data-label="Phương thức"><span class="payment-method-name"><span class="payment-method-icon">${paymentMethodIcon(method.type)}</span><span><strong>${escapeHtml(method.name)}</strong><small>${escapeHtml(method.code)}</small></span></span></td>
-                        <td data-label="Loại">${paymentMethodTypeLabel(method.type)}</td>
-                        <td data-label="Thông tin"><span class="payment-method-info">${methodInfo(method)}</span></td>
-                        <td data-label="Trạng thái">${statusPill(method)}</td>
+                        <td class="payment-cell-name" data-label="Phương thức"><span class="payment-method-name"><span class="payment-method-icon">${paymentMethodIcon(method.type)}</span><span><strong>${escapeHtml(method.name)}</strong><small>${escapeHtml(method.code)}</small></span></span></td>
+                        <td class="payment-cell-type" data-label="Loại">${paymentMethodTypeLabel(method.type)}</td>
+                        <td class="payment-cell-info" data-label="Thông tin"><span class="payment-method-info">${methodInfo(method)}</span></td>
+                        <td class="payment-cell-status" data-label="Trạng thái">${statusPill(method)}</td>
                     </tr>`).join('') : '<tr><td colspan="4"><div class="empty-state">Chưa có phương thức thanh toán nào.</div></td></tr>'}
                 </tbody>
             </table>
@@ -99,7 +100,7 @@ function paymentMethodForm(method = null) {
                 }
                 if (previewUrl) URL.revokeObjectURL(previewUrl);
                 previewUrl = URL.createObjectURL(file);
-                preview.innerHTML = `<img src="${previewUrl}" alt="Xem trước mã QR">`;
+                preview.innerHTML = `<img src="${previewUrl}" alt="Xem trước mã QR" decoding="async">`;
                 overlayText.textContent = 'Đổi QR';
                 const removeInput = $('.payment-qr-remove', modal)?.querySelector('input');
                 if (removeInput) removeInput.checked = false;
@@ -114,19 +115,17 @@ function paymentMethodForm(method = null) {
                 formData.set('is_enabled', $('#payment-method-enabled', modal).checked ? '1' : '0');
                 if (method) formData.set('_method', 'PUT');
 
-                saveButton.disabled = true;
-                saveButton.textContent = 'Đang lưu…';
-                try {
-                    const result = await api(method ? `/api/v1/admin/payment-methods/${method.id}` : '/api/v1/admin/payment-methods', { method: 'POST', body: formData });
-                    toast(result.message);
-                    if (previewUrl) URL.revokeObjectURL(previewUrl);
-                    close();
-                    renderSettingsAdmin();
-                } catch (error) {
-                    saveButton.disabled = false;
-                    saveButton.textContent = 'Lưu phương thức';
-                    toast(error.message, 'error');
-                }
+                await runButtonAction(saveButton, async () => {
+                    try {
+                        const result = await api(method ? `/api/v1/admin/payment-methods/${method.id}` : '/api/v1/admin/payment-methods', { method: 'POST', body: formData });
+                        toast(result.message);
+                        if (previewUrl) URL.revokeObjectURL(previewUrl);
+                        close();
+                        renderSettingsAdmin();
+                    } catch (error) {
+                        toast(error.message, 'error');
+                    }
+                }, { busyText: 'Đang lưu…' });
             };
         }
     });

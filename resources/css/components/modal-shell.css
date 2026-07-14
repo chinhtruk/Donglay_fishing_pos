@@ -108,3 +108,176 @@
         opacity: .5
     }
 }
+
+/* Shared phone dialog contract. Transaction-heavy POS order/checkout modals
+   remain feature-owned until their dedicated mobile phase. */
+@media(max-width: 767px) {
+    body[data-role] #modal-root .modal-backdrop,
+    .modal-backdrop {
+        width: 100vw;
+        height: 100dvh;
+        align-items: stretch;
+        padding: 0 !important;
+        overflow: hidden;
+        background: rgba(44, 30, 21, .48)
+    }
+
+    body[data-role] #modal-root .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal),
+    body #modal-root .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal) {
+        width: 100vw !important;
+        max-width: none !important;
+        height: calc(100dvh - var(--modal-keyboard-offset)) !important;
+        max-height: calc(100dvh - var(--modal-keyboard-offset)) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        animation: mobile-sheet-in .22s ease-out
+    }
+
+    body[data-role] #modal-root .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-head,
+    .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-head {
+        min-height: calc(60px + env(safe-area-inset-top)) !important;
+        flex: 0 0 auto;
+        padding: env(safe-area-inset-top) var(--mobile-page-x) 0 !important;
+        background: rgba(255, 255, 255, .96);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px)
+    }
+
+    .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-head h2 {
+        min-width: 0;
+        padding: 12px 10px 12px 0;
+        overflow-wrap: anywhere;
+        font-size: 18px;
+        line-height: 1.25
+    }
+
+    body[data-role] #modal-root .modal .modal-close,
+    .modal-close {
+        width: var(--mobile-touch-target) !important;
+        height: var(--mobile-touch-target) !important;
+        flex: 0 0 var(--mobile-touch-target);
+        border-radius: 12px
+    }
+
+    body[data-role] #modal-root .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-body,
+    .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: var(--mobile-page-y) var(--mobile-page-x) !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch
+    }
+
+    body[data-role] #modal-root .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-foot,
+    .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-foot {
+        flex: 0 0 auto;
+        padding: 12px var(--mobile-page-x) max(12px, env(safe-area-inset-bottom)) !important;
+        background: rgba(255, 255, 255, .98);
+        box-shadow: 0 -10px 28px rgba(44, 30, 21, .07)
+    }
+
+    body[data-role] #modal-root .modal input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    body[data-role] #modal-root .modal select,
+    body[data-role] #modal-root .modal textarea {
+        min-height: var(--mobile-touch-target) !important;
+        font-size: 16px !important
+    }
+
+    .modal-foot .button {
+        min-height: var(--mobile-touch-target)
+    }
+
+    body[data-role] #modal-root .modal-backdrop.modal-confirm-backdrop,
+    .modal-backdrop.modal-confirm-backdrop {
+        align-items: center;
+        padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+        overflow: auto
+    }
+
+    body[data-role] #modal-root .modal.modal-confirm,
+    .modal.modal-confirm {
+        width: min(430px, calc(100vw - 24px)) !important;
+        max-height: calc(100dvh - 24px) !important;
+        border-radius: var(--mobile-dialog-radius) !important
+    }
+
+    .modal-confirm>.modal-head {
+        min-height: 60px;
+        padding: 10px 10px 10px var(--mobile-page-x)
+    }
+
+    .modal-confirm>.modal-head h2 {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        font-size: 18px;
+        line-height: 1.3
+    }
+
+    .modal-confirm>.modal-body {
+        padding: 18px var(--mobile-page-x)
+    }
+
+    .modal-confirm>.modal-foot {
+        padding: 12px var(--mobile-page-x) max(12px, env(safe-area-inset-bottom))
+    }
+
+    .modal-confirm>.modal-foot>div {
+        margin-left: auto
+    }
+
+    .modal-backdrop.modal-keyboard-active {
+        overflow: hidden
+    }
+}
+
+@media(max-width: 359px) {
+    .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-foot {
+        align-items: stretch;
+        flex-direction: column
+    }
+
+    .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-foot>span:empty {
+        display: none
+    }
+
+    .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-foot>div {
+        width: 100%;
+        flex-direction: column-reverse
+    }
+
+    .modal:not(.modal-confirm):not(.pos-order-modal):not(.pos-checkout-modal)>.modal-foot .button {
+        width: 100%
+    }
+
+    .modal-confirm>.modal-foot {
+        align-items: stretch;
+        flex-direction: column
+    }
+
+    .modal-confirm>.modal-foot>span:empty {
+        display: none
+    }
+
+    .modal-confirm>.modal-foot>div {
+        width: 100%;
+        margin-left: 0;
+        flex-direction: column-reverse
+    }
+
+    .modal-confirm>.modal-foot .button {
+        width: 100%
+    }
+}
+
+@media(max-width: 767px) and (prefers-reduced-motion: reduce) {
+    body #modal-root .modal {
+        animation: none !important
+    }
+}
+
+@keyframes mobile-sheet-in {
+    from {
+        opacity: .75;
+        transform: translateY(18px)
+    }
+}

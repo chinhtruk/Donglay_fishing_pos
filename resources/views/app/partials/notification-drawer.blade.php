@@ -1,6 +1,6 @@
 @if(auth()->user()->isAdmin())
-    <button id="notification-drawer-scrim" class="notification-drawer-scrim hidden" type="button" aria-label="Đóng trung tâm thông báo"></button>
-    <aside id="notification-drawer" class="notification-drawer" aria-hidden="true" aria-label="Trung tâm thông báo">
+    <button id="notification-drawer-scrim" class="notification-drawer-scrim hidden" type="button" aria-label="Đóng trung tâm thông báo" aria-hidden="true" tabindex="-1"></button>
+    <aside id="notification-drawer" class="notification-drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Trung tâm thông báo" tabindex="-1">
         <header class="notification-drawer-head">
             <div>
                 <small>TRUNG TÂM</small>
@@ -21,7 +21,7 @@
                 <button type="button" data-notification-category="system" aria-pressed="false">Hệ thống</button>
             </div>
         </div>
-        <div id="notification-drawer-list" class="notification-drawer-list">
+        <div id="notification-drawer-list" class="notification-drawer-list" role="region" aria-label="Danh sách thông báo" aria-busy="false">
             <div class="notification-empty">Đang tải thông báo...</div>
         </div>
         <footer class="notification-drawer-foot">

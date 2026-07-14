@@ -1,0 +1,189 @@
+/* Phase 7 accessibility and resilient-presentation contract.
+   Imported last so shared focus, motion and safe-area rules can bridge legacy
+   selectors without changing feature geometry on tablet or desktop. */
+
+:where(a[href], button, [role="button"], [role="tab"], [role="menuitem"], [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
+}
+
+:where(input, select, textarea):focus-visible {
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 3px var(--focus-ring-soft);
+}
+
+:where(button, input, select, textarea, [role="button"]):disabled,
+:where(button, input, select, textarea, [role="button"])[aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+[aria-busy="true"] {
+    cursor: progress;
+}
+
+img {
+    max-width: 100%;
+}
+
+.product-art,
+.menu-table-image,
+.menu-image-preview,
+.menu-batch-image-preview,
+.payment-qr-preview,
+.checkout-qr-image {
+    contain: layout paint;
+}
+
+.product-art,
+.menu-table-image,
+.menu-image-preview,
+.menu-batch-image-preview,
+.payment-qr-preview,
+.checkout-qr-image {
+    background-color: #f0eee9;
+}
+
+.product-art img,
+.menu-table-image img,
+.menu-image-preview img,
+.menu-batch-image-preview img,
+.payment-qr-preview img,
+.checkout-qr-image img {
+    display: block;
+}
+
+.payment-qr-preview,
+.checkout-qr-image {
+    aspect-ratio: 1;
+}
+
+:where(.page-content, .modal, .notification-drawer, .profile-menu) :where(h1, h2, h3, h4, p, strong, small, em, b, dd, td) {
+    overflow-wrap: anywhere;
+}
+
+@media(max-width: 767px) {
+    /* Safe-area override intentionally follows feature files during the legacy
+       migration; it only changes outer chrome, not page-owned layout. */
+    .topbar,
+    .page-content {
+        padding-left: max(var(--mobile-page-x), env(safe-area-inset-left)) !important;
+        padding-right: max(var(--mobile-page-x), env(safe-area-inset-right)) !important;
+    }
+
+    body[data-role] #modal-root .modal:not(.modal-confirm)>.modal-head,
+    body[data-role] #modal-root .modal:not(.modal-confirm)>.modal-body,
+    body[data-role] #modal-root .modal:not(.modal-confirm)>.modal-foot {
+        padding-left: max(var(--mobile-page-x), env(safe-area-inset-left)) !important;
+        padding-right: max(var(--mobile-page-x), env(safe-area-inset-right)) !important;
+    }
+
+    .notification-drawer-head,
+    .notification-drawer-controls,
+    .notification-drawer-list,
+    .notification-drawer-foot {
+        padding-left: max(var(--mobile-page-x), env(safe-area-inset-left));
+        padding-right: max(var(--mobile-page-x), env(safe-area-inset-right));
+    }
+
+    :where(.button, .icon-button, button, [role="button"]):focus-visible {
+        outline-offset: 2px;
+    }
+}
+
+@media(max-width: 767px) and (max-height: 500px) {
+    :root {
+        --mobile-page-y: 12px;
+        --mobile-section-gap: 12px;
+    }
+
+    .page-head {
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    body[data-role] #modal-root .modal:not(.modal-confirm)>.modal-head {
+        min-height: calc(52px + env(safe-area-inset-top)) !important;
+    }
+
+    body[data-role] #modal-root .modal:not(.modal-confirm)>.modal-body {
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+    }
+
+    body[data-role] #modal-root .modal:not(.modal-confirm)>.modal-foot {
+        padding-top: 8px !important;
+    }
+}
+
+/* A phone rotated to landscape can expose more than 767 CSS pixels. Keep the
+   compact-height contract without forcing wide-page layouts into phone grids. */
+@media(max-width: 900px) and (max-height: 500px) {
+    .page-head h1 {
+        white-space: normal;
+    }
+
+    body[data-role] #modal-root .modal :where(button, [role="button"], [role="tab"], input, select, textarea),
+    body[data-role] #page-content :where(button, [role="button"], [role="tab"], input, select, textarea),
+    body[data-role] .topbar :where(button, [role="button"], [role="tab"], input, select, textarea),
+    body[data-role] .sidebar :where(button, [role="button"], [role="tab"]),
+    body[data-role] .notification-drawer :where(button, [role="button"], [role="tab"]) {
+        min-height: var(--mobile-touch-target) !important;
+    }
+
+    body[data-role] #modal-root .modal :where(input, select, textarea),
+    body[data-role] #page-content :where(input, select, textarea) {
+        font-size: 16px !important;
+    }
+
+    .modal-backdrop {
+        padding: 8px;
+    }
+
+    .modal {
+        max-height: calc(100dvh - 16px);
+    }
+}
+
+/* Approximation of a 390px phone at 200% browser zoom: the layout viewport is
+   roughly halved, so confirm dialogs must anchor to the top safe edge. */
+@media(max-width: 239px) {
+    body[data-role] #modal-root .modal-backdrop.modal-confirm-backdrop,
+    .modal-backdrop.modal-confirm-backdrop {
+        align-items: flex-start !important;
+        padding: 8px !important;
+    }
+
+    body[data-role] #modal-root .modal.modal-confirm,
+    .modal.modal-confirm {
+        width: calc(100vw - 16px) !important;
+        max-height: calc(100dvh - 16px) !important;
+    }
+}
+
+@media(prefers-reduced-motion: reduce) {
+    html:focus-within {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        transition-delay: 0ms !important;
+    }
+}
+
+@media(forced-colors: active) {
+    :where(a[href], button, [role="button"], [role="tab"], [tabindex]:not([tabindex="-1"])):focus-visible {
+        outline-color: Highlight;
+    }
+
+    .pill,
+    .table-state,
+    .notification-item-icon {
+        border: 1px solid currentColor;
+    }
+}

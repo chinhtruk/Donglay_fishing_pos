@@ -9,11 +9,16 @@ import { $, $$ } from '../../templates/dom.js';
 import { schedulePosOperationalReset, stopPosOperationalReset } from './operational-day.js';
 import { openCheckout } from './checkout.js';
 import {
+    announceOrderMobileAdd,
+    centerOrderCategory,
     renderEditableOrderLine,
     renderLineSectionHeader,
     renderOrderEmpty,
     renderOrderModalBody,
     renderPaidOrderLine,
+    orderMobileInitialView,
+    setupOrderModalMobileNavigation,
+    updateOrderModalMobileNavigation,
 } from './order-modal.js';
 import {
     fishingMergeTargetChipHtml,
@@ -50,6 +55,26 @@ export function fishingOrderActionMode(remainingDue) {
     return Number(remainingDue) > 0 ? 'outstanding' : 'paid';
 }
 
+export function fishingSpotCardView(spot = {}) {
+    const isPaid = Boolean(spot.order) && spot.order.status === 'paid';
+    const stateLabel = isPaid
+        ? 'Đã thanh toán'
+        : spot.state === 'available'
+            ? 'Sẵn sàng'
+            : spot.state === 'disabled'
+                ? 'Tạm nghỉ'
+                : spot.state === 'expired'
+                    ? 'Hết giờ'
+                    : 'Đang câu';
+
+    return {
+        isPaid,
+        stateClass: `${spot.state || 'available'}${isPaid ? ' paid-ready' : ''}`,
+        stateLabel,
+        idleDetail: spot.state === 'available' ? 'Chạm để mở phiên' : 'Chưa nhận khách',
+    };
+}
+
 export async function renderFishing() {
     const data = await api('/api/v1/fishing/map'); const clock = new ServerClock(data.server_time);
     schedulePosOperationalReset(data, fishingLifecycle);
@@ -57,18 +82,18 @@ export async function renderFishing() {
     const leftSpots = data.spots.slice(0, mid);
     const rightSpots = data.spots.slice(mid);
     const spotButton = (spot, side, row) => {
-        const isPaid = spot.order && spot.order.status === 'paid';
-        const stateClass = spot.state + (isPaid ? ' paid-ready' : '');
-        const stateLabel = isPaid ? 'Đã thanh toán' : (spot.state === 'available' ? 'Sẵn sàng' : spot.state === 'disabled' ? 'Tạm nghỉ' : spot.state === 'expired' ? 'Hết giờ' : 'Đang câu');
-        return `<button class="fishing-slot ${stateClass} side-${side}" style="grid-column:${side === 'left' ? 1 : 3};grid-row:${row}" data-spot="${spot.id}" ${spot.state === 'disabled' ? 'disabled' : ''}><span class="fishing-slot-number">${escapeHtml(spot.label)}</span><span><strong>${stateLabel}</strong><small ${spot.order ? `data-ends="${spot.order.fishing_session.ends_at}"` : ''}>${spot.state === 'available' ? 'Chạm để mở phiên' : spot.state === 'disabled' ? 'Chưa nhận khách' : duration(remaining(spot.order.fishing_session.ends_at, clock.now()))}</small></span><i></i></button>`;
+        const view = fishingSpotCardView(spot);
+        const detail = spot.order ? duration(remaining(spot.order.fishing_session.ends_at, clock.now())) : view.idleDetail;
+        return `<button class="fishing-slot ${view.stateClass} side-${side}" type="button" style="grid-column:${side === 'left' ? 1 : 3};grid-row:${row}" data-spot="${spot.id}" aria-label="${escapeHtml(`${spot.label}. ${view.stateLabel}. ${detail}`)}" ${spot.state === 'disabled' ? 'disabled' : ''}><span class="fishing-slot-number">${escapeHtml(spot.label)}</span><span><strong>${view.stateLabel}</strong><small ${spot.order ? `data-ends="${spot.order.fishing_session.ends_at}"` : ''}>${detail}</small></span><i></i></button>`;
     };
     $('#page-content').innerHTML = `
         <section class="fishing-map-shell">
             <div class="fishing-map-header">
                 <span class="fishing-header-tip muted">Chạm chòi để mở hoặc xem phiên câu</span>
                 <div class="fishing-header-actions">
-                    <button class="button secondary small" id="btn-merge-mode">Gộp hóa đơn</button>
-                    <button class="button primary small hidden" id="btn-merge-confirm" disabled>Xác nhận gộp (0)</button>
+                    <button class="button secondary small" id="btn-merge-mode" type="button">Gộp hóa đơn</button>
+                    <button class="button primary small hidden" id="btn-merge-confirm" type="button" disabled>Xác nhận gộp (0)</button>
+                    <span class="pos-merge-status hidden" id="fishing-merge-status" aria-live="polite">Chọn ít nhất hai chòi đang có khách</span>
                 </div>
                 ${slotLegend(true)}
             </div>
@@ -119,6 +144,8 @@ export async function renderFishing() {
 
     const mergeModeBtn = $('#btn-merge-mode');
     const mergeConfirmBtn = $('#btn-merge-confirm');
+    const mergeStatus = $('#fishing-merge-status');
+    const fishingShell = $('.fishing-map-shell');
 
     mergeModeBtn.onclick = () => {
         isMergeMode = !isMergeMode;
@@ -126,11 +153,14 @@ export async function renderFishing() {
         mergeModeBtn.classList.toggle('danger', isMergeMode);
         mergeModeBtn.textContent = isMergeMode ? 'Hủy gộp' : 'Gộp hóa đơn';
         mergeConfirmBtn.classList.toggle('hidden', !isMergeMode);
+        mergeStatus?.classList.toggle('hidden', !isMergeMode);
+        fishingShell?.classList.toggle('is-merge-mode', isMergeMode);
         mergeConfirmBtn.disabled = true;
         mergeConfirmBtn.textContent = 'Xác nhận gộp (0)';
 
         $$('[data-spot]').forEach(node => {
             node.classList.remove('selected-for-merge');
+            node.removeAttribute('aria-pressed');
         });
     };
 
@@ -141,6 +171,7 @@ export async function renderFishing() {
         let targetSpotId = defaultTarget?.id || null;
         openModal({
             title: 'Gộp nhiều chòi câu',
+            className: 'merge-target-modal',
             body: `<div class="merge-target-panel"><div class="merge-target-label">Chọn chòi chính nhận hóa đơn</div><div class="merge-target-grid">${targetButtons}</div></div><p class="merge-target-note">Toàn bộ tiền giờ câu và món nước của các chòi còn lại sẽ được gộp vào chòi chính. Các chòi nguồn sẽ kết thúc phiên câu và chuyển thành trống.</p>`,
             footer: `<span></span><div><button class="button primary" id="btn-bulk-merge-confirm" ${targetSpotId ? '' : 'disabled'}>Xác nhận</button></div>`,
             onReady(subModal, subClose) {
@@ -199,9 +230,20 @@ export async function renderFishing() {
         });
     };
 
-    const tick = () => $$('[data-ends]').forEach(node => { const ms = remaining(node.dataset.ends, clock.now()); node.textContent = ms ? duration(ms) : 'Đã hết giờ'; node.closest('.fishing-slot')?.classList.toggle('expired', ms === 0); });
+    const tick = () => $$('[data-ends]').forEach(node => {
+        const ms = remaining(node.dataset.ends, clock.now());
+        const slot = node.closest('.fishing-slot');
+        node.textContent = ms ? duration(ms) : 'Đã hết giờ';
+        slot?.classList.toggle('expired', ms === 0);
+        if (ms === 0 && !slot?.classList.contains('paid-ready')) {
+            const state = slot?.querySelector('strong');
+            if (state) state.textContent = 'Hết giờ';
+        }
+    });
     tick();
-    fishingLifecycle.interval(tick, 1000);
+    fishingLifecycle.interval(() => {
+        if (!document.hidden) tick();
+    }, 1000);
 
     $$('[data-spot]').forEach(node => node.onclick = () => {
         const spotId = Number(node.dataset.spot);
@@ -215,9 +257,11 @@ export async function renderFishing() {
             if (selectedSpotIds.has(spotId)) {
                 selectedSpotIds.delete(spotId);
                 node.classList.remove('selected-for-merge');
+                node.setAttribute('aria-pressed', 'false');
             } else {
                 selectedSpotIds.add(spotId);
                 node.classList.add('selected-for-merge');
+                node.setAttribute('aria-pressed', 'true');
             }
             mergeConfirmBtn.disabled = selectedSpotIds.size < 2;
             mergeConfirmBtn.textContent = `Xác nhận gộp (${selectedSpotIds.size})`;
@@ -279,6 +323,7 @@ async function openFishing(spot, menu, fishingConfig = {}) {
         body: modalBody,
         wide: true,
         onReady(modal, closeModal) {
+            setupOrderModalMobileNavigation(modal, { initialView: orderMobileInitialView(Boolean(currentOrder)) });
             const renderModalBill = () => {
                 const panel = modal.querySelector('#modal-order-panel');
                 const lines = cart.values();
@@ -488,6 +533,7 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                             `}
                         </div>
                     </div>`;
+                updateOrderModalMobileNavigation(modal, { itemCount: totalItemCount, unpaidCount: unpaidItemCount });
 
                 modal.querySelectorAll('[data-modal-minus]').forEach(button => button.onclick = () => changeQuantity(Number(button.dataset.modalMinus), Number(button.dataset.modalPrice), -1));
                 modal.querySelectorAll('[data-modal-plus]').forEach(button => button.onclick = () => changeQuantity(Number(button.dataset.modalPlus), Number(button.dataset.modalPrice), 1));
@@ -662,6 +708,7 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                             let targetId = defaultTarget.id;
                             openModal({
                                 title: 'Gộp hóa đơn',
+                                className: 'merge-target-modal',
                                 body: `<div class="merge-target-panel"><div class="merge-target-label">Chọn chòi mục tiêu để nhận hóa đơn</div><div class="merge-target-grid">${targetButtons}</div></div><p class="merge-target-note">Phiên câu của chòi hiện tại sẽ kết thúc. Toàn bộ tiền giờ và món nước sẽ gộp vào chòi mục tiêu.</p>`,
                                 footer: `<span></span><div><button class="button primary" id="confirm-merge-btn">Xác nhận gộp</button></div>`,
                                 onReady(subModal, subClose) {
@@ -726,6 +773,7 @@ async function openFishing(spot, menu, fishingConfig = {}) {
                         cart.add(matchedItem);
                     }
                     renderModalBill();
+                    announceOrderMobileAdd(modal, matchedItem.name, cart.values().reduce((sum, item) => sum + Number(item.quantity || 0), 0));
                 }
             });
 
@@ -741,6 +789,7 @@ async function openFishing(spot, menu, fishingConfig = {}) {
             modal.querySelectorAll('[data-modal-category]').forEach(button => button.onclick = () => {
                 activeCategory = button.dataset.modalCategory;
                 modal.querySelectorAll('[data-modal-category]').forEach(item => item.classList.toggle('active', item === button));
+                centerOrderCategory(button);
                 filterModalProducts();
             });
 

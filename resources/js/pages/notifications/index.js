@@ -15,8 +15,17 @@ let notificationDrawerOpen = false;
 let notificationDrawerPage = 1;
 let notificationDrawerMeta = null;
 let notificationDrawerItems = [];
+let notificationDrawerLastFocus = null;
 const notificationDrawerLifecycle = createLifecycleScope();
 let notificationDrawerFilters = { read: 'all', category: '' };
+const NOTIFICATION_DRAWER_FOCUSABLE_SELECTOR = [
+    'button:not([disabled])',
+    'a[href]',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+].join(', ');
 
 export function notificationToastOptions(notification) {
     const type = notification.data?.type || '';
@@ -44,7 +53,11 @@ function setNotificationBadge(count = 0) {
     const value = Number(count) || 0;
     badge.textContent = value > 99 ? '99+' : String(value);
     badge.classList.toggle('hidden', value <= 0);
-    $('#notification-bell')?.classList.toggle('has-unread', value > 0);
+    const bell = $('#notification-bell');
+    bell?.classList.toggle('has-unread', value > 0);
+    bell?.setAttribute('aria-label', value > 0
+        ? `Mở trung tâm thông báo, có ${value} thông báo chưa đọc`
+        : 'Mở trung tâm thông báo');
 }
 
 export function notificationCategory(notification) {
@@ -125,41 +138,68 @@ function renderNotificationDrawer() {
 async function loadNotificationDrawer(page = 1, options = {}) {
     const list = $('#notification-drawer-list');
     if (!list) return;
+    list.setAttribute('aria-busy', 'true');
     if (!options.append) {
         list.innerHTML = '<div class="notification-empty">Đang tải thông báo...</div>';
     }
 
-    const result = await api(notificationListPath(page));
-    setNotificationBadge(result.unread_count);
-    notificationDrawerMeta = result.meta || null;
-    notificationDrawerPage = Number(notificationDrawerMeta?.current_page || page);
-    notificationDrawerItems = options.append
-        ? [...notificationDrawerItems, ...(result.notifications || [])]
-        : (result.notifications || []);
-    renderNotificationDrawer();
+    try {
+        const result = await api(notificationListPath(page));
+        setNotificationBadge(result.unread_count);
+        notificationDrawerMeta = result.meta || null;
+        notificationDrawerPage = Number(notificationDrawerMeta?.current_page || page);
+        notificationDrawerItems = options.append
+            ? [...notificationDrawerItems, ...(result.notifications || [])]
+            : (result.notifications || []);
+        renderNotificationDrawer();
+    } finally {
+        list.setAttribute('aria-busy', 'false');
+    }
 }
 
-export function closeNotificationDrawer() {
+export function closeNotificationDrawer({ restoreFocus = true } = {}) {
     const drawer = $('#notification-drawer');
     if (!drawer) return;
+    const wasOpen = notificationDrawerOpen;
     notificationDrawerOpen = false;
     drawer.classList.remove('open');
     drawer.setAttribute('aria-hidden', 'true');
-    $('#notification-drawer-scrim')?.classList.add('hidden');
-    $('#notification-bell')?.setAttribute('aria-expanded', 'false');
+    if ('inert' in drawer) drawer.inert = true;
+    document.body.classList.remove('notification-drawer-open');
+    const scrim = $('#notification-drawer-scrim');
+    scrim?.classList.add('hidden');
+    scrim?.setAttribute('aria-hidden', 'true');
+    if (scrim) scrim.tabIndex = -1;
+    const bell = $('#notification-bell');
+    bell?.setAttribute('aria-expanded', 'false');
     notificationDrawerLifecycle.unmount();
+
+    if (restoreFocus && wasOpen) {
+        const focusTarget = notificationDrawerLastFocus?.isConnected ? notificationDrawerLastFocus : bell;
+        focusTarget?.focus?.();
+    }
+    notificationDrawerLastFocus = null;
 }
 
 async function openNotificationDrawer() {
     const drawer = $('#notification-drawer');
     if (!drawer) return;
+    notificationDrawerLifecycle.unmount();
+    notificationDrawerLastFocus = document.activeElement;
     notificationDrawerOpen = true;
     drawer.classList.add('open');
     drawer.setAttribute('aria-hidden', 'false');
-    $('#notification-drawer-scrim')?.classList.remove('hidden');
+    if ('inert' in drawer) drawer.inert = false;
+    document.body.classList.add('notification-drawer-open');
+    const scrim = $('#notification-drawer-scrim');
+    scrim?.classList.remove('hidden');
+    scrim?.setAttribute('aria-hidden', 'false');
+    if (scrim) scrim.tabIndex = 0;
     $('#notification-bell')?.setAttribute('aria-expanded', 'true');
+    document.dispatchEvent(new CustomEvent('donglay:notification-drawer-open'));
+    window.requestAnimationFrame(() => $('#notification-drawer-close')?.focus?.());
     await loadNotificationDrawer(1);
-    notificationDrawerLifecycle.unmount();
+    if (!notificationDrawerOpen) return;
     notificationDrawerLifecycle.interval(() => {
         if (notificationDrawerOpen) loadNotificationDrawer(1).catch(() => {});
     }, 8000);
@@ -244,6 +284,39 @@ export function setupNotificationDrawer({ lifecycle = null } = {}) {
         target?.addEventListener?.(eventName, callback);
         return () => target?.removeEventListener?.(eventName, callback);
     };
+    const drawerFocusables = () => {
+        const drawer = $('#notification-drawer');
+        return drawer
+            ? Array.from(drawer.querySelectorAll(NOTIFICATION_DRAWER_FOCUSABLE_SELECTOR))
+                .filter(element => !element.hidden && element.getAttribute('aria-hidden') !== 'true')
+            : [];
+    };
+    const handleKeyboard = event => {
+        if (!notificationDrawerOpen) return;
+        const drawer = $('#notification-drawer');
+        if (!drawer) return;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeNotificationDrawer();
+            return;
+        }
+        if (event.key !== 'Tab') return;
+
+        const focusables = drawerFocusables();
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !drawer.contains(document.activeElement))) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || !drawer.contains(document.activeElement))) {
+            event.preventDefault();
+            first.focus();
+        }
+    };
+
+    closeNotificationDrawer({ restoreFocus: false });
 
     listen($('#notification-bell'), 'click', event => {
         event.stopPropagation();
@@ -252,6 +325,8 @@ export function setupNotificationDrawer({ lifecycle = null } = {}) {
     });
     listen($('#notification-drawer-close'), 'click', closeNotificationDrawer);
     listen($('#notification-drawer-scrim'), 'click', closeNotificationDrawer);
+    listen(document, 'keydown', handleKeyboard);
+    listen(document, 'donglay:sidebar-open', () => closeNotificationDrawer({ restoreFocus: false }));
     listen($('#notification-read-all'), 'click', async () => {
         await api('/api/v1/notifications/read-all', { method: 'POST' });
         setNotificationBadge(0);
@@ -292,6 +367,7 @@ export function setupNotificationDrawer({ lifecycle = null } = {}) {
 
 
 export async function pollNotificationToasts() {
+    if (document.hidden) return;
     try {
         const result = await api('/api/v1/notifications?unread=1&per_page=10');
         setNotificationBadge(result.unread_count);

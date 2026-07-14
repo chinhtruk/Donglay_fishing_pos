@@ -617,7 +617,7 @@ Bộ test hiện bao phủ:
 - dashboard, notification, backup và reset dữ liệu;
 - router/lifecycle frontend, cart, modal và định dạng tiền.
 
-Baseline hiện tại: 65 PHP tests và 29 JavaScript tests.
+Baseline hiện tại: 65 PHP tests và 40 JavaScript tests.
 
 ## Triển khai production
 

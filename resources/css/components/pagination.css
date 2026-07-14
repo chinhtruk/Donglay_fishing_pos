@@ -126,3 +126,52 @@
     color: var(--line);
     font-weight: 700;
 }
+
+@media(max-width: 767px) {
+    .admin-pagination {
+        width: 100%;
+        min-width: 0;
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 12px;
+        padding: 8px 0 0
+    }
+
+    .pagination-summary {
+        width: 100%;
+        font-size: 11px;
+        text-align: left
+    }
+
+    .pagination-controls {
+        width: 100%;
+        min-width: 0;
+        justify-content: flex-end;
+        gap: 4px;
+        padding: 2px 0 4px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch
+    }
+
+    .pagination-controls::-webkit-scrollbar {
+        display: none
+    }
+
+    body[data-role] .admin-pagination .pagination-nav,
+    body[data-role] .admin-pagination .pagination-page,
+    body[data-role] .admin-pagination .pagination-gap {
+        width: var(--mobile-touch-target) !important;
+        min-width: var(--mobile-touch-target) !important;
+        height: var(--mobile-touch-target) !important;
+        flex: 0 0 var(--mobile-touch-target)
+    }
+
+    .pagination-nav,
+    .pagination-page {
+        border-radius: 12px !important;
+        touch-action: manipulation
+    }
+}

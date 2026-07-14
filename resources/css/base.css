@@ -3,7 +3,7 @@
 
 * {
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent
+    -webkit-tap-highlight-color: rgba(78, 54, 41, .14)
 }
 
 html,
@@ -14,10 +14,6 @@ body {
     color: var(--ink);
     background: var(--paper);
     font-size: 14px
-}
-
-body {
-    -webkit-touch-callout: none
 }
 
 button,
@@ -49,7 +45,7 @@ a,
 .fishing-slot,
 .menu-card,
 .pos-product-card {
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: rgba(78, 54, 41, .14);
     user-select: none
 }
 
@@ -188,6 +184,39 @@ textarea {
 
 .form-message.error {
     color: var(--rose)
+}
+
+/* Shared phone form contract. Feature files can own layout, but not shrink
+   interactive fields below a comfortable touch and input size. */
+@media(max-width: 767px) {
+    button,
+    a,
+    [role="button"] {
+        touch-action: manipulation
+    }
+
+    body[data-role] input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    body[data-role] select,
+    body[data-role] textarea,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    select,
+    textarea {
+        min-height: var(--mobile-touch-target) !important;
+        font-size: 16px !important
+    }
+
+    body[data-role] textarea,
+    textarea {
+        min-height: 112px !important
+    }
+
+    .form-grid {
+        grid-template-columns: minmax(0, 1fr)
+    }
+
+    label {
+        gap: 7px
+    }
 }
 
 /* ════════════════════════════════════════
@@ -420,7 +449,7 @@ body.login-page {
 }
 
 .lp-field input::placeholder {
-    color: #a89f97
+    color: var(--subtle-ink)
 }
 
 /* Field header (label + forgot link on same row) */
@@ -461,7 +490,7 @@ body.login-page {
     border: 0;
     background: none;
     cursor: pointer;
-    color: #9aa09a;
+    color: var(--subtle-ink);
     padding: 4px;
     display: flex;
     align-items: center;
@@ -497,7 +526,7 @@ body.login-page {
     left: 11px;
     font-size: 10px;
     font-weight: 600;
-    color: #9aa09a;
+    color: var(--subtle-ink);
     background: #ffffff;
     padding: 0 4px;
     line-height: 1;
@@ -525,14 +554,14 @@ body.login-page {
     cursor: pointer;
     font-size: 13px;
     font-weight: 700;
-    color: #f5a623;
+    color: #8b5500;
     padding: 2px 0;
     flex-shrink: 0;
     transition: .15s
 }
 
 .lp-amber-link:hover {
-    color: #d4880e
+    color: #704400
 }
 
 /* Primary CTA button – full-width pill, amber */
@@ -589,7 +618,7 @@ body.login-page {
 
 .lp-help {
     font-size: 12px;
-    color: #9aa09a;
+    color: var(--subtle-ink);
     text-align: center;
     margin: 0;
     line-height: 1.6

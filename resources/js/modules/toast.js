@@ -23,6 +23,7 @@ export function toast(message, type = 'success', options = {}) {
 
     const node = cloneTemplate('tpl-toast') || document.createElement('div');
     node.className = `toast ${type}${options.sticky ? ' is-sticky' : ''}`;
+    node.setAttribute('role', ['error', 'alert'].includes(type) ? 'alert' : 'status');
     if (toastId) node.dataset.toastId = String(toastId);
     if (node.querySelector('[data-toast-icon]')) {
         const title = $('[data-toast-title]', node);

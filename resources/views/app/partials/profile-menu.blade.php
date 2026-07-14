@@ -1,5 +1,5 @@
 <div class="profile-menu-wrap">
-    <button id="profile-menu-button" class="profile" type="button" aria-haspopup="menu" aria-expanded="false">
+    <button id="profile-menu-button" class="profile" type="button" aria-haspopup="menu" aria-controls="profile-menu" aria-expanded="false" aria-label="Mở menu tài khoản của {{ auth()->user()->name }}">
         <span class="avatar">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
         <span class="profile-copy"><strong>{{ auth()->user()->name }}</strong><small>{{ auth()->user()->isAdmin() ? 'Quản trị viên' : 'Nhân viên' }}</small></span>
         <svg class="profile-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>

@@ -13,6 +13,7 @@ export function setupProfileMenu({ api, confirmModal, closeNotificationDrawer, l
     const closeProfileMenu = () => {
         menu?.classList.add('hidden');
         button?.setAttribute('aria-expanded', 'false');
+        if (button) button.setAttribute('aria-label', `Mở menu tài khoản của ${document.body.dataset.user || 'bạn'}`);
     };
 
     const toggleProfileMenu = event => {
@@ -21,6 +22,7 @@ export function setupProfileMenu({ api, confirmModal, closeNotificationDrawer, l
         const opening = menu.classList.contains('hidden');
         menu.classList.toggle('hidden', !opening);
         button.setAttribute('aria-expanded', String(opening));
+        button.setAttribute('aria-label', `${opening ? 'Đóng' : 'Mở'} menu tài khoản của ${document.body.dataset.user || 'bạn'}`);
     };
 
     const logout = async () => {
@@ -47,6 +49,7 @@ export function setupProfileMenu({ api, confirmModal, closeNotificationDrawer, l
 
     listen(button, 'click', toggleProfileMenu);
     listen(logoutButton, 'click', logout);
+    listen(document, 'donglay:sidebar-open', closeProfileMenu);
     listen(document, 'click', closeFromOutside);
     listen(document, 'keydown', closeFromKeyboard);
 

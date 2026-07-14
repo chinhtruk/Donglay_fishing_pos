@@ -1,4 +1,5 @@
 import { api } from '../../modules/api.js';
+import { runButtonAction } from '../../modules/action.js';
 import { escapeHtml } from '../../modules/format.js';
 import { confirmModal } from '../../modules/modal.js';
 import { toast } from '../../modules/toast.js';
@@ -104,20 +105,16 @@ export async function renderDataAdmin() {
 }
 
 async function runDataAction(button, path, loadingText, body = undefined) {
-    const originalHtml = button.innerHTML;
-    button.disabled = true;
-    button.textContent = loadingText;
-    try {
-        const result = await api(path, { method: 'POST', ...(body ? { body } : {}) });
-        toast(result.message);
-        return true;
-    } catch (error) {
-        toast(error.message, 'error');
-        return false;
-    } finally {
-        button.disabled = false;
-        button.innerHTML = originalHtml;
-    }
+    return runButtonAction(button, async () => {
+        try {
+            const result = await api(path, { method: 'POST', ...(body ? { body } : {}) });
+            toast(result.message);
+            return true;
+        } catch (error) {
+            toast(error.message, 'error');
+            return false;
+        }
+    }, { busyText: loadingText });
 }
 
 export const dataPage = definePageModule({

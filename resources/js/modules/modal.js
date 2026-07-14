@@ -1,5 +1,20 @@
+import { keyboardViewportIsOpen, keyboardViewportOffset } from './keyboard.js';
+
+const MODAL_FOCUSABLE_SELECTOR = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[contenteditable="true"]',
+    '[tabindex]:not([tabindex="-1"])'
+].join(', ');
+
+let modalTitleSequence = 0;
+
 export function openModal({ title, body, footer = '', wide = false, className = '', onReady, onClose }) {
     const root = document.querySelector('#modal-root');
+    const previouslyFocused = document.activeElement;
     document.body.classList.add('modal-open');
     const shell = cloneTemplate('tpl-modal-shell');
     if (shell) {
@@ -8,34 +23,71 @@ export function openModal({ title, body, footer = '', wide = false, className = 
         const modalBody = root.querySelector('[data-modal-body]');
         const modalFooter = root.querySelector('[data-modal-footer]');
         modalTitle.innerHTML = title;
-        root.querySelector('.modal').setAttribute('aria-label', modalTitle.textContent || title);
+        modalTitle.id = `modal-title-${++modalTitleSequence}`;
+        root.querySelector('.modal').setAttribute('aria-labelledby', modalTitle.id);
         modalBody.innerHTML = body;
         if (footer) modalFooter.innerHTML = footer;
         else modalFooter.remove();
     } else {
-        root.innerHTML = `<div class="modal-backdrop"><section class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${title}"><header class="modal-head"><h2>${title}</h2><button class="modal-close" aria-label="Đóng"><svg class="modal-close-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></header><div class="modal-body">${body}</div>${footer ? `<footer class="modal-foot">${footer}</footer>` : ''}</section></div>`;
+        const titleId = `modal-title-${++modalTitleSequence}`;
+        root.innerHTML = `<div class="modal-backdrop"><section class="modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="${titleId}"><header class="modal-head"><h2 id="${titleId}">${title}</h2><button class="modal-close" type="button" aria-label="Đóng"><svg class="modal-close-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></header><div class="modal-body">${body}</div>${footer ? `<footer class="modal-foot">${footer}</footer>` : ''}</section></div>`;
     }
     const modal = root.querySelector('.modal');
     const backdrop = root.querySelector('.modal-backdrop');
+    const closeButton = root.querySelector('.modal-close');
+    modal.tabIndex = -1;
+    closeButton.type = 'button';
     modal.classList.toggle('wide', Boolean(wide));
     if (modal.querySelector('.modal-pos-layout')) modal.classList.add('pos-order-modal');
     if (className) modal.classList.add(...className.split(/\s+/).filter(Boolean));
+    backdrop.classList.toggle('modal-confirm-backdrop', modal.classList.contains('modal-confirm'));
     const removeKeyboardGuard = setupModalKeyboardGuard(backdrop);
     let closed = false;
+    const focusableElements = () => Array.from(modal.querySelectorAll(MODAL_FOCUSABLE_SELECTOR))
+        .filter(element => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
     const close = () => {
         if (closed) return;
         closed = true;
         removeKeyboardGuard();
         root.innerHTML = '';
         document.body.classList.remove('modal-open');
-        document.removeEventListener('keydown', escape);
+        document.removeEventListener('keydown', handleKeydown);
+        if (previouslyFocused?.isConnected) previouslyFocused.focus?.();
         onClose?.();
     };
-    const escape = event => { if (event.key === 'Escape') close(); };
-    root.querySelector('.modal-close').addEventListener('click', close);
+    function handleKeydown(event) {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            close();
+            return;
+        }
+        if (event.key !== 'Tab') return;
+
+        const focusables = focusableElements();
+        if (!focusables.length) {
+            event.preventDefault();
+            modal.focus();
+            return;
+        }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+    closeButton.addEventListener('click', close);
     backdrop.addEventListener('click', event => { if (event.target === event.currentTarget) close(); });
-    document.addEventListener('keydown', escape);
+    document.addEventListener('keydown', handleKeydown);
     onReady?.(modal, close);
+    window.requestAnimationFrame(() => {
+        if (closed || modal.contains(document.activeElement)) return;
+        const autofocusTarget = modal.querySelector('[autofocus]');
+        (autofocusTarget || closeButton || modal).focus();
+    });
     return close;
 }
 
@@ -56,6 +108,7 @@ export function confirmModal(title, message, confirmText = 'Xác nhận') {
             title,
             body,
             footer,
+            className: 'modal-confirm',
             onClose() {
                 settle(false);
             },
@@ -131,11 +184,11 @@ function setupModalKeyboardGuard(backdrop) {
 
     const updateKeyboardOffset = () => {
         const keyboardOffset = viewport
-            ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+            ? keyboardViewportOffset(window.innerHeight, viewport.height, viewport.offsetTop)
             : 0;
 
         backdrop.style.setProperty('--modal-keyboard-offset', `${Math.round(keyboardOffset)}px`);
-        backdrop.classList.toggle('modal-keyboard-active', keyboardOffset > 80 && Boolean(focusedModalField()));
+        backdrop.classList.toggle('modal-keyboard-active', keyboardViewportIsOpen(keyboardOffset) && Boolean(focusedModalField()));
     };
 
     const scrollFocusedFieldIntoView = () => {
@@ -151,7 +204,8 @@ function setupModalKeyboardGuard(backdrop) {
         const safeBottom = visibleBottom - 28;
 
         if (rect.top < safeTop || rect.bottom > safeBottom) {
-            field.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+            const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+            field.scrollIntoView({ block: 'center', inline: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
         }
     };
 

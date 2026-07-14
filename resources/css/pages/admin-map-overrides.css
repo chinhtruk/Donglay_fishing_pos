@@ -232,3 +232,337 @@ body[data-role="admin"] .admin-map-pos-preview .pos-table-card.disabled,
 body[data-role="admin"] .admin-fishing-preview .fishing-slot.disabled {
     background: #f3f0ec !important;
 }
+
+@media(max-width: 767px) {
+    body[data-role="admin"] .owner-map-page .page-head {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        margin-bottom: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .page-head>div:not(.head-actions) {
+        width: 100%;
+        min-width: 0;
+        text-align: left;
+    }
+
+    body[data-role="admin"] .owner-map-page .head-actions,
+    body[data-role="admin"] .owner-map-page .admin-map-head-actions {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .admin-map-head-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    body[data-role="admin"] .owner-map-page .admin-map-toolbar {
+        position: static !important;
+        top: auto !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100% !important;
+        height: auto !important;
+        min-height: 52px !important;
+        margin: 0 !important;
+        padding: 4px !important;
+        overflow: hidden !important;
+        background: #f2e9df !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .admin-map-tab {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: var(--mobile-touch-target) !important;
+        min-height: var(--mobile-touch-target) !important;
+        font-size: 12px !important;
+        box-shadow: none !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .admin-map-tab.active {
+        box-shadow: none !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .admin-add-resource-button {
+        width: 100% !important;
+        min-height: var(--mobile-touch-target) !important;
+        justify-content: center;
+    }
+
+    body[data-role="admin"] .owner-map-page .admin-map-pos-preview,
+    body[data-role="admin"] .owner-map-page .admin-fishing-preview {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 12px !important;
+        overflow: hidden !important;
+        border-radius: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .admin-map-pos-preview .pos-section-head,
+    body[data-role="admin"] .owner-map-page .admin-fishing-note {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-bottom: 10px !important;
+        font-size: 11px !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .legend {
+        width: 100%;
+        min-height: var(--mobile-touch-target);
+        gap: 12px !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+        font-size: 10px !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body[data-role="admin"] .owner-map-page .legend::-webkit-scrollbar {
+        display: none;
+    }
+
+    body[data-role="admin"] .owner-map-page .legend span {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    body[data-role="admin"] .owner-map-page .pos-table-grid {
+        width: 100%;
+        min-width: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .pos-table-card {
+        min-width: 0;
+        min-height: 96px !important;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        align-content: start;
+        gap: 6px;
+        padding: 10px !important;
+        border-radius: 14px !important;
+        text-align: left;
+        touch-action: manipulation;
+    }
+
+    body[data-role="admin"] .owner-map-page .pos-table-card .table-state {
+        position: static !important;
+        width: max-content;
+        max-width: 100%;
+        justify-self: start;
+        padding: 4px 7px !important;
+        overflow: hidden;
+        font-size: 9px !important;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    body[data-role="admin"] .owner-map-page .pos-table-card strong {
+        overflow-wrap: anywhere;
+        font-size: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .pos-table-card small {
+        align-self: end;
+        overflow-wrap: anywhere;
+        font-size: 10px !important;
+        white-space: normal !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .fishing-lake-plan {
+        width: 100%;
+        min-width: 0;
+        height: auto !important;
+        min-height: 0 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) !important;
+        grid-template-rows: repeat(10, minmax(80px, auto)) !important;
+        column-gap: 6px !important;
+        row-gap: 8px !important;
+        padding: 2px 0 !important;
+        overflow: visible !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .lake-water {
+        grid-column: 2 !important;
+        grid-row: 1 / 11 !important;
+        min-width: 0;
+        padding: 3px !important;
+        border-width: 1px !important;
+        border-radius: 999px !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .lake-title small,
+    body[data-role="admin"] .owner-map-page .admin-fish {
+        display: none !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .lake-title strong {
+        font-size: 8px !important;
+        letter-spacing: .05em !important;
+        writing-mode: vertical-rl;
+    }
+
+    body[data-role="admin"] .owner-map-page .fishing-slot,
+    body[data-role="admin"] .owner-map-page .fishing-slot.side-right {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 80px !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: auto auto !important;
+        align-content: start !important;
+        gap: 5px !important;
+        margin: 0 !important;
+        padding: 8px !important;
+        border-radius: 12px !important;
+        text-align: left !important;
+        touch-action: manipulation;
+    }
+
+    body[data-role="admin"] .owner-map-page .fishing-slot-number {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        font-size: 10px !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .fishing-slot.side-right .fishing-slot-number {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .fishing-slot strong,
+    body[data-role="admin"] .owner-map-page .fishing-slot small {
+        display: block;
+        overflow-wrap: anywhere;
+        white-space: normal !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .fishing-slot>span:nth-child(2),
+    body[data-role="admin"] .owner-map-page .fishing-slot.side-right>span:nth-child(2) {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        width: 100%;
+        min-width: 0;
+        text-align: left !important;
+    }
+
+    body[data-role="admin"] .owner-map-page .fishing-slot>i {
+        display: none !important;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-form~* {
+        min-width: 0;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-modal>.modal-body {
+        padding-top: 14px !important;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-form {
+        gap: 14px !important;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-summary {
+        grid-template-columns: 44px minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding-bottom: 12px !important;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-summary em {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        align-self: center;
+        justify-self: end;
+        max-width: 96px;
+        text-align: center;
+        white-space: normal;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-field input {
+        min-height: var(--mobile-touch-target) !important;
+        font-size: 16px !important;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-toggle-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 12px !important;
+        min-height: 0 !important;
+        padding: 12px !important;
+        border: 1px solid var(--pos-line) !important;
+        border-radius: 12px !important;
+        background: #fffefa !important;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-toggle-row>span {
+        min-width: 0;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-toggle-row>i {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+    }
+
+    body[data-role="admin"] #modal-root .modal-foot .admin-resource-actions {
+        display: grid !important;
+        grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr) !important;
+        grid-column: 1 / -1;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-modal .modal-foot {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-modal .modal-foot>span {
+        grid-column: 1;
+        font-size: 10px !important;
+        line-height: 1.4;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-modal .modal-foot>div {
+        grid-column: 1;
+        width: 100% !important;
+    }
+
+    body[data-role="admin"] #modal-root .admin-resource-modal .modal-foot>div>.button {
+        width: 100% !important;
+        min-height: var(--mobile-touch-target) !important;
+    }
+
+    body[data-role="admin"] #modal-root .modal-foot .admin-resource-action {
+        width: 100% !important;
+        height: auto !important;
+        min-height: var(--mobile-touch-target) !important;
+    }
+}
+
+@media(max-width: 359px) {
+    body[data-role="admin"] .owner-map-page .pos-table-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

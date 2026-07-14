@@ -102,7 +102,7 @@ function serializeForm(form) {
 
 function paymentQrPreview(method = null) {
     return method?.qr_image_url
-        ? `<img src="${escapeHtml(method.qr_image_url)}" alt="Mã QR thanh toán">`
+        ? `<img src="${escapeHtml(method.qr_image_url)}" alt="Mã QR thanh toán" decoding="async">`
         : qrPlaceholder;
 }
 

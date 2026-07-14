@@ -39,7 +39,9 @@ function ordersSignature(result) {
 }
 
 export function shouldPollOrders() {
-    return ['admin', 'employee'].includes(document.body.dataset.role) && location.pathname.endsWith('/orders');
+    return !document.hidden
+        && ['admin', 'employee'].includes(document.body.dataset.role)
+        && location.pathname.endsWith('/orders');
 }
 
 function stopOrderPolling() {
@@ -123,6 +125,7 @@ function bindAdminOrderFilters() {
         adminOrderFilters = { ...adminOrderFilters, [field]: value };
         adminOrdersPage = 1;
         orderPollSignature = '';
+        centerOrderFilter(button);
         renderOrders(1);
     });
 
@@ -159,6 +162,12 @@ function bindAdminOrderFilters() {
         adminOrderSearchTimer = null;
         applySearch(true);
     });
+}
+
+function centerOrderFilter(button) {
+    if (!button || typeof window === 'undefined' || !window.matchMedia?.('(max-width: 767px)').matches) return;
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    button.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
 }
 
 function ordersApiPath(page, admin) {
@@ -226,12 +235,12 @@ export async function renderOrders(page = null, options = {}) {
     startOrderPolling();
 }
 
-function orderTable(orders, admin) {
+export function orderTable(orders, admin) {
     const pinIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>';
     if (!admin) {
-        return `<div class="data-table-wrap"><table class="data-table staff-order-table"><thead><tr><th>MÃ ĐƠN</th><th>MÔ HÌNH</th><th>VỊ TRÍ</th><th>THỜI GIAN</th><th>TRẠNG THÁI</th></tr></thead><tbody>${orders.length ? orders.map(order => `<tr class="order-row-clickable" data-view-order="${order.id}" tabindex="0" role="button" aria-label="Mở chi tiết đơn ${escapeHtml(order.order_number)}"><td data-label="Mã đơn"><strong>${order.order_number}</strong></td><td data-label="Mô hình"><span class="order-card-meta">${orderServiceIcon(order.service_type)}${order.service_type === 'coffee' ? 'Cà phê' : 'Câu cá'}</span></td><td data-label="Vị trí"><span class="order-card-meta">${pinIcon}${escapeHtml(order.resource?.label || 'Chưa xác định')}</span></td><td data-label="Thời gian">${dateTime(employeeOrderDisplayTime(order))}</td><td data-label="Trạng thái"><span class="pill ${statusClass(order.status)}">${statusLabel(order.status)}</span></td></tr>`).join('') : '<tr class="order-table-empty"><td colspan="5"><div class="empty-state">Chưa có đơn nào trong bộ lọc này.</div></td></tr>'}</tbody></table></div>`;
+        return `<div class="data-table-wrap is-mobile-card-list order-card-list"><table class="data-table staff-order-table"><thead><tr><th>MÃ ĐƠN</th><th>MÔ HÌNH</th><th>VỊ TRÍ</th><th>THỜI GIAN</th><th>TRẠNG THÁI</th></tr></thead><tbody>${orders.length ? orders.map(order => `<tr class="order-row-clickable" data-view-order="${order.id}" tabindex="0" role="button" aria-label="Mở chi tiết đơn ${escapeHtml(order.order_number)}"><td class="order-cell-number" data-label="Mã đơn"><strong>${escapeHtml(order.order_number)}</strong><span class="order-card-open" aria-hidden="true">Xem chi tiết</span></td><td class="order-cell-service" data-label="Mô hình"><span class="order-card-meta">${orderServiceIcon(order.service_type)}${order.service_type === 'coffee' ? 'Cà phê' : 'Câu cá'}</span></td><td class="order-cell-resource" data-label="Vị trí"><span class="order-card-meta">${pinIcon}${escapeHtml(order.resource?.label || 'Chưa xác định')}</span></td><td class="order-cell-time" data-label="Thời gian">${dateTime(employeeOrderDisplayTime(order))}</td><td class="order-cell-status" data-label="Trạng thái"><span class="pill ${statusClass(order.status)}">${statusLabel(order.status)}</span></td></tr>`).join('') : '<tr class="order-table-empty"><td colspan="5"><div class="empty-state">Chưa có đơn nào trong bộ lọc này.</div></td></tr>'}</tbody></table></div>`;
     }
-    return `<div class="data-table-wrap"><table class="data-table admin-order-table"><thead><tr><th>MÃ ĐƠN</th><th>MÔ HÌNH</th><th>VỊ TRÍ</th><th>THỜI GIAN</th><th>TỔNG</th><th>TRẠNG THÁI</th></tr></thead><tbody>${orders.length ? orders.map(order => `<tr class="order-row-clickable" data-view-order="${order.id}" tabindex="0" role="button" aria-label="Mở chi tiết đơn ${escapeHtml(order.order_number)}"><td data-label="Mã đơn"><strong>${order.order_number}</strong></td><td data-label="Mô hình"><span class="order-card-meta">${orderServiceIcon(order.service_type)}${order.service_type === 'coffee' ? 'Cà phê' : 'Câu cá'}</span></td><td data-label="Vị trí"><span class="order-card-meta">${pinIcon}${escapeHtml(order.resource?.label || 'Chưa xác định')}</span></td><td data-label="Thời gian">${dateTime(order.opened_at)}</td><td data-label="Tổng"><strong>${money(order.total)}</strong></td><td data-label="Trạng thái"><span class="pill ${statusClass(order.status)}">${statusLabel(order.status)}</span></td></tr>`).join('') : '<tr class="order-table-empty"><td colspan="6"><div class="empty-state">Chưa có đơn nào trong bộ lọc này.</div></td></tr>'}</tbody></table></div>`;
+    return `<div class="data-table-wrap is-mobile-card-list order-card-list"><table class="data-table admin-order-table"><thead><tr><th>MÃ ĐƠN</th><th>MÔ HÌNH</th><th>VỊ TRÍ</th><th>THỜI GIAN</th><th>TỔNG</th><th>TRẠNG THÁI</th></tr></thead><tbody>${orders.length ? orders.map(order => `<tr class="order-row-clickable" data-view-order="${order.id}" tabindex="0" role="button" aria-label="Mở chi tiết đơn ${escapeHtml(order.order_number)}"><td class="order-cell-number" data-label="Mã đơn"><strong>${escapeHtml(order.order_number)}</strong><span class="order-card-open" aria-hidden="true">Xem chi tiết</span></td><td class="order-cell-service" data-label="Mô hình"><span class="order-card-meta">${orderServiceIcon(order.service_type)}${order.service_type === 'coffee' ? 'Cà phê' : 'Câu cá'}</span></td><td class="order-cell-resource" data-label="Vị trí"><span class="order-card-meta">${pinIcon}${escapeHtml(order.resource?.label || 'Chưa xác định')}</span></td><td class="order-cell-time" data-label="Thời gian">${dateTime(order.opened_at)}</td><td class="order-cell-total" data-label="Tổng"><strong>${money(order.total)}</strong></td><td class="order-cell-status" data-label="Trạng thái"><span class="pill ${statusClass(order.status)}">${statusLabel(order.status)}</span></td></tr>`).join('') : '<tr class="order-table-empty"><td colspan="6"><div class="empty-state">Chưa có đơn nào trong bộ lọc này.</div></td></tr>'}</tbody></table></div>`;
 }
 
 export function employeeOrderDisplayTime(order = {}) {
@@ -304,92 +313,142 @@ export function renderOrderPaymentRow(payment) {
     </div>`;
 }
 
+function receiptServiceIcon(isCoffee) {
+    return isCoffee
+        ? '<svg viewBox="0 0 24 24"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"></path><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17"></path><path d="M3 22h16M8 2v3M12 2v3"></path></svg>'
+        : '<svg viewBox="0 0 24 24"><path d="M4 12c2.4-3.2 5.2-4.8 8.4-4.8 3.3 0 6.1 1.6 8.6 4.8-2.5 3.2-5.3 4.8-8.6 4.8C9.2 16.8 6.4 15.2 4 12Z"></path><path d="m4 12-3-3v6l3-3Z"></path><circle cx="16.5" cy="11" r=".8" fill="currentColor" stroke="none"></circle></svg>';
+}
+
+export function orderItemPaymentParts(item = {}) {
+    const quantity = Math.max(0, Number(item.quantity) || 0);
+    const paid = Math.min(quantity, Math.max(0, Number(item.paid_quantity) || 0));
+    const unpaid = item.unpaid_quantity == null
+        ? Math.max(0, quantity - paid)
+        : Math.min(quantity, Math.max(0, Number(item.unpaid_quantity) || 0));
+    return { quantity, paid, unpaid };
+}
+
+function receiptHeader(order, isCoffee, remainingAmount) {
+    const totalQuantity = (Array.isArray(order.items) ? order.items : []).reduce((sum, item) => sum + orderItemPaymentParts(item).quantity, 0);
+    return `<header class="pos-receipt-head">
+        <span class="pos-receipt-icon">${receiptServiceIcon(isCoffee)}</span>
+        <div class="pos-receipt-title"><small>${isCoffee ? 'CÀ PHÊ' : 'CÂU CÁ'} · ${escapeHtml(order.resource?.label || 'Chưa xác định')}</small><strong>${escapeHtml(order.order_number)}</strong></div>
+        <span class="pill ${statusClass(order.status)}">${statusLabel(order.status)}</span>
+    </header>
+    <div class="pos-receipt-meta">
+        <span><small>Mở lúc</small><strong>${dateTime(order.opened_at)}</strong></span>
+        <span><small>Số lượng</small><strong>${number(totalQuantity)} món</strong></span>
+        <span><small>Thanh toán</small><strong>${remainingAmount > 0 ? `Còn ${money(remainingAmount)}` : 'Đã hoàn tất'}</strong></span>
+    </div>`;
+}
+
+function adminReceiptSection(items, paymentState) {
+    if (!items.length) return '';
+    const isPaid = paymentState === 'paid';
+    const quantityKey = isPaid ? 'paid' : 'unpaid';
+    const quantity = items.reduce((sum, item) => sum + orderItemPaymentParts(item)[quantityKey], 0);
+
+    return `<section class="pos-receipt-section ${isPaid ? 'pos-receipt-paid' : 'pos-receipt-unpaid'}">
+        <header><strong>${isPaid ? 'Món đã thanh toán' : 'Món chưa thanh toán'}</strong><span>${number(quantity)} món</span></header>
+        <div class="pos-receipt-lines">
+            ${items.map(item => {
+                const itemQuantity = orderItemPaymentParts(item)[quantityKey];
+                return `<div class="pos-receipt-line ${isPaid ? 'is-paid' : 'is-unpaid'}">
+                    <span class="receipt-quantity">${number(itemQuantity)}</span>
+                    <div>
+                        <strong>${escapeHtml(item.name)}</strong>
+                        <small>${money(item.unit_price)} / món · <span class="receipt-payment-state">${isPaid ? 'Đã trả' : 'Chưa trả'}</span></small>
+                        ${item.note ? `<div class="order-item-note">* ${escapeHtml(item.note)}</div>` : ''}
+                    </div>
+                    <strong>${money(Number(item.unit_price) * itemQuantity)}</strong>
+                </div>`;
+            }).join('')}
+        </div>
+    </section>`;
+}
+
+function staffReceiptSection(items, paymentState) {
+    if (!items.length) return '';
+    const isPaid = paymentState === 'paid';
+    const quantityKey = isPaid ? 'paid' : 'unpaid';
+    const itemParts = items.map(item => ({ ...item, display_quantity: orderItemPaymentParts(item)[quantityKey] }));
+    const groups = groupOrderItemsByTime(itemParts);
+    const quantity = itemParts.reduce((sum, item) => sum + item.display_quantity, 0);
+
+    return `<section class="pos-receipt-section ${isPaid ? 'pos-receipt-paid' : 'pos-receipt-unpaid'}">
+        <header><strong>${isPaid ? 'Món đã thanh toán' : 'Món cần xử lý'}</strong><span>${number(quantity)} món</span></header>
+        <div class="pos-receipt-lines">
+            ${groups.map((group, index) => `<section class="staff-order-time-group">
+                <header class="staff-order-time-head">
+                    <span>Lần ${number(index + 1)}</span>
+                    <strong>${escapeHtml(`Gọi lúc ${orderTimeLabel(group.ordered_at)}`)}</strong>
+                </header>
+                <div class="staff-order-time-lines">
+                    ${group.items.map(item => `<div class="pos-receipt-line ${isPaid ? 'is-paid' : 'is-unpaid'}">
+                        <span class="receipt-quantity staff-item-quantity" aria-label="Số lượng ${number(item.display_quantity)}">x${number(item.display_quantity)}</span>
+                        <div>
+                            <strong>${escapeHtml(item.name)}</strong>
+                            ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ''}
+                            <span class="receipt-payment-state">${isPaid ? '✓ Đã thanh toán' : '! Chưa thanh toán'}</span>
+                        </div>
+                    </div>`).join('')}
+                </div>
+            </section>`).join('')}
+        </div>
+    </section>`;
+}
+
+export function renderOrderReceipt(order, { admin = false } = {}) {
+    const isCoffee = order.service_type === 'coffee';
+    const items = Array.isArray(order.items) ? order.items : [];
+    const payments = Array.isArray(order.payments) ? order.payments : [];
+    const completedPayments = payments.filter(payment => payment.status === 'completed');
+    const paidAmount = completedPayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+    const remainingAmount = Math.max(0, Number(order.total) - paidAmount);
+    const unpaidItems = items.filter(item => orderItemPaymentParts(item).unpaid > 0);
+    const paidItems = items.filter(item => orderItemPaymentParts(item).paid > 0);
+    const sections = admin
+        ? adminReceiptSection(unpaidItems, 'unpaid') + adminReceiptSection(paidItems, 'paid')
+        : staffReceiptSection(unpaidItems, 'unpaid') + staffReceiptSection(paidItems, 'paid');
+
+    return `<article class="pos-receipt ${admin ? '' : 'staff-receipt '}${isCoffee ? 'receipt-coffee' : 'receipt-fishing'}">
+        ${receiptHeader(order, isCoffee, remainingAmount)}
+        ${sections || '<div class="pos-receipt-empty">Đơn chưa có món.</div>'}
+        ${admin ? `<section class="pos-receipt-totals">
+            <div><span>Tạm tính</span><strong>${money(order.subtotal ?? order.total)}</strong></div>
+            <div><span>Đã thanh toán</span><strong>${money(paidAmount)}</strong></div>
+            ${remainingAmount > 0 ? `<div class="remaining"><span>Còn lại</span><strong>${money(remainingAmount)}</strong></div>` : ''}
+            <div class="receipt-grand-total"><span>Tổng cộng</span><strong>${money(order.total)}</strong></div>
+        </section>
+        <section class="pos-receipt-payments">
+            <header><strong>Lịch sử thanh toán</strong><button type="button" class="receipt-payment-toggle" data-payment-history-toggle aria-expanded="true"><span>${number(payments.length)} giao dịch</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg></button></header>
+            <div class="pos-receipt-payment-list" data-payment-history-list>
+                ${payments.length ? payments.map(renderOrderPaymentRow).join('') : '<div class="pos-receipt-empty">Chưa phát sinh giao dịch thanh toán.</div>'}
+            </div>
+        </section>` : ''}
+    </article>`;
+}
+
+function bindReceiptPaymentHistory(modal) {
+    const toggle = modal.querySelector('[data-payment-history-toggle]');
+    const list = modal.querySelector('[data-payment-history-list]');
+    if (!toggle || !list) return;
+    toggle.onclick = () => {
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        list.hidden = expanded;
+    };
+}
+
 function bindOrderActions() {
     $$('[data-view-order]').forEach(trigger => {
         const openOrder = async () => {
             const { order } = await api(`/api/v1/orders/${trigger.dataset.viewOrder}`);
             const isAdmin = document.body.dataset.role === 'admin';
-            const isCoffee = order.service_type === 'coffee';
-            const serviceIcon = isCoffee
-                ? '<svg viewBox="0 0 24 24"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"></path><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17"></path><path d="M3 22h16M8 2v3M12 2v3"></path></svg>'
-                : '<svg viewBox="0 0 24 24"><path d="M4 12c2.4-3.2 5.2-4.8 8.4-4.8 3.3 0 6.1 1.6 8.6 4.8-2.5 3.2-5.3 4.8-8.6 4.8C9.2 16.8 6.4 15.2 4 12Z"></path><path d="m4 12-3-3v6l3-3Z"></path><circle cx="16.5" cy="11" r=".8" fill="currentColor" stroke="none"></circle></svg>';
-            const completedPayments = order.payments.filter(payment => payment.status === 'completed');
-            const paidAmount = completedPayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
-            const remainingAmount = Math.max(0, Number(order.total) - paidAmount);
-            const staffItemGroups = groupOrderItemsByTime(order.items);
-            const receiptBody = `
-            <article class="pos-receipt ${isCoffee ? 'receipt-coffee' : 'receipt-fishing'}">
-                <header class="pos-receipt-head">
-                    <span class="pos-receipt-icon">${serviceIcon}</span>
-                    <div class="pos-receipt-title"><small>${isCoffee ? 'CÀ PHÊ' : 'CÂU CÁ'} · ${escapeHtml(order.resource?.label || 'Chưa xác định')}</small><strong>${escapeHtml(order.order_number)}</strong></div>
-                    <span class="pill ${statusClass(order.status)}">${statusLabel(order.status)}</span>
-                </header>
-                <div class="pos-receipt-meta">
-                    <span><small>Mở lúc</small><strong>${dateTime(order.opened_at)}</strong></span>
-                    <span><small>Số lượng</small><strong>${number(order.items.reduce((sum, item) => sum + Number(item.quantity), 0))} món</strong></span>
-                    <span><small>Thanh toán</small><strong>${remainingAmount > 0 ? `Còn ${money(remainingAmount)}` : 'Đã hoàn tất'}</strong></span>
-                </div>
-                <section class="pos-receipt-section">
-                    <header><strong>Món trong đơn</strong><span>${number(order.items.length)} dòng</span></header>
-                    <div class="pos-receipt-lines">
-                        ${order.items.map(item => `<div class="pos-receipt-line">
-                            <span class="receipt-quantity">${number(item.quantity)}</span>
-                            <div>
-                                <strong>${escapeHtml(item.name)}</strong>
-                                <small>${money(item.unit_price)} / món${Number(item.paid_quantity || 0) ? ` · Đã trả ${number(item.paid_quantity)}` : ''}</small>
-                                ${item.note ? `<div class="order-item-note">* ${escapeHtml(item.note)}</div>` : ''}
-                            </div>
-                            <strong>${money(item.line_total)}</strong>
-                        </div>`).join('')}
-                    </div>
-                </section>
-                <section class="pos-receipt-totals">
-                    <div><span>Tạm tính</span><strong>${money(order.subtotal ?? order.total)}</strong></div>
-                    <div><span>Đã thanh toán</span><strong>${money(paidAmount)}</strong></div>
-                    ${remainingAmount > 0 ? `<div><span>Còn lại</span><strong>${money(remainingAmount)}</strong></div>` : ''}
-                    <div class="receipt-grand-total"><span>Tổng cộng</span><strong>${money(order.total)}</strong></div>
-                </section>
-                <section class="pos-receipt-payments">
-                    <header><strong>Lịch sử thanh toán</strong><span>${number(order.payments.length)} giao dịch</span></header>
-                    ${order.payments.length ? order.payments.map(renderOrderPaymentRow).join('') : '<div class="pos-receipt-empty">Chưa phát sinh giao dịch thanh toán.</div>'}
-                </section>
-            </article>`;
-            const staffReceiptBody = `
-            <article class="pos-receipt staff-receipt ${isCoffee ? 'receipt-coffee' : 'receipt-fishing'}">
-                <header class="pos-receipt-head">
-                    <span class="pos-receipt-icon">${serviceIcon}</span>
-                    <div class="pos-receipt-title"><small>${isCoffee ? 'CÀ PHÊ' : 'CÂU CÁ'} · ${escapeHtml(order.resource?.label || 'Chưa xác định')}</small><strong>${escapeHtml(order.order_number)}</strong></div>
-                    <span class="pill ${statusClass(order.status)}">${statusLabel(order.status)}</span>
-                </header>
-                <div class="pos-receipt-meta">
-                    <span><small>Mở lúc</small><strong>${dateTime(order.opened_at)}</strong></span>
-                    <span><small>Số lượng</small><strong>${number(order.items.reduce((sum, item) => sum + Number(item.quantity), 0))} món</strong></span>
-                </div>
-                <section class="pos-receipt-section">
-                    <header><strong>Món cần xử lý</strong><span>${number(order.items.length)} dòng</span></header>
-                    <div class="pos-receipt-lines">
-                        ${staffItemGroups.map((group, index) => `<section class="staff-order-time-group">
-                            <header class="staff-order-time-head">
-                                <span>Lần ${number(index + 1)}</span>
-                                <strong>${escapeHtml(`Gọi lúc ${orderTimeLabel(group.ordered_at)}`)}</strong>
-                            </header>
-                            <div class="staff-order-time-lines">
-                                ${group.items.map(item => `<div class="pos-receipt-line">
-                                    <span class="receipt-quantity staff-item-quantity" aria-label="Số lượng ${number(item.quantity)}">x${number(item.quantity)}</span>
-                                    <div>
-                                        <strong>${escapeHtml(item.name)}</strong>
-                                        ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ''}
-                                    </div>
-                                </div>`).join('')}
-                            </div>
-                        </section>`).join('')}
-                    </div>
-                </section>
-            </article>`;
-            openModal({ title: 'Chi tiết đơn hàng', body: isAdmin ? receiptBody : staffReceiptBody, wide: isAdmin, onReady(modal) {
-                modal.classList.add('order-detail-modal');
-                modal.classList.add('pos-receipt-modal');
+            openModal({ title: 'Chi tiết đơn hàng', body: renderOrderReceipt(order, { admin: isAdmin }), wide: isAdmin, onReady(modal) {
+                modal.classList.add('order-detail-modal', 'pos-receipt-modal');
                 if (!isAdmin) modal.classList.add('staff-order-detail-modal');
+                bindReceiptPaymentHistory(modal);
             } });
         };
         trigger.onclick = openOrder;

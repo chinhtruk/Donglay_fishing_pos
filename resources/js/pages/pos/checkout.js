@@ -12,6 +12,16 @@ export function configureCheckout(dependencies) {
     renderPage = dependencies.renderPage;
 }
 
+export function checkoutCanSubmit({ total = 0, paymentMethod = 'cash', cashReceived = 0, isSubmitting = false } = {}) {
+    return !isSubmitting && Number(total) > 0 && (paymentMethod !== 'cash' || Number(cashReceived) >= Number(total));
+}
+
+export async function copyCheckoutText(value, clipboard = globalThis.navigator?.clipboard) {
+    if (!value || !clipboard?.writeText) throw new Error('Trình duyệt không hỗ trợ sao chép tự động.');
+    await clipboard.writeText(String(value));
+    return String(value);
+}
+
 export function openCheckout(order, type, paymentSettings = {}) {
     const unpaid = order.items.filter(item => item.unpaid_quantity > 0);
     const paid = order.items.filter(item => item.paid_quantity > 0);
@@ -39,6 +49,12 @@ export function openCheckout(order, type, paymentSettings = {}) {
         <div class="checkout-qr-account">
             ${method.account_name ? `<strong>${escapeHtml(method.account_name)}</strong>` : ''}
             ${method.account_number ? `<b>${escapeHtml(method.account_number)}</b>` : ''}
+            ${method.account_number ? `
+                <div class="checkout-copy-row">
+                    <button type="button" class="checkout-copy-button" data-copy-account="${escapeHtml(method.account_number)}">Sao chép số tài khoản</button>
+                    <span class="checkout-copy-status" data-copy-status aria-live="polite"></span>
+                </div>
+            ` : ''}
         </div>
     `;
     const paymentMethodHint = method => method === 'cash'
@@ -48,7 +64,10 @@ export function openCheckout(order, type, paymentSettings = {}) {
         <div class="checkout-release-block">
             <label class="checkout-release-label">
                 <input class="checkout-release-input" type="checkbox" id="checkout-release" checked>
-                <span>${type === 'coffee' ? 'Giải phóng bàn khi thanh toán xong' : 'Trả chòi & Giải phóng khi thanh toán xong'}</span>
+                <span class="checkout-release-copy">
+                    <span>${type === 'coffee' ? 'Giải phóng bàn khi thanh toán xong' : 'Trả chòi & Giải phóng khi thanh toán xong'}</span>
+                    <small class="checkout-release-reason hidden" id="checkout-release-reason">Chỉ có thể giải phóng khi thanh toán toàn bộ phần còn lại.</small>
+                </span>
             </label>
         </div>
     ` : '';
@@ -91,13 +110,13 @@ export function openCheckout(order, type, paymentSettings = {}) {
                 </div>
                 ${transferMethods.map(method => `
                     <section class="checkout-qr-panel checkout-payment-panel hidden" data-payment-panel="${escapeHtml(method.code)}">
-                        <div class="checkout-qr-image"><img src="${escapeHtml(method.qr_image_url)}" alt="Mã QR thanh toán"></div>
+                        <div class="checkout-qr-image"><img src="${escapeHtml(method.qr_image_url)}" alt="Mã QR thanh toán" decoding="async"></div>
                         ${paymentAccountInfo(method)}
                     </section>
                 `).join('')}
                 <div class="summary-row checkout-change-row">
                     <span class="checkout-change-label">Tiền thừa trả khách</span>
-                    <span class="checkout-change-value" id="change-due">0</span>
+                    <span class="checkout-change-value" id="change-due" aria-live="polite">0</span>
                 </div>
 
                 ${releaseHtml}
@@ -158,10 +177,10 @@ export function openCheckout(order, type, paymentSettings = {}) {
                         </div>
                         <div class="summary-row total checkout-total-row">
                             <span>Cần thanh toán <small class="order-total-count" id="checkout-selected-count">${orderPaymentItemCountLabel(checkoutUnpaidQuantity, checkoutTotalQuantity)}</small></span>
-                            <strong id="checkout-total">0</strong>
+                            <strong id="checkout-total" aria-live="polite">0</strong>
                         </div>
                         <div class="order-actions checkout-actions">
-                            <button class="button primary" id="confirm-checkout">Hoàn tất thanh toán</button>
+                            <button type="button" class="button primary" id="confirm-checkout">Hoàn tất thanh toán</button>
                         </div>
                     </div>
                 </div>
@@ -171,6 +190,8 @@ export function openCheckout(order, type, paymentSettings = {}) {
 
     openModal({ title:`Thanh toán · ${order.order_number}`, body, wide: true, className: 'pos-checkout-modal pos-order-modal', onReady(modal, close) {
         let paymentMethod = initialPaymentMethod;
+        let isSubmitting = false;
+        const confirmButton = $('#confirm-checkout', modal);
         const calculate = () => {
             let total = 0;
             let selectedQuantity = 0;
@@ -189,7 +210,8 @@ export function openCheckout(order, type, paymentSettings = {}) {
                 }
             });
             $('#checkout-total', modal).textContent = money(total);
-            $('#change-due', modal).textContent = paymentMethod !== 'cash' ? money(0) : money(Math.max(0, parseThousandsMoneyInput($('#cash-received', modal).value) - total));
+            const cashReceived = parseThousandsMoneyInput($('#cash-received', modal).value);
+            $('#change-due', modal).textContent = paymentMethod !== 'cash' ? money(0) : money(Math.max(0, cashReceived - total));
             const selectedCountEl = $('#checkout-selected-count', modal);
             if (selectedCountEl) selectedCountEl.textContent = orderPaymentItemCountLabel(selectedQuantity, checkoutTotalQuantity);
 
@@ -206,7 +228,10 @@ export function openCheckout(order, type, paymentSettings = {}) {
                 }
                 releaseEl.parentElement.classList.toggle('is-disabled', !isFullPayment);
                 releaseEl.dataset.wasDisabled = !isFullPayment;
+                $('#checkout-release-reason', modal)?.classList.toggle('hidden', isFullPayment);
             }
+            confirmButton.disabled = !checkoutCanSubmit({ total, paymentMethod, cashReceived, isSubmitting });
+            confirmButton.setAttribute('aria-disabled', confirmButton.disabled ? 'true' : 'false');
             return total;
         };
 
@@ -248,6 +273,19 @@ export function openCheckout(order, type, paymentSettings = {}) {
             button.onclick = () => syncPaymentMethod(button.dataset.paymentMethod);
         });
 
+        modal.querySelectorAll('[data-copy-account]').forEach(button => {
+            button.onclick = async () => {
+                const status = button.parentElement?.querySelector('[data-copy-status]');
+                if (status) status.textContent = 'Đang sao chép…';
+                try {
+                    await copyCheckoutText(button.dataset.copyAccount);
+                    if (status) status.textContent = 'Đã sao chép';
+                } catch (error) {
+                    if (status) status.textContent = error.message;
+                }
+            };
+        });
+
         modal.querySelectorAll('.quick-cash-btn').forEach(btn => {
             btn.onclick = () => {
                 cashInput.value = formatMoneyInput(btn.dataset.thousands);
@@ -264,7 +302,14 @@ export function openCheckout(order, type, paymentSettings = {}) {
         syncCashInputShell();
         syncPaymentMethod(paymentMethod);
 
-        $('#confirm-checkout', modal).onclick = async () => {
+        confirmButton.onclick = async () => {
+            if (isSubmitting || confirmButton.disabled) return;
+            isSubmitting = true;
+            confirmButton.disabled = true;
+            confirmButton.setAttribute('aria-disabled', 'true');
+            const originalLabel = confirmButton.textContent;
+            confirmButton.textContent = 'Đang xử lý…';
+            modal.classList.add('checkout-submitting');
             const items = unpaid.filter(item => $(`[data-pay-check="${item.id}"]`, modal).checked).map(item => ({ order_item_id:item.id, quantity:Number($(`input[data-pay-qty="${item.id}"]`, modal).value) }));
             const releaseEl = $('#checkout-release', modal);
             const release = releaseEl ? releaseEl.checked : false;
@@ -298,6 +343,13 @@ export function openCheckout(order, type, paymentSettings = {}) {
                     return;
                 }
                 toast(error.message, 'error');
+            } finally {
+                isSubmitting = false;
+                if (modal.isConnected) {
+                    modal.classList.remove('checkout-submitting');
+                    confirmButton.textContent = originalLabel;
+                    calculate();
+                }
             }
         };
     }});

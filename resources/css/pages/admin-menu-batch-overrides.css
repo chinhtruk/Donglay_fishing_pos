@@ -135,7 +135,12 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
 
 @media(max-width: 767px) {
     body[data-role="admin"] #modal-root .menu-batch-modal {
-        width: min(100%, calc(100vw - 24px)) !important;
+        width: 100vw !important;
+        max-width: none !important;
+        height: calc(100dvh - var(--modal-keyboard-offset)) !important;
+        max-height: calc(100dvh - var(--modal-keyboard-offset)) !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
     }
 
     body[data-role="admin"] #modal-root .menu-batch-modal .modal-head,
@@ -156,7 +161,7 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
     }
 
     body[data-role="admin"] #modal-root .menu-batch-image {
-        height: 72px !important;
+        height: 82px !important;
     }
 
     body[data-role="admin"] #modal-root .menu-batch-fields {
@@ -183,10 +188,16 @@ body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
     body[data-role="admin"] #modal-root .menu-batch-add-row-wrap .button {
         max-width: 100%;
         height: auto;
-        min-height: 38px !important;
+        min-height: var(--mobile-touch-target) !important;
         padding-top: 8px;
         padding-bottom: 8px;
         white-space: normal;
+    }
+
+    body[data-role="admin"] #modal-root .menu-batch-modal .modal-foot .button,
+    body[data-role="admin"] #modal-root .menu-batch-remove,
+    body[data-role="admin"] #modal-root .menu-batch-availability {
+        min-height: var(--mobile-touch-target) !important;
     }
 }
 

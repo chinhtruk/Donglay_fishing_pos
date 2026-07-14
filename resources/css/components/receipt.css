@@ -1221,3 +1221,402 @@
         padding-right: 22px
     }
 }
+
+/* Receipt state language and collapsible payment history. */
+.pos-receipt-unpaid>header {
+    color: #8a592f;
+}
+
+.pos-receipt-paid>header {
+    color: #315f3d;
+}
+
+.pos-receipt-line.is-unpaid .receipt-quantity {
+    background: #fff0dc;
+    color: #8a592f;
+}
+
+.pos-receipt-line.is-paid .receipt-quantity {
+    background: #e5f2e7;
+    color: #315f3d;
+}
+
+.receipt-payment-state {
+    display: inline-block;
+    color: inherit;
+    font-size: inherit;
+    font-weight: 800;
+}
+
+.pos-receipt-line.is-unpaid .receipt-payment-state {
+    color: #9a6335;
+}
+
+.pos-receipt-line.is-paid .receipt-payment-state {
+    color: #3e754b;
+}
+
+.receipt-payment-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    min-height: 36px;
+    padding: 5px 7px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+}
+
+.receipt-payment-toggle svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    transition: transform .16s ease;
+}
+
+.receipt-payment-toggle[aria-expanded="false"] svg {
+    transform: rotate(-90deg);
+}
+
+.pos-receipt-payment-list[hidden] {
+    display: none;
+}
+
+/* Phase 5 phone receipt: one full-screen scroll surface with fixed modal chrome
+   and a sticky financial summary for admin orders. */
+@media(max-width: 767px) {
+    body[data-role] #modal-root .modal-backdrop:has(.modal.pos-receipt-modal) {
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        padding: 0 !important;
+    }
+
+    body[data-role] #modal-root .modal.pos-receipt-modal,
+    body[data-role="employee"] #modal-root .modal.staff-order-detail-modal.pos-receipt-modal,
+    body[data-role="admin"] #modal-root .modal.order-detail-modal.pos-receipt-modal {
+        width: 100vw !important;
+        max-width: none !important;
+        height: calc(100dvh - var(--modal-keyboard-offset)) !important;
+        min-height: 0 !important;
+        max-height: calc(100dvh - var(--modal-keyboard-offset)) !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body[data-role] #modal-root .modal.pos-receipt-modal>.modal-head {
+        flex: 0 0 auto !important;
+        min-height: calc(58px + env(safe-area-inset-top)) !important;
+        padding: env(safe-area-inset-top) 12px 0 16px !important;
+        border-radius: 0 !important;
+        background: #fffdf9 !important;
+    }
+
+    body[data-role] #modal-root .modal.pos-receipt-modal>.modal-head h2 {
+        font-size: 16px !important;
+        font-weight: 800 !important;
+    }
+
+    body[data-role] #modal-root .modal.pos-receipt-modal>.modal-head .modal-close {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+
+    body[data-role] #modal-root .modal.pos-receipt-modal>.modal-body {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        background: #fffdf9 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt,
+    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-head {
+        flex: 0 0 auto !important;
+        grid-template-columns: 44px minmax(0, 1fr) auto !important;
+        gap: 10px !important;
+        min-width: 0;
+        padding: 14px 14px 12px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-icon {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 12px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-title small {
+        margin-bottom: 3px !important;
+        overflow-wrap: anywhere;
+        font-size: 9px !important;
+        line-height: 1.3 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-title strong {
+        overflow-wrap: anywhere;
+        font-size: 16px !important;
+        line-height: 1.25 !important;
+        white-space: normal !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-head>.pill {
+        align-self: start;
+        padding: 6px 8px !important;
+        font-size: 9px !important;
+        white-space: nowrap;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-meta,
+    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-meta {
+        flex: 0 0 auto !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 0 !important;
+        margin: 0 14px 12px !important;
+        padding: 10px 0 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-meta>span {
+        min-width: 0;
+        padding: 0 9px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-meta>span:first-child {
+        padding-left: 0 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-meta>span:last-child {
+        padding-right: 0 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-meta small {
+        font-size: 9px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-meta strong {
+        margin-top: 3px !important;
+        overflow-wrap: anywhere;
+        font-size: 10.5px !important;
+        line-height: 1.3 !important;
+        white-space: normal !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-section,
+    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-section {
+        display: block !important;
+        flex: 0 0 auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        border-top-width: 7px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-section>header,
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-payments>header,
+    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-section>header {
+        position: sticky;
+        top: 0;
+        z-index: 4;
+        min-height: 48px !important;
+        padding: 10px 14px !important;
+        background: #fffaf4 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-unpaid>header {
+        background: #fff7ec !important;
+        color: #8a592f !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-paid>header {
+        background: #eef7f0 !important;
+        color: #315f3d !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-section>header strong,
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-payments>header strong {
+        font-size: 12.5px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-lines,
+    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-lines {
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 0 14px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-line,
+    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line {
+        grid-template-columns: 38px minmax(0, 1fr) auto !important;
+        gap: 9px !important;
+        min-height: 68px !important;
+        padding: 12px 0 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .receipt-quantity,
+    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .staff-item-quantity {
+        width: 36px !important;
+        min-width: 36px !important;
+        height: 36px !important;
+        padding: 0 7px !important;
+        border-radius: 10px !important;
+        font-size: 11px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-line div>strong,
+    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line div>strong {
+        overflow-wrap: anywhere;
+        font-size: 13.5px !important;
+        line-height: 1.3 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-line div>small,
+    body[data-role="employee"] #modal-root .staff-order-detail-modal .staff-receipt .pos-receipt-line div>small {
+        font-size: 10.5px !important;
+        line-height: 1.4 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-line>strong {
+        min-width: 72px;
+        color: var(--receipt-price) !important;
+        font-size: 11.5px !important;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .receipt-payment-state {
+        display: block;
+        margin-top: 4px;
+        font-size: 9.5px !important;
+        line-height: 1.3;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .staff-order-time-group {
+        padding: 4px 0 7px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .staff-order-time-head {
+        min-height: 38px !important;
+        padding: 7px 0 !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-payments {
+        order: 5;
+        flex: 0 0 auto;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .receipt-payment-toggle {
+        min-width: 44px;
+        min-height: 44px;
+        margin: -8px -5px -8px 0;
+        padding: 8px;
+        font-size: 10px;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-payment-row {
+        grid-template-columns: 36px minmax(0, 1fr) auto !important;
+        gap: 10px !important;
+        min-height: 66px !important;
+        padding: 12px 14px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-payment-row div>strong {
+        font-size: 11px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-payment-row div>small,
+    body[data-role] #modal-root .pos-receipt-modal .payment-row-items {
+        overflow-wrap: anywhere;
+        font-size: 9.5px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-totals {
+        position: sticky;
+        bottom: 0;
+        z-index: 7;
+        order: 6;
+        flex: 0 0 auto;
+        padding: 11px 14px max(12px, env(safe-area-inset-bottom)) !important;
+        border-top: 1px solid var(--line) !important;
+        background: rgba(255, 253, 249, .97) !important;
+        box-shadow: 0 -10px 26px rgba(45, 33, 27, .09);
+        backdrop-filter: blur(12px);
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-totals>div {
+        padding: 4px 0 !important;
+        font-size: 10.5px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-totals .receipt-grand-total {
+        margin-top: 5px !important;
+        padding-top: 9px !important;
+        font-size: 15px !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-totals .receipt-grand-total strong {
+        font-size: 20px !important;
+    }
+}
+
+@media(max-width: 359px) {
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-head {
+        grid-template-columns: 40px minmax(0, 1fr) !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-head>.pill {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-meta>span:last-child {
+        grid-column: 1 / -1;
+        margin-top: 9px;
+        padding: 9px 0 0 !important;
+        border-top: 1px solid var(--line);
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-line {
+        grid-template-columns: 36px minmax(0, 1fr) !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-receipt-line>strong {
+        grid-column: 2;
+        min-width: 0;
+        text-align: left;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-payment-row {
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+    }
+
+    body[data-role] #modal-root .pos-receipt-modal .pos-payment-row>div:last-child {
+        grid-column: 2;
+        text-align: left;
+    }
+}

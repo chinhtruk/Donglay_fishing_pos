@@ -27,6 +27,7 @@ export function setupLogin() {
 
     const setBusy = (form, busy) => {
         form.classList.toggle('is-busy', busy);
+        form.setAttribute('aria-busy', String(busy));
         form.querySelectorAll('button[type="submit"]').forEach(button => { button.disabled = busy; });
     };
 
@@ -76,18 +77,35 @@ export function setupLogin() {
         setMsg(result.message || 'Mã xác minh đang được gửi đến email của bạn.');
     };
 
-    $$('[data-login-tab]').forEach(button => {
-        button.onclick = () => {
-            const role = button.dataset.loginTab;
-            $$('[data-login-tab]').forEach(tab => {
-                const active = tab === button;
-                tab.classList.toggle('lp-tab--active', active);
-                tab.setAttribute('aria-selected', String(active));
-            });
-            employeeForm.classList.toggle('hidden', role !== 'employee');
-            adminForm.classList.toggle('hidden', role !== 'admin');
-            setMsg('');
-            focusSoon(role === 'admin' ? $('#admin-username') : (employeeStep === 'otp' ? codeInput : usernameInput));
+    const loginTabs = $$('[data-login-tab]');
+    const activateLoginTab = (button, { focusPanel = true } = {}) => {
+        const role = button.dataset.loginTab;
+        loginTabs.forEach(tab => {
+            const active = tab === button;
+            tab.classList.toggle('lp-tab--active', active);
+            tab.setAttribute('aria-selected', String(active));
+            tab.tabIndex = active ? 0 : -1;
+        });
+        employeeForm.classList.toggle('hidden', role !== 'employee');
+        adminForm.classList.toggle('hidden', role !== 'admin');
+        setMsg('');
+        if (focusPanel) focusSoon(role === 'admin' ? $('#admin-username') : (employeeStep === 'otp' ? codeInput : usernameInput));
+    };
+
+    loginTabs.forEach((button, index) => {
+        button.onclick = () => activateLoginTab(button);
+        button.onkeydown = event => {
+            const keyTargets = {
+                ArrowLeft: (index - 1 + loginTabs.length) % loginTabs.length,
+                ArrowRight: (index + 1) % loginTabs.length,
+                Home: 0,
+                End: loginTabs.length - 1,
+            };
+            if (!(event.key in keyTargets)) return;
+            event.preventDefault();
+            const target = loginTabs[keyTargets[event.key]];
+            activateLoginTab(target, { focusPanel: false });
+            target.focus();
         };
     });
 

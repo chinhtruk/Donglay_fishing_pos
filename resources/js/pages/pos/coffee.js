@@ -7,9 +7,14 @@ import { openModal } from '../../modules/modal.js';
 import { schedulePosOperationalReset, stopPosOperationalReset } from './operational-day.js';
 import { openCheckout } from './checkout.js';
 import {
+    announceOrderMobileAdd,
+    centerOrderCategory,
     renderCoffeeOrderLines,
     renderCoffeeOrderPanel,
     renderOrderModalBody,
+    orderMobileInitialView,
+    setupOrderModalMobileNavigation,
+    updateOrderModalMobileNavigation,
 } from './order-modal.js';
 import {
     hasMissingVariablePrice,
@@ -26,6 +31,28 @@ import { $, $$ } from '../../templates/dom.js';
 
 let coffeeLifecycle = null;
 
+export function coffeeTableCardView(table = {}) {
+    const isPaid = Boolean(table.order) && table.order.status === 'paid';
+    const stateLabel = table.state === 'available'
+        ? 'Trống'
+        : table.state === 'occupied'
+            ? (isPaid ? 'Đã thanh toán' : 'Đang dùng')
+            : 'Tạm nghỉ';
+    const orderNumber = table.order?.order_number ? String(table.order.order_number) : '';
+    const amount = table.order
+        ? (isPaid ? 'Đã trả đủ' : money(orderRemainingDue(table.order)))
+        : table.state === 'disabled'
+            ? 'Chưa nhận khách'
+            : 'Chạm để mở bàn';
+
+    return {
+        isPaid,
+        stateClass: `${table.state || 'available'}${isPaid ? ' paid-ready' : ''}`,
+        stateLabel,
+        detail: [orderNumber, amount].filter(Boolean).join(' · '),
+    };
+}
+
 export async function renderCoffee() {
     const data = await api('/api/v1/coffee/map');
     schedulePosOperationalReset(data, coffeeLifecycle);
@@ -33,7 +60,7 @@ export async function renderCoffee() {
     const categories = posMenuCategories(orderedMenu);
 
     $('#page-content').innerHTML = `
-        <section class="pos-stats">
+        <section class="pos-stats coffee-pos-stats">
             <article class="pos-stat">
                 <span>
                     <svg class="pos-stat-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
@@ -52,9 +79,9 @@ export async function renderCoffee() {
                 </span>
                 <div><small>Hoàn tất hôm nay</small><strong>${number(data.stats.completed_today)} đơn</strong></div>
             </article>
-            <button class="button primary pos-new-order-btn pos-new-order">
+            <button class="button primary pos-new-order-btn pos-new-order" type="button">
                 <svg class="pos-new-order-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Đơn mới
+                Tạo đơn quầy
             </button>
         </section>
         <div class="coffee-pos-layout coffee-pos-layout-single">
@@ -62,18 +89,17 @@ export async function renderCoffee() {
                 <section class="pos-section">
                     <div class="pos-section-head">
                         <div class="header-actions coffee-header-actions">
-                            <button class="button secondary small coffee-merge-button" id="btn-merge-mode">Gộp hóa đơn</button>
-                            <button class="button primary small coffee-merge-button hidden" id="btn-merge-confirm" disabled>Xác nhận gộp (0)</button>
+                            <button class="button secondary small coffee-merge-button" id="btn-merge-mode" type="button">Gộp hóa đơn</button>
+                            <button class="button primary small coffee-merge-button hidden" id="btn-merge-confirm" type="button" disabled>Xác nhận gộp (0)</button>
+                            <span class="pos-merge-status hidden" id="coffee-merge-status" aria-live="polite">Chọn các hóa đơn nguồn cần gộp</span>
                         </div>
                         ${slotLegend()}
                     </div>
                     <div class="pos-table-grid">${data.tables.map(table => {
-                        const isPaid = table.order && table.order.status === 'paid';
-                        const stateClass = table.state + (isPaid ? ' paid-ready' : '');
-                        const stateLabel = table.state === 'available' ? 'Trống' : (table.state === 'occupied' ? (isPaid ? 'Đã thanh toán' : 'Đang dùng') : 'Tạm nghỉ');
-                        return `<button class="pos-table-card ${stateClass}" data-pos-table="${table.id}" ${table.state === 'disabled' ? 'disabled' : ''}><span class="table-state">${stateLabel}</span><strong>${escapeHtml(table.label)}</strong><small>${table.state === 'occupied' ? money(orderRemainingDue(table.order)) : 'Sẵn sàng nhận khách'}</small></button>`;
+                        const view = coffeeTableCardView(table);
+                        return `<button class="pos-table-card ${view.stateClass}" type="button" data-pos-table="${table.id}" aria-label="${escapeHtml(`${table.label}. ${view.stateLabel}. ${view.detail}`)}" ${table.state === 'disabled' ? 'disabled' : ''}><span class="table-state">${view.stateLabel}</span><strong>${escapeHtml(table.label)}</strong><small>${escapeHtml(view.detail)}</small></button>`;
                     }).join('')}</div>
-                    <div class="counter-order-strip ${data.counter_orders.length ? '' : 'is-empty'}"><div><strong>Đơn tại quầy</strong><small>Chưa xác định được bàn</small></div><div class="counter-order-list">${data.counter_orders.map(order => `<button class="counter-order-chip" data-counter-order="${order.id}"><strong>${escapeHtml(order.order_number)}</strong><span>${number(order.items.reduce((sum, item) => sum + item.quantity, 0))} món · ${money(order.total)}</span></button>`).join('')}</div></div>
+                    <div class="counter-order-strip ${data.counter_orders.length ? '' : 'is-empty'}"><div><strong>Đơn tại quầy</strong><small>Chưa xác định được bàn</small></div><div class="counter-order-list">${data.counter_orders.map(order => `<button class="counter-order-chip" type="button" data-counter-order="${order.id}"><strong>${escapeHtml(order.order_number)}</strong><span>${number(order.items.reduce((sum, item) => sum + item.quantity, 0))} món · ${money(order.total)}</span></button>`).join('')}</div></div>
                 </section>
             </main>
         </div>`;
@@ -102,6 +128,7 @@ export async function renderCoffee() {
             body: modalBody,
             wide: true,
             onReady(modal, closeModal) {
+                setupOrderModalMobileNavigation(modal, { initialView: orderMobileInitialView(Boolean(currentOrder)) });
                 const renderModalBill = () => {
                     const panel = modal.querySelector('#modal-order-panel');
                     const lines = cart.values();
@@ -136,6 +163,7 @@ export async function renderCoffee() {
                         canReleaseOnly,
                         hasLines: Boolean(lines.length),
                     });
+                    updateOrderModalMobileNavigation(modal, { itemCount: totalItemCount, unpaidCount: unpaidItemCount });
 
                     modal.querySelectorAll('[data-modal-minus]').forEach(button => button.onclick = () => changeQuantity(Number(button.dataset.modalMinus), Number(button.dataset.modalPrice), -1));
                     modal.querySelectorAll('[data-modal-plus]').forEach(button => button.onclick = () => changeQuantity(Number(button.dataset.modalPlus), Number(button.dataset.modalPrice), 1));
@@ -251,6 +279,7 @@ export async function renderCoffee() {
                             cart.add(matchedItem);
                         }
                         renderModalBill();
+                        announceOrderMobileAdd(modal, matchedItem.name, cart.values().reduce((sum, item) => sum + Number(item.quantity || 0), 0));
                     }
                 });
 
@@ -266,6 +295,7 @@ export async function renderCoffee() {
                 modal.querySelectorAll('[data-modal-category]').forEach(button => button.onclick = () => {
                     activeCategory = button.dataset.modalCategory;
                     modal.querySelectorAll('[data-modal-category]').forEach(item => item.classList.toggle('active', item === button));
+                    centerOrderCategory(button);
                     filterModalProducts();
                 });
 
@@ -292,6 +322,8 @@ export async function renderCoffee() {
 
     const mergeModeBtn = $('#btn-merge-mode');
     const mergeConfirmBtn = $('#btn-merge-confirm');
+    const mergeStatus = $('#coffee-merge-status');
+    const coffeeSection = $('.coffee-pos-main .pos-section');
     const updateMergeConfirmState = () => {
         const sourceCount = selectedTableIds.size + selectedCounterOrderIds.size;
         const hasCounterSource = selectedCounterOrderIds.size > 0;
@@ -309,14 +341,18 @@ export async function renderCoffee() {
         mergeModeBtn.classList.toggle('danger', isMergeMode);
         mergeModeBtn.textContent = isMergeMode ? 'Hủy gộp' : 'Gộp hóa đơn';
         mergeConfirmBtn.classList.toggle('hidden', !isMergeMode);
+        mergeStatus?.classList.toggle('hidden', !isMergeMode);
+        coffeeSection?.classList.toggle('is-merge-mode', isMergeMode);
         mergeConfirmBtn.disabled = true;
         mergeConfirmBtn.textContent = 'Xác nhận gộp (0)';
 
         $$('[data-pos-table]').forEach(node => {
             node.classList.remove('selected-for-merge');
+            node.removeAttribute('aria-pressed');
         });
         $$('[data-counter-order]').forEach(node => {
             node.classList.remove('selected-for-merge');
+            node.removeAttribute('aria-pressed');
         });
     };
 
@@ -339,6 +375,7 @@ export async function renderCoffee() {
         let targetTableId = defaultTarget?.id || null;
         openModal({
             title: 'Gộp nhiều bàn cà phê',
+            className: 'merge-target-modal',
             body: `<div class="merge-target-panel"><div class="merge-target-label">Chọn bàn nhận hóa đơn</div><div class="merge-target-grid">${targetButtons}</div></div><p class="merge-target-note">Có thể chuyển đơn tại quầy vào bất kỳ bàn đang bật. Nếu bàn nhận đang phục vụ, món và thanh toán sẽ được gộp vào hóa đơn hiện có.</p>`,
             footer: `<span></span><div><button class="button primary" id="btn-bulk-merge-confirm" ${targetTableId ? '' : 'disabled'}>Xác nhận</button></div>`,
             onReady(subModal, subClose) {
@@ -429,9 +466,11 @@ export async function renderCoffee() {
                 if (selectedTableIds.has(tableId)) {
                     selectedTableIds.delete(tableId);
                     node.classList.remove('selected-for-merge');
+                    node.setAttribute('aria-pressed', 'false');
                 } else {
                     selectedTableIds.add(tableId);
                     node.classList.add('selected-for-merge');
+                    node.setAttribute('aria-pressed', 'true');
                 }
                 updateMergeConfirmState();
             } else {
@@ -446,9 +485,11 @@ export async function renderCoffee() {
                 if (selectedCounterOrderIds.has(orderId)) {
                     selectedCounterOrderIds.delete(orderId);
                     node.classList.remove('selected-for-merge');
+                    node.setAttribute('aria-pressed', 'false');
                 } else {
                     selectedCounterOrderIds.add(orderId);
                     node.classList.add('selected-for-merge');
+                    node.setAttribute('aria-pressed', 'true');
                 }
                 updateMergeConfirmState();
                 return;

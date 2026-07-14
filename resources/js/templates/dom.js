@@ -12,8 +12,13 @@ export const cloneTemplate = id => {
 export function setLoading() {
     const page = $('#page-content');
     page.className = 'page-content';
+    page.setAttribute('aria-busy', 'true');
     const loading = cloneTemplate('tpl-loading-state');
-    page.replaceChildren(loading || document.createRange().createContextualFragment('<div class="loading-state"><span></span><p>Đang sắp xếp không gian…</p></div>'));
+    const content = loading || document.createRange().createContextualFragment('<div class="loading-state"><span></span><p>Đang sắp xếp không gian…</p></div>');
+    const status = content.matches?.('.loading-state') ? content : content.querySelector?.('.loading-state');
+    status?.setAttribute('role', 'status');
+    status?.setAttribute('aria-live', 'polite');
+    page.replaceChildren(content);
 }
 
 export function pageHead(eyebrow, title, description, actions = '') {

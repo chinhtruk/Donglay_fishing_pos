@@ -9,6 +9,7 @@
 @import './pages/pos.css';
 @import './pages/pos-orders.css';
 @import './legacy-overrides.css';
+@import './pages/admin-dashboard.css';
 @import './pages/pos-orders-overrides.css';
 @import './pages/admin-map-overrides.css';
 @import './pages/admin-menu.css';
@@ -20,4 +21,8 @@
 @import './responsive/mobile.css';
 @import './responsive/ipad.css';
 @import './components/checkout-modal.css';
+@import './components/merge-target-modal.css';
 @import './components/notifications.css';
+@import './components/accessibility.css';
+@import './components/pos-order-mobile-toolbar.css';
+@import './components/pos-mobile-compact-inputs.css';

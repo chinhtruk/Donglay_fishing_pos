@@ -1,0 +1,231 @@
+/* Phase 6: admin dashboard phone contract. This owner loads after legacy. */
+@media(max-width: 767px) {
+    body[data-role="admin"] .owner-dashboard-page .owner-dashboard-head {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+        margin-bottom: 16px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-dashboard-title h1 {
+        white-space: normal !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter-bar {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 10px !important;
+        justify-self: stretch !important;
+        width: 100% !important;
+        max-width: none !important;
+        overflow: visible !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 7px !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-range-badges .button {
+        width: 100% !important;
+        min-height: var(--mobile-touch-target) !important;
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter .filter-separator {
+        display: none;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter input {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        min-height: var(--mobile-touch-target) !important;
+        flex: none !important;
+        font-size: 16px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dashboard-filter .primary {
+        grid-column: 1 / -1;
+        width: 100% !important;
+        min-height: var(--mobile-touch-target) !important;
+        font-size: 12px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        margin-bottom: 12px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi {
+        display: grid !important;
+        grid-template-columns: 38px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 108px !important;
+        padding: 14px !important;
+        border-radius: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi.primary,
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi.warning {
+        grid-column: 1 / -1;
+        min-height: 96px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi-icon {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        flex-basis: 38px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi-icon svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi>div {
+        gap: 5px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi small {
+        overflow-wrap: anywhere;
+        font-size: 9px !important;
+        letter-spacing: .06em !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi strong {
+        overflow-wrap: anywhere;
+        font-size: 18px !important;
+        line-height: 1.18 !important;
+        white-space: normal !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-panel {
+        min-width: 0 !important;
+        padding: 14px !important;
+        overflow: hidden;
+        border-radius: 14px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-panel-head {
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-panel-head h3 {
+        font-size: 16px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-panel-head>i {
+        flex: 0 0 38px;
+        width: 38px;
+        height: 38px;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .revenue-overview {
+        overflow: hidden !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .revenue-overview .owner-panel-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .chart-legend {
+        gap: 16px;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-chart-wrap {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: visible;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-revenue-chart {
+        display: block;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-chart-tooltip {
+        position: absolute;
+        width: min(220px, calc(100vw - 60px));
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-main-grid,
+    body[data-role="admin"] .owner-dashboard-page .owner-bottom-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 12px !important;
+        margin-bottom: 12px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .business-total {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .business-total strong {
+        font-size: 23px;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dash-product-row {
+        grid-template-columns: 28px minmax(0, 1fr) !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dash-product-row>strong {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dash-mini-row {
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        gap: 8px;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dash-mini-row small {
+        grid-column: 1;
+        padding-left: 34px;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .dash-mini-row>strong {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+    }
+}
+
+@media(max-width: 359px) {
+    body[data-role="admin"] .owner-dashboard-page .owner-kpis {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi,
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi.primary,
+    body[data-role="admin"] .owner-dashboard-page .owner-kpi.warning {
+        grid-column: 1;
+        min-height: 88px !important;
+    }
+
+    body[data-role="admin"] .owner-dashboard-page .business-stat-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

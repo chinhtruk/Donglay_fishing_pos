@@ -1,0 +1,133 @@
+/* Final phone field contract for Admin and POS. Editable values stay at 16px
+   to prevent iOS auto-zoom; geometry, weight and placeholders are compact. */
+@media(max-width: 767px) {
+    body[data-role] #page-content input:where(:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"])),
+    body[data-role] #modal-root .modal input:where(:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"])),
+    body[data-role] #page-content select,
+    body[data-role] #modal-root .modal select {
+        box-sizing: border-box;
+        height: var(--mobile-field-height) !important;
+        min-height: var(--mobile-field-height) !important;
+        padding: 4px var(--mobile-field-padding-x) !important;
+        border: 1px solid var(--pos-line, var(--line)) !important;
+        border-radius: var(--mobile-field-radius) !important;
+        background-color: #fffefa !important;
+        color: var(--pos-ink, var(--ink)) !important;
+        box-shadow: none !important;
+        font-size: 16px !important;
+        font-weight: 650 !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0 !important;
+    }
+
+    body[data-role] #page-content select,
+    body[data-role] #modal-root .modal select {
+        padding-right: 32px !important;
+    }
+
+    body[data-role] #page-content textarea,
+    body[data-role] #modal-root .modal textarea {
+        box-sizing: border-box;
+        height: auto !important;
+        min-height: 72px !important;
+        padding: 8px var(--mobile-field-padding-x) !important;
+        border: 1px solid var(--pos-line, var(--line)) !important;
+        border-radius: var(--mobile-field-radius) !important;
+        background: #fffefa !important;
+        color: var(--pos-ink, var(--ink)) !important;
+        box-shadow: none !important;
+        font-size: 16px !important;
+        font-weight: 650 !important;
+        line-height: 1.35 !important;
+        letter-spacing: 0 !important;
+    }
+
+    body[data-role] #page-content input::placeholder,
+    body[data-role] #modal-root .modal input::placeholder,
+    body[data-role] #page-content textarea::placeholder,
+    body[data-role] #modal-root .modal textarea::placeholder {
+        color: var(--pos-muted, var(--muted)) !important;
+        font-size: var(--mobile-field-placeholder-size) !important;
+        font-weight: 550 !important;
+        line-height: 1.2 !important;
+        letter-spacing: 0 !important;
+        opacity: .72 !important;
+    }
+
+    body[data-role] #page-content input:focus,
+    body[data-role] #page-content select:focus,
+    body[data-role] #page-content textarea:focus,
+    body[data-role] #modal-root .modal input:focus,
+    body[data-role] #modal-root .modal select:focus,
+    body[data-role] #modal-root .modal textarea:focus {
+        border-color: var(--pos-brand-2, var(--focus-ring)) !important;
+        box-shadow: 0 0 0 2px rgba(138, 96, 67, .12) !important;
+    }
+
+    body[data-role="admin"] #page-content :is(.admin-menu-search, .admin-order-search)>input[type="search"],
+    body[data-role="employee"] #page-content .staff-order-search>input[type="search"],
+    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal) .pos-search>input[type="search"] {
+        min-height: var(--mobile-compact-field-height) !important;
+        height: var(--mobile-compact-field-height) !important;
+    }
+
+    body[data-role="admin"] #page-content :is(.admin-menu-search, .admin-order-search),
+    body[data-role="employee"] #page-content .staff-order-search,
+    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal) .pos-search {
+        min-height: var(--mobile-compact-field-height) !important;
+        height: var(--mobile-compact-field-height) !important;
+    }
+
+    body[data-role="admin"] #page-content :is(.admin-menu-search, .admin-order-search)>input[type="search"]::placeholder,
+    body[data-role="employee"] #page-content .staff-order-search>input[type="search"]::placeholder,
+    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal) .pos-search>input[type="search"]::placeholder {
+        font-size: var(--mobile-field-placeholder-size) !important;
+        font-weight: 550 !important;
+    }
+
+    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal) .order-line-note-row>input[data-modal-note] {
+        min-height: var(--mobile-compact-field-height) !important;
+        height: var(--mobile-compact-field-height) !important;
+        padding: 4px 9px !important;
+        font-size: 16px !important;
+        font-weight: 650 !important;
+        line-height: 1.2 !important;
+    }
+
+    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal) .order-line-note-row>input[data-modal-note]:focus,
+    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal) .order-line-note-row>input[data-modal-note]:focus-visible {
+        box-shadow: 0 0 0 2px rgba(138, 96, 67, .12) !important;
+    }
+
+    body[data-role="employee"] #modal-root .modal.pos-order-modal:not(.pos-checkout-modal) .order-line-note-row>input[data-modal-note]::placeholder {
+        font-size: var(--mobile-field-placeholder-size) !important;
+        font-weight: 550 !important;
+        line-height: 1.2 !important;
+    }
+
+    body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell {
+        min-height: var(--mobile-compact-field-height) !important;
+        height: var(--mobile-compact-field-height) !important;
+        padding-inline: 10px !important;
+        font-size: 16px !important;
+        font-weight: 750 !important;
+        line-height: 1 !important;
+    }
+
+    body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell:focus-within {
+        box-shadow: 0 0 0 2px rgba(138, 96, 67, .12) !important;
+    }
+
+    body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-input-shell>input.checkout-cash-input:not([type="checkbox"]):not([type="hidden"]) {
+        min-height: calc(var(--mobile-compact-field-height) - 2px) !important;
+        height: calc(var(--mobile-compact-field-height) - 2px) !important;
+        font: inherit !important;
+        letter-spacing: 0 !important;
+    }
+
+    body[data-role="employee"] #modal-root .modal.pos-checkout-modal .checkout-cash-label .checkout-cash-thousands {
+        height: auto !important;
+        font: inherit !important;
+        letter-spacing: 0 !important;
+    }
+}

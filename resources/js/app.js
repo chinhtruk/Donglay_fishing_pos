@@ -66,16 +66,20 @@ function closeOpenModal() {
 }
 
 async function renderPage(page) {
-    await renderRoutedPage(page, {
-        modules: pageModules,
-        runtime: pageRuntime,
-        beforeRender() {
-            setLoading();
-        },
-        onError(error) {
-            $('#page-content').innerHTML = emptyState('Mình chưa tải được khu vực này', error.message);
-        },
-    });
+    try {
+        await renderRoutedPage(page, {
+            modules: pageModules,
+            runtime: pageRuntime,
+            beforeRender() {
+                setLoading();
+            },
+            onError(error) {
+                $('#page-content').innerHTML = emptyState('Mình chưa tải được khu vực này', error.message);
+            },
+        });
+    } finally {
+        $('#page-content')?.setAttribute('aria-busy', 'false');
+    }
 }
 
 if (document.body.dataset.view === 'login') setupLogin();

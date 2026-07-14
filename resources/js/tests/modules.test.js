@@ -1,16 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Cart } from '../modules/cart.js';
+import { runButtonAction } from '../modules/action.js';
 import { formatMoneyInput, formatStoredMoneyInput, number, parseMoneyInput, parseThousandsMoneyInput } from '../modules/format.js';
 import { fallbackConfirmFooterHtml, findInSelfOrDescendant, once, prepareConfirmFooter } from '../modules/modal.js';
+import { keyboardViewportIsOpen, keyboardViewportOffset } from '../modules/keyboard.js';
 import { duration, remaining } from '../modules/timers.js';
 import { paymentMethodFormTitle, renderPaymentMethodForm, renderUserForm, userFormTitle } from '../pages/admin/forms.js';
-import { renderCoffeeOrderLines, renderCoffeeOrderPanel } from '../pages/pos/order-modal.js';
-import { fishingOrderActionMode, fishingOrderModalCatalog } from '../pages/pos/fishing.js';
-import { adminOrderStatusOptions, employeeOrderDisplayTime, renderOrderPaymentRow } from '../pages/orders/list.js';
+import { orderMobileInitialView, orderMobileNavigationHtml, renderCoffeeOrderLines, renderCoffeeOrderPanel } from '../pages/pos/order-modal.js';
+import { checkoutCanSubmit, copyCheckoutText } from '../pages/pos/checkout.js';
+import { coffeeTableCardView } from '../pages/pos/coffee.js';
+import { fishingOrderActionMode, fishingOrderModalCatalog, fishingSpotCardView } from '../pages/pos/fishing.js';
+import { adminOrderStatusOptions, employeeOrderDisplayTime, orderItemPaymentParts, orderTable, renderOrderPaymentRow, renderOrderReceipt } from '../pages/orders/list.js';
 import { fishingSessionLineTotalHtml, fishingSessionMetaHtml, formatDisplayPrice, orderPaymentItemCountLabel, orderedPosMenu, orderRemainingDue, paidQuantityForLine, posMenuCategories } from '../pages/pos/shared.js';
 import { createLifecycleScope } from '../shell/lifecycle.js';
 import { createPageRuntime, definePageModule } from '../shell/page-runtime.js';
+import { isMobileSidebarViewport } from '../shell/sidebar.js';
 import {
     notificationCategory,
     notificationDayGroup,
@@ -100,6 +105,47 @@ test('modal settle helper resolves a close or confirm path only once', () => {
     assert.deepEqual(resolved, [false]);
 });
 
+test('button action guard blocks a second tap and restores accessible state', async () => {
+    let release;
+    let calls = 0;
+    const attributes = new Map();
+    const button = {
+        dataset: {},
+        disabled: false,
+        innerHTML: '<span>Lưu</span>',
+        textContent: '',
+        isConnected: true,
+        setAttribute(name, value) { attributes.set(name, String(value)); },
+        removeAttribute(name) { attributes.delete(name); },
+    };
+    const task = () => {
+        calls += 1;
+        return new Promise(resolve => { release = resolve; });
+    };
+
+    const first = runButtonAction(button, task, { busyText: 'Đang lưu…' });
+    const second = runButtonAction(button, task, { busyText: 'Đang lưu…' });
+    assert.equal(calls, 1);
+    assert.equal(button.disabled, true);
+    assert.equal(attributes.get('aria-busy'), 'true');
+    assert.equal(await second, undefined);
+    release('done');
+    assert.equal(await first, 'done');
+    assert.equal(button.disabled, false);
+    assert.equal(button.innerHTML, '<span>Lưu</span>');
+    assert.equal(attributes.has('aria-busy'), false);
+    assert.equal(attributes.has('aria-disabled'), false);
+});
+
+test('keyboard viewport helpers calculate mobile keyboard state consistently', () => {
+    assert.equal(keyboardViewportOffset(844, 544), 300);
+    assert.equal(keyboardViewportOffset(844, 600, 44), 200);
+    assert.equal(keyboardViewportOffset(600, 844), 0);
+    assert.equal(keyboardViewportIsOpen(120), false);
+    assert.equal(keyboardViewportIsOpen(121), true);
+    assert.equal(keyboardViewportIsOpen(121, 120), true);
+});
+
 test('shell router resolves page names from app paths', () => {
     assert.equal(pageFromPath('/pos/coffee'), 'coffee');
     assert.equal(pageFromPath('/admin/settings'), 'settings');
@@ -119,6 +165,13 @@ test('shell router applies POS page flags by role', () => {
         isOrdersPage: false,
     });
     assert.equal(pageShellFlags('fishing', 'admin').isFishingPage, true);
+});
+
+test('mobile sidebar breakpoint ends before the existing iPad layer', () => {
+    assert.equal(isMobileSidebarViewport(320), true);
+    assert.equal(isMobileSidebarViewport(767), true);
+    assert.equal(isMobileSidebarViewport(768), false);
+    assert.equal(isMobileSidebarViewport(1024), false);
 });
 
 test('lifecycle scope unmounts cleanups once in reverse order', () => {
@@ -321,6 +374,71 @@ test('admin orders hide reconciliation filters and payment adjustment actions', 
     assert.doesNotMatch(paymentHtml, /Điều chỉnh|data-reverse-payment/);
 });
 
+test('orders opt into the reviewed mobile card list without changing desktop columns', () => {
+    const order = {
+        id: 17,
+        order_number: 'ORD-&17',
+        service_type: 'coffee',
+        resource: { label: 'Bàn 03' },
+        opened_at: '2026-07-13T08:30:00+07:00',
+        activity_at: '2026-07-13T08:45:00+07:00',
+        total: 78000,
+        status: 'partially_paid',
+    };
+    const employeeHtml = orderTable([order], false);
+    const adminHtml = orderTable([order], true);
+
+    assert.match(employeeHtml, /is-mobile-card-list order-card-list/);
+    assert.match(employeeHtml, /class="order-cell-number" data-label="Mã đơn"/);
+    assert.match(employeeHtml, /tabindex="0" role="button"/);
+    assert.match(employeeHtml, /ORD-&amp;17/);
+    assert.doesNotMatch(employeeHtml, /order-cell-total/);
+    assert.match(adminHtml, /class="order-cell-total" data-label="Tổng"/);
+});
+
+test('order receipt splits partially paid quantities into explicit paid and unpaid sections', () => {
+    const order = {
+        order_number: 'ORD-017',
+        service_type: 'coffee',
+        resource: { label: 'Bàn 03' },
+        opened_at: '2026-07-13T08:30:00+07:00',
+        status: 'partially_paid',
+        subtotal: 78000,
+        total: 78000,
+        items: [
+            { id: 1, name: 'Bạc xỉu đá', quantity: 3, paid_quantity: 1, unpaid_quantity: 2, unit_price: 26000, note: 'Ít đá', ordered_at: '2026-07-13T08:31:00+07:00' },
+        ],
+        payments: [
+            { payment_number: 'PAY-017', amount: 26000, paid_at: '2026-07-13T08:40:00+07:00', method: 'cash', status: 'completed', lines: [] },
+        ],
+    };
+    const adminHtml = renderOrderReceipt(order, { admin: true });
+    const employeeHtml = renderOrderReceipt(order);
+
+    assert.deepEqual(orderItemPaymentParts(order.items[0]), { quantity: 3, paid: 1, unpaid: 2 });
+    assert.match(adminHtml, /pos-receipt-unpaid[\s\S]*Món chưa thanh toán[\s\S]*>2</);
+    assert.match(adminHtml, /pos-receipt-paid[\s\S]*Món đã thanh toán[\s\S]*>1</);
+    assert.match(adminHtml, /data-payment-history-toggle/);
+    assert.doesNotMatch(adminHtml, /data-reverse-payment|data-void-order/);
+    assert.match(employeeHtml, /Món cần xử lý/);
+    assert.match(employeeHtml, /! Chưa thanh toán/);
+    assert.match(employeeHtml, /✓ Đã thanh toán/);
+});
+
+test('order receipt tolerates legacy details without item or payment arrays', () => {
+    const html = renderOrderReceipt({
+        order_number: 'ORD-EMPTY',
+        service_type: 'fishing',
+        resource: null,
+        opened_at: null,
+        status: 'open',
+        total: 0,
+    }, { admin: true });
+
+    assert.match(html, /Đơn chưa có món/);
+    assert.match(html, /0 giao dịch/);
+});
+
 test('POS menu helpers keep drink categories before food categories', () => {
     const menu = [
         { id: 1, name: 'Khoai chiên', category: 'Đồ ăn' },
@@ -369,6 +487,43 @@ test('fishing session metadata shows the selected discount', () => {
 test('fishing order actions reopen after adding unpaid items to a paid session', () => {
     assert.equal(fishingOrderActionMode(0), 'paid');
     assert.equal(fishingOrderActionMode(20000), 'outstanding');
+});
+
+test('POS map card copy preserves operational states on mobile', () => {
+    assert.deepEqual(coffeeTableCardView({ state: 'disabled' }), {
+        isPaid: false,
+        stateClass: 'disabled',
+        stateLabel: 'Tạm nghỉ',
+        detail: 'Chưa nhận khách',
+    });
+    assert.match(coffeeTableCardView({
+        state: 'occupied',
+        order: { status: 'open', order_number: 'DL-1042', total: 75000, payments: [] },
+    }).detail, /DL-1042.*75\.000/);
+    assert.equal(fishingSpotCardView({ state: 'expired' }).stateLabel, 'Hết giờ');
+    assert.equal(fishingSpotCardView({ state: 'occupied', order: { status: 'paid' } }).stateLabel, 'Đã thanh toán');
+});
+
+test('mobile order navigation opens new orders on menu and existing orders on receipt', () => {
+    assert.equal(orderMobileInitialView(false), 'menu');
+    assert.equal(orderMobileInitialView(true), 'receipt');
+    assert.match(orderMobileNavigationHtml('menu'), /data-order-mobile-tab="menu"[^>]*aria-controls="mobile-order-menu-panel"[^>]*aria-selected="true"/);
+    assert.match(orderMobileNavigationHtml('receipt'), /data-order-mobile-tab="receipt"[^>]*aria-controls="mobile-order-receipt-panel"[^>]*aria-selected="true"/);
+});
+
+test('checkout submit guard requires a payable selection and enough cash', () => {
+    assert.equal(checkoutCanSubmit({ total: 0, cashReceived: 100000 }), false);
+    assert.equal(checkoutCanSubmit({ total: 50000, cashReceived: 49999 }), false);
+    assert.equal(checkoutCanSubmit({ total: 50000, cashReceived: 50000 }), true);
+    assert.equal(checkoutCanSubmit({ total: 50000, paymentMethod: 'qr', cashReceived: 0 }), true);
+    assert.equal(checkoutCanSubmit({ total: 50000, paymentMethod: 'qr', isSubmitting: true }), false);
+});
+
+test('checkout account copy uses the provided clipboard contract', async () => {
+    let copied = '';
+    const value = await copyCheckoutText('0123456789', { writeText: async text => { copied = text; } });
+    assert.equal(value, '0123456789');
+    assert.equal(copied, '0123456789');
 });
 
 test('POS order modal renderer keeps unpaid and paid lines distinct', () => {

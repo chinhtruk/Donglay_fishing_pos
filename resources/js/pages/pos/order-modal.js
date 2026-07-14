@@ -12,6 +12,82 @@ const minusIcon = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" s
 const plusIcon = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
 const emptyIcon = '<svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>';
 
+export function orderMobileInitialView(hasExistingOrder = false) {
+    return hasExistingOrder ? 'receipt' : 'menu';
+}
+
+export function orderMobileNavigationHtml(initialView = 'menu') {
+    const receiptActive = initialView === 'receipt';
+    return `
+        <div class="order-mobile-navigation">
+            <div class="order-mobile-tabs" role="tablist" aria-label="Chọn khu vực đặt món">
+                <button type="button" role="tab" data-order-mobile-tab="menu" aria-controls="mobile-order-menu-panel" aria-selected="${receiptActive ? 'false' : 'true'}" tabindex="${receiptActive ? '-1' : '0'}">Menu</button>
+                <button type="button" role="tab" data-order-mobile-tab="receipt" aria-controls="mobile-order-receipt-panel" aria-selected="${receiptActive ? 'true' : 'false'}" tabindex="${receiptActive ? '0' : '-1'}">Phiếu <span data-order-mobile-count>0</span></button>
+            </div>
+            <p class="sr-only" data-order-mobile-feedback aria-live="polite"></p>
+        </div>
+    `;
+}
+
+export function setupOrderModalMobileNavigation(modal, { initialView = 'menu' } = {}) {
+    const body = modal?.querySelector('.modal-body');
+    const layout = modal?.querySelector('.modal-pos-layout');
+    const menu = modal?.querySelector('.pos-menu-section');
+    const receipt = modal?.querySelector('.modal-order-dock-aside');
+    if (!body || !layout || !menu || !receipt) return null;
+
+    menu.id = 'mobile-order-menu-panel';
+    menu.setAttribute('role', 'tabpanel');
+    receipt.id = 'mobile-order-receipt-panel';
+    receipt.setAttribute('role', 'tabpanel');
+    layout.insertAdjacentHTML('beforebegin', orderMobileNavigationHtml(initialView));
+    body.insertAdjacentHTML('beforeend', '<button type="button" class="order-mobile-receipt-cta hidden" data-order-mobile-receipt-cta>Xem phiếu <span data-order-mobile-cta-count>0</span></button>');
+
+    const setView = view => {
+        const normalized = view === 'receipt' ? 'receipt' : 'menu';
+        modal.dataset.mobileOrderView = normalized;
+        modal.classList.toggle('mobile-order-view-menu', normalized === 'menu');
+        modal.classList.toggle('mobile-order-view-receipt', normalized === 'receipt');
+        modal.querySelectorAll('[data-order-mobile-tab]').forEach(button => {
+            const active = button.dataset.orderMobileTab === normalized;
+            button.setAttribute('aria-selected', active ? 'true' : 'false');
+            button.tabIndex = active ? 0 : -1;
+        });
+        const cta = modal.querySelector('[data-order-mobile-receipt-cta]');
+        cta?.classList.toggle('is-view-hidden', normalized !== 'menu');
+    };
+
+    modal.querySelectorAll('[data-order-mobile-tab]').forEach(button => {
+        button.addEventListener('click', () => setView(button.dataset.orderMobileTab));
+    });
+    modal.querySelector('[data-order-mobile-receipt-cta]')?.addEventListener('click', () => setView('receipt'));
+    setView(initialView);
+
+    return { setView };
+}
+
+export function updateOrderModalMobileNavigation(modal, { itemCount = 0, unpaidCount = itemCount } = {}) {
+    const count = Math.max(0, Number(itemCount) || 0);
+    const unpaid = Math.max(0, Number(unpaidCount) || 0);
+    modal?.querySelectorAll('[data-order-mobile-count], [data-order-mobile-cta-count]').forEach(element => {
+        element.textContent = String(count);
+    });
+    const receiptTab = modal?.querySelector('[data-order-mobile-tab="receipt"]');
+    receiptTab?.setAttribute('aria-label', `Phiếu, ${count} món, ${unpaid} món chưa thanh toán`);
+    modal?.querySelector('[data-order-mobile-receipt-cta]')?.classList.toggle('hidden', count === 0);
+}
+
+export function announceOrderMobileAdd(modal, itemName, itemCount) {
+    const feedback = modal?.querySelector('[data-order-mobile-feedback]');
+    if (feedback) feedback.textContent = `Đã thêm ${itemName}. Phiếu hiện có ${itemCount} món.`;
+}
+
+export function centerOrderCategory(button) {
+    if (!button || typeof window === 'undefined' || !window.matchMedia?.('(max-width: 767px)').matches) return;
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    button.scrollIntoView({ inline: 'center', block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+}
+
 export function renderOrderModalBody({ categories, menu, activeCategory = 'Tất cả' }) {
     const body = cloneTemplate('tpl-pos-order-modal-body');
     if (!body) return renderOrderModalBodyFallback({ categories, menu, activeCategory });

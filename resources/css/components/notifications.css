@@ -539,3 +539,132 @@ body[data-role="admin"] .notification-drawer-foot .button {
     color: var(--muted);
     font-size: 12px;
 }
+
+/* Shared phone notification contract: the drawer becomes a full-height panel,
+   while toasts remain compact and never cover the whole working surface. */
+@media(max-width: 767px) {
+    body.notification-drawer-open {
+        height: 100dvh;
+        overflow: hidden;
+        overscroll-behavior: none
+    }
+
+    body[data-role="admin"] .notification-drawer {
+        width: 100vw;
+        max-width: none;
+        border-left: 0
+    }
+
+    body[data-role="admin"] .notification-drawer-head {
+        min-height: calc(60px + env(safe-area-inset-top));
+        padding: env(safe-area-inset-top) var(--mobile-page-x) 0
+    }
+
+    body[data-role="admin"] .notification-drawer-head .icon-button {
+        width: var(--mobile-touch-target);
+        height: var(--mobile-touch-target);
+        flex: 0 0 var(--mobile-touch-target);
+        border-radius: 12px
+    }
+
+    body[data-role="admin"] .notification-drawer-controls {
+        gap: 7px;
+        padding: 9px 12px
+    }
+
+    body[data-role="admin"] .notification-tabs,
+    body[data-role="admin"] .notification-category-tabs {
+        width: 100%;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch
+    }
+
+    body[data-role="admin"] .notification-tabs button,
+    body[data-role="admin"] .notification-category-tabs button {
+        min-height: var(--mobile-touch-target);
+        height: var(--mobile-touch-target)
+    }
+
+    body[data-role="admin"] .notification-drawer-list {
+        padding: 8px 12px 18px;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch
+    }
+
+    body[data-role="admin"] .notification-item {
+        min-height: 72px;
+        margin: 0;
+        padding: 12px 8px
+    }
+
+    body[data-role="admin"] .notification-load-more,
+    body[data-role="admin"] .notification-drawer-foot .button {
+        min-height: var(--mobile-touch-target);
+        height: var(--mobile-touch-target)
+    }
+
+    body[data-role="admin"] .notification-drawer-foot {
+        padding: 10px 12px max(10px, env(safe-area-inset-bottom))
+    }
+
+    .toast-root {
+        top: max(10px, env(safe-area-inset-top));
+        right: 12px;
+        left: 12px;
+        max-height: min(240px, calc(100dvh - 20px - env(safe-area-inset-top)));
+        justify-items: stretch;
+        overflow: hidden
+    }
+
+    .toast,
+    .toast.is-sticky {
+        width: 100%;
+        min-height: 56px;
+        padding: 9px 6px 9px 12px;
+        border-radius: 12px
+    }
+
+    .toast-copy>span {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3
+    }
+
+    .toast-close {
+        width: var(--mobile-touch-target);
+        height: var(--mobile-touch-target);
+        margin: 0;
+        touch-action: manipulation
+    }
+
+    .notification-order-summary>header {
+        grid-template-columns: 38px minmax(0, 1fr)
+    }
+
+    .notification-order-summary>header>:last-child {
+        grid-column: 1 / -1;
+        justify-self: stretch
+    }
+
+    .notification-order-stats {
+        grid-template-columns: minmax(0, 1fr)
+    }
+
+    .notification-order-line {
+        grid-template-columns: 34px minmax(0, 1fr)
+    }
+
+    .notification-order-line>b {
+        grid-column: 2;
+        justify-self: start
+    }
+}
+
+@media(max-width: 767px) and (prefers-reduced-motion: reduce) {
+    body[data-role="admin"] .notification-drawer,
+    .toast {
+        animation: none;
+        transition: none
+    }
+}

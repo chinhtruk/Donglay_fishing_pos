@@ -193,9 +193,18 @@ function drawDashboard(data) {
 
 function chartSvg(rows) {
     if (!rows.length) return '<div class="empty-state">Chưa có doanh thu trong khoảng này.</div>';
-    const width = 960, height = 300, left = 68, right = 22, top = 18, bottom = 42;
+    const compact = window.matchMedia?.('(max-width: 767px)').matches ?? false;
+    const width = compact ? 360 : 960;
+    const height = compact ? 238 : 300;
+    const left = compact ? 48 : 68;
+    const right = compact ? 8 : 22;
+    const top = compact ? 14 : 18;
+    const bottom = compact ? 38 : 42;
     const max = Math.max(...rows.map(row => Number(row.revenue)), 1);
-    const plotWidth = width - left - right, plotHeight = height - top - bottom, slot = plotWidth / rows.length, barWidth = Math.max(5, Math.min(32, slot * .58));
+    const plotWidth = width - left - right;
+    const plotHeight = height - top - bottom;
+    const slot = plotWidth / rows.length;
+    const barWidth = Math.max(compact ? 3 : 5, Math.min(compact ? 14 : 32, slot * .58));
 
     const grid = [0, .5, 1].map(ratio => {
         const y = top + plotHeight * (1 - ratio);
@@ -213,7 +222,8 @@ function chartSvg(rows) {
         return `<g class="revenue-stack" role="button" tabindex="0" data-chart-stack data-day="${row.day}" data-coffee="${coffee}" data-fishing="${fishing}" data-total="${coffee + fishing}" aria-label="Xem doanh thu ngày ${row.day}"><rect class="chart-hit-area" x="${left + index * slot}" y="${top}" width="${slot}" height="${plotHeight}"></rect><rect class="coffee-bar" x="${x}" y="${coffeeY}" width="${barWidth}" height="${Math.max(coffeeHeight, coffee ? 2 : 0)}" rx="4"></rect><rect class="fishing-bar" x="${x}" y="${fishingY}" width="${barWidth}" height="${Math.max(fishingHeight, fishing ? 2 : 0)}" rx="4"></rect></g>`;
     }).join('');
 
-    const labelStep = Math.max(1, Math.ceil(rows.length / 6));
+    const targetLabelCount = compact ? 4 : 7;
+    const labelStep = Math.max(1, Math.ceil((rows.length - 1) / (targetLabelCount - 1)));
     const labels = rows.map((row, index) => index % labelStep === 0 || index === rows.length - 1 ? `<text class="chart-date" x="${left + index * slot + slot / 2}" y="${height - 10}">${new Date(`${row.day}T00:00:00`).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}</text>` : '').join('');
 
     return `<div class="owner-chart-wrap"><svg class="chart owner-revenue-chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
