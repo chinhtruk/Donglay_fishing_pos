@@ -88,11 +88,10 @@ body[data-role] #modal-root .modal.pos-checkout-modal {
 
 .pos-checkout-modal .checkout-cash-input {
     box-sizing: border-box;
-    field-sizing: content;
     flex: 0 1 auto;
-    min-width: 0;
+    min-width: 2px;
     max-width: calc(100% - 48px);
-    width: auto !important;
+    width: var(--checkout-cash-input-width, 2px) !important;
     height: 44px;
     padding: 0 !important;
     border: 0 !important;
@@ -101,13 +100,9 @@ body[data-role] #modal-root .modal.pos-checkout-modal {
     background: transparent !important;
     box-shadow: none !important;
     color: var(--ink) !important;
+    caret-color: var(--ink);
     font: inherit;
     font-variant-numeric: tabular-nums;
-}
-
-.pos-checkout-modal .checkout-cash-input-shell.is-empty .checkout-cash-input {
-    flex-basis: 0;
-    width: 0 !important;
 }
 
 body[data-role] #modal-root .pos-checkout-modal .checkout-cash-input,
@@ -120,6 +115,8 @@ body[data-role] #modal-root .modal.pos-checkout-modal .checkout-cash-label .chec
     outline: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
+    color: var(--ink) !important;
+    caret-color: var(--ink) !important;
     font: inherit !important;
     letter-spacing: 0 !important;
     font-variant-numeric: tabular-nums;

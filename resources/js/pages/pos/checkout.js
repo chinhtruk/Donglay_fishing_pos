@@ -252,7 +252,12 @@ export function openCheckout(order, type, paymentSettings = {}) {
 
         const cashInput = $('#cash-received', modal);
         const cashInputShell = cashInput.closest('.checkout-cash-input-shell');
-        const syncCashInputShell = () => cashInputShell?.classList.toggle('is-empty', !cashInput.value);
+        const syncCashInputShell = () => {
+            cashInputShell?.classList.toggle('is-empty', !cashInput.value);
+            cashInput.style.setProperty('--checkout-cash-input-width', '2px');
+            const contentWidth = cashInput.value ? cashInput.scrollWidth : 0;
+            cashInput.style.setProperty('--checkout-cash-input-width', `${Math.max(2, contentWidth + 5)}px`);
+        };
 
         const syncPaymentMethod = method => {
             paymentMethod = method;

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/build/assets/app-Toft5bTN.css">
+    <title>Checkout cash input QA</title>
+    <style>
+        body { margin: 0; }
+        .qa-wrap { padding: 24px; }
+        .qa-panel { max-width: 720px; padding: 20px; background: #fff; }
+    </style>
+</head>
+<body data-role="employee">
+    <div id="modal-root">
+        <section class="modal pos-order-modal pos-checkout-modal">
+            <div class="qa-wrap">
+                <div class="qa-panel">
+                    <label class="checkout-cash-label">
+                        Tiền khách đưa
+                        <span class="checkout-cash-input-shell is-empty">
+                            <input class="checkout-cash-input" id="cash-received" inputmode="numeric" type="text" autocomplete="off" aria-label="Số tiền khách đưa, đơn vị nghìn đồng">
+                            <span class="checkout-cash-thousands" aria-hidden="true">.000</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script>
+        const input = document.querySelector('#cash-received');
+        const shell = input.closest('.checkout-cash-input-shell');
+        const sync = () => {
+            shell.classList.toggle('is-empty', !input.value);
+            input.style.setProperty('--checkout-cash-input-width', '2px');
+            const contentWidth = input.value ? input.scrollWidth : 0;
+            input.style.setProperty('--checkout-cash-input-width', `${Math.max(2, contentWidth + 5)}px`);
+        };
+        input.addEventListener('input', sync);
+        sync();
+    </script>
+</body>
+</html>
