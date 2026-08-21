@@ -2,18 +2,10 @@ import { api } from './modules/api.js';
 import { confirmModal } from './modules/modal.js';
 import { toast } from './modules/toast.js';
 import { setupKeyboardViewportGuard } from './modules/keyboard.js';
-import { dashboardPage } from './pages/admin/dashboard.js';
-import { dataPage } from './pages/admin/data.js';
-import { mapPage } from './pages/admin/map.js';
-import { menuPage } from './pages/admin/menu.js';
-import { settingsPage } from './pages/admin/settings.js';
-import { configureAdminUsers, usersPage } from './pages/admin/users.js';
+import { configureAdminUsers } from './pages/admin/users.js';
 import { setupLogin } from './pages/auth/login.js';
 import { closeNotificationDrawer, pollNotificationToasts, setupNotificationDrawer } from './pages/notifications/index.js';
-import { ordersPage } from './pages/orders/list.js';
 import { configureCheckout } from './pages/pos/checkout.js';
-import { coffeePage } from './pages/pos/coffee.js';
-import { fishingPage } from './pages/pos/fishing.js';
 import { configurePosOperationalReset } from './pages/pos/operational-day.js';
 import { createLifecycleScope } from './shell/lifecycle.js';
 import { createPageRuntime } from './shell/page-runtime.js';
@@ -25,16 +17,18 @@ import { $, emptyState, setLoading } from './templates/dom.js';
 
 const appLifecycle = createLifecycleScope();
 const pageRuntime = createPageRuntime();
-const pageModules = {
-    coffee: coffeePage,
-    fishing: fishingPage,
-    orders: ordersPage,
-    dashboard: dashboardPage,
-    data: dataPage,
-    menu: menuPage,
-    map: mapPage,
-    settings: settingsPage,
-    users: usersPage,
+
+// Lazy-loaded page modules — Vite will code-split each dynamic import into its own chunk
+const pageLoaders = {
+    coffee: () => import('./pages/pos/coffee.js').then(m => m.coffeePage),
+    fishing: () => import('./pages/pos/fishing.js').then(m => m.fishingPage),
+    orders: () => import('./pages/orders/list.js').then(m => m.ordersPage),
+    dashboard: () => import('./pages/admin/dashboard.js').then(m => m.dashboardPage),
+    data: () => import('./pages/admin/data.js').then(m => m.dataPage),
+    menu: () => import('./pages/admin/menu.js').then(m => m.menuPage),
+    map: () => import('./pages/admin/map.js').then(m => m.mapPage),
+    settings: () => import('./pages/admin/settings.js').then(m => m.settingsPage),
+    users: () => import('./pages/admin/users.js').then(m => m.usersPage),
 };
 
 setupKeyboardViewportGuard();
@@ -67,8 +61,11 @@ function closeOpenModal() {
 
 async function renderPage(page) {
     try {
+        const loader = pageLoaders[page];
+        if (!loader) throw new Error(`No page module registered for "${page}".`);
+        const module = await loader();
         await renderRoutedPage(page, {
-            modules: pageModules,
+            modules: { [page]: module },
             runtime: pageRuntime,
             beforeRender() {
                 setLoading();

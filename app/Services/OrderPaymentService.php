@@ -16,7 +16,7 @@ class OrderPaymentService
     ) {
     }
 
-    public function checkout(Order $order, User $cashier, array $selections, float $cashReceived, string $method = 'cash', ?callable $completedAtResolver = null, ?CarbonInterface $paidAt = null): Payment
+    public function checkout(Order $order, User $cashier, array $selections, int $cashReceived, string $method = 'cash', ?callable $completedAtResolver = null, ?CarbonInterface $paidAt = null): Payment
     {
         $items = $order->items()->lockForUpdate()->get()->keyBy('id');
 
@@ -40,7 +40,8 @@ class OrderPaymentService
                 throw ValidationException::withMessages(['items' => 'Một món vừa thay đổi. Mình sẽ làm mới hóa đơn để bạn chọn lại nhé.']);
             }
 
-            $amount += (float) $item->unit_price * $quantity;
+            $unitPrice = (int) $item->unit_price;
+            $amount += $unitPrice * $quantity;
         }
 
         $method = $method ?: 'cash';
@@ -64,11 +65,12 @@ class OrderPaymentService
         foreach ($selections as $selection) {
             $item = $items->get((int) $selection['order_item_id']);
             $quantity = (int) $selection['quantity'];
+            $unitPrice = (int) $item->unit_price;
             $payment->lines()->create([
                 'order_item_id' => $item->id,
                 'quantity' => $quantity,
-                'unit_price' => $item->unit_price,
-                'amount' => (float) $item->unit_price * $quantity,
+                'unit_price' => $unitPrice,
+                'amount' => $unitPrice * $quantity,
             ]);
             $item->increment('paid_quantity', $quantity);
         }

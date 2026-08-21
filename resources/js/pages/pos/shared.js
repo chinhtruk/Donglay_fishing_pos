@@ -17,17 +17,37 @@ export function normalizedCategoryName(category = '') {
     return String(category).trim().toLowerCase();
 }
 
+/** Normalize collection responses from both JSON arrays and wrapped/object payloads. */
+export function normalizeCollection(value) {
+    if (Array.isArray(value)) {
+        return value.length === 1 && Array.isArray(value[0])
+            ? normalizeCollection(value[0])
+            : value;
+    }
+
+    if (value && typeof value === 'object') {
+        if (Object.prototype.hasOwnProperty.call(value, 'data')) {
+            return normalizeCollection(value.data);
+        }
+
+        return Object.values(value);
+    }
+
+    return [];
+}
+
 export function isTrailingPosMenuCategory(category = '') {
     return ['ăn vặt', 'đồ ăn'].includes(normalizedCategoryName(category));
 }
 
 export function orderedPosMenu(menu = []) {
+    const safeMenu = normalizeCollection(menu).filter(item => item && typeof item === 'object');
     const categoryIndexes = new Map();
-    menu.forEach(item => {
+    safeMenu.forEach(item => {
         if (!categoryIndexes.has(item.category)) categoryIndexes.set(item.category, categoryIndexes.size);
     });
 
-    return [...menu].sort((a, b) => {
+    return [...safeMenu].sort((a, b) => {
         const trailingDiff = Number(isTrailingPosMenuCategory(a.category)) - Number(isTrailingPosMenuCategory(b.category));
         if (trailingDiff !== 0) return trailingDiff;
 
@@ -39,7 +59,8 @@ export function orderedPosMenu(menu = []) {
 }
 
 export function posMenuCategories(menu = []) {
-    return ['Tất cả', ...new Set(menu.map(item => item.category))];
+    const safeMenu = normalizeCollection(menu).filter(item => item && typeof item === 'object');
+    return ['Tất cả', ...new Set(safeMenu.map(item => item.category).filter(Boolean))];
 }
 
 export function isVariablePriceItem(menuItems, menuItemId) {

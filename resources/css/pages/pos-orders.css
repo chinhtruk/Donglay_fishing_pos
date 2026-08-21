@@ -151,14 +151,31 @@
 }
 
 .staff-order-detail-modal .staff-receipt .pos-receipt-meta {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     flex: 0 0 auto;
     margin: 0 18px 12px;
     padding: 10px 0;
 }
 
 .staff-order-detail-modal .staff-receipt .pos-receipt-meta>span:nth-child(2) {
-    border-right: 0;
+    border-right: 1px solid var(--line);
+}
+
+@media (max-width: 767px) {
+    .staff-order-detail-modal .staff-receipt .pos-receipt-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .staff-order-detail-modal .staff-receipt .pos-receipt-meta>span:nth-child(2) {
+        border-right: 0;
+    }
+
+    .staff-order-detail-modal .staff-receipt .pos-receipt-meta>span:nth-child(3) {
+        grid-column: 1 / -1;
+        border-top: 1px solid var(--line);
+        margin-top: 8px;
+        padding-top: 8px;
+    }
 }
 
 .staff-order-detail-modal .staff-receipt .pos-receipt-head {

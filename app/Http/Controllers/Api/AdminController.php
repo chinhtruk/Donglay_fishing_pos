@@ -22,6 +22,7 @@ use App\Services\AdminDashboardService;
 use App\Services\AdminMapService;
 use App\Services\AdminMenuService;
 use App\Services\AdminPaymentMethodService;
+use App\Services\OrderStatusResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -165,11 +166,17 @@ class AdminController extends Controller
         if (! in_array($order->status, ['open', 'partially_paid'], true)) {
             throw ValidationException::withMessages(['order' => 'Đơn này đã khép lại nên không thể hủy trực tiếp.']);
         }
+        if ($order->completed_at !== null) {
+            throw ValidationException::withMessages(['order' => 'Đơn đã hoàn tất nên không thể hủy.']);
+        }
         if ($order->payments()->where('status', 'completed')->exists()) {
             throw ValidationException::withMessages(['order' => 'Đơn đã có thanh toán. Bạn hãy đảo thanh toán trước để sổ sách luôn rõ ràng nhé.']);
         }
         DB::transaction(function () use ($request, $order, $data) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
+            if ($locked->completed_at !== null || ! in_array($locked->status, ['open', 'partially_paid'], true)) {
+                throw ValidationException::withMessages(['order' => 'Đơn vừa thay đổi trạng thái, vui lòng tải lại.']);
+            }
             $before = $locked->toArray();
             $locked->update(['status' => 'void', 'voided_at' => now(), 'void_reason' => $data['reason'], 'version' => $locked->version + 1]);
             $locked->fishingSession()->update(['status' => 'completed', 'completed_at' => now()]);
@@ -186,15 +193,30 @@ class AdminController extends Controller
             throw ValidationException::withMessages(['payment' => 'Giao dịch này đã được điều chỉnh trước đó rồi.']);
         }
         DB::transaction(function () use ($request, $payment, $data) {
-            $locked = Payment::lockForUpdate()->findOrFail($payment->id);
+            $locked = Payment::with('lines')->lockForUpdate()->findOrFail($payment->id);
+            if ($locked->status !== 'completed') {
+                throw ValidationException::withMessages(['payment' => 'Giao dịch vừa được điều chỉnh, vui lòng tải lại.']);
+            }
+            $order = $locked->order()->lockForUpdate()->firstOrFail();
+            if ($order->completed_at !== null) {
+                throw ValidationException::withMessages(['payment' => 'Đơn đã hoàn tất, không thể đảo thanh toán. Vui lòng tạo điều chỉnh thủ công.']);
+            }
             $before = $locked->toArray();
             $locked->update(['status' => 'reversed']);
-            DB::table('payment_adjustments')->insert(['payment_id' => $locked->id, 'created_by' => $request->user()->id, 'amount' => -((float) $locked->amount), 'reason' => $data['reason'], 'created_at' => now()]);
-            $locked->order()->update(['status' => 'payment_exception', 'version' => DB::raw('version + 1')]);
+            // Hoàn paid_quantity để đơn có thể thanh toán lại phần đã đảo
+            foreach ($locked->lines as $line) {
+                $item = $line->orderItem()->lockForUpdate()->first();
+                if ($item) {
+                    $item->decrement('paid_quantity', $line->quantity);
+                }
+            }
+            DB::table('payment_adjustments')->insert(['payment_id' => $locked->id, 'created_by' => $request->user()->id, 'amount' => -((int) $locked->amount), 'reason' => $data['reason'], 'created_at' => now()]);
+            $status = app(OrderStatusResolver::class)->resolve($order->fresh());
+            $order->update(['status' => $status, 'version' => $order->version + 1]);
             $this->audit($request, 'payment.reversed', $locked, $before, $locked->fresh()->toArray(), $data['reason']);
         });
 
-        return response()->json(['message' => 'Giao dịch đã được đảo và chuyển sang mục cần đối soát.']);
+        return response()->json(['message' => 'Giao dịch đã được đảo và đơn đã cập nhật để có thể thanh toán lại.']);
     }
 
     private function userData(StoreUserRequest $request, ?User $user = null): array

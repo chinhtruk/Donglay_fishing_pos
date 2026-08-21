@@ -29,6 +29,7 @@ use App\Services\PosNotificationMessageFactory;
 use App\Services\PosOperationalDayCloser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
@@ -39,13 +40,23 @@ class PosController extends Controller
     public function coffeeMap(PosOperationalDayCloser $dayCloser): JsonResponse
     {
         $dayCloser->closeDueOrders();
-        $tables = CoffeeTable::orderBy('id')->get()->map(function ($table) {
-            $order = $table->orders()->activeForPos()->latest('updated_at')->latest('id')->first();
+
+        $activeOrders = Order::with(['items', 'payments.lines.orderItem', 'coffeeTable', 'fishingSpot', 'fishingSession', 'opener:id,name'])
+            ->activeForPos()
+            ->where('service_type', 'coffee')
+            ->whereNotNull('coffee_table_id')
+            ->latest('updated_at')
+            ->latest('id')
+            ->get()
+            ->keyBy('coffee_table_id');
+
+        $tables = CoffeeTable::orderBy('id')->get()->map(function ($table) use ($activeOrders) {
+            $order = $activeOrders->get($table->id);
 
             return ['id' => $table->id, 'label' => $table->label, 'position_x' => $table->position_x, 'position_y' => $table->position_y, 'is_enabled' => $table->is_enabled, 'state' => ! $table->is_enabled ? 'disabled' : ($order ? 'occupied' : 'available'), 'order' => $order ? OrderPresenter::make($order) : null];
         });
 
-        $counterOrders = Order::query()
+        $counterOrders = Order::with(['items', 'payments.lines.orderItem', 'coffeeTable', 'fishingSpot', 'fishingSession', 'opener:id,name'])
             ->activeForPos()
             ->where('service_type', 'coffee')
             ->whereNull('coffee_table_id')
@@ -64,8 +75,8 @@ class PosController extends Controller
                 'counter_orders' => $counterOrders->count(),
                 'completed_today' => Order::query()->forCurrentPosOperationalDay()->where('service_type', 'coffee')->where('status', 'paid')->whereNotNull('completed_at')->count(),
             ],
-            'menu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
-            'payment_settings' => $this->paymentSettingsPayload(),
+            'menu' => $this->cachedMenu(),
+            'payment_settings' => $this->cachedPaymentSettings(),
         ]);
     }
 
@@ -116,14 +127,14 @@ class PosController extends Controller
         $method = $data['payment_method'] ?? PaymentQrSetting::TYPE_CASH;
         $this->assertPaymentMethodAvailable($method);
 
-        $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) ($data['cash_received'] ?? 0), $method);
+        $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (int) ($data['cash_received'] ?? 0), $method);
 
         $freshOrder = $order->fresh();
         if (! empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
             $service->release($freshOrder, $freshOrder->version);
         }
         $freshOrder = $order->fresh();
-        $this->notifyOrderEvent($this->notificationMessages->coffeePaymentCompleted($freshOrder, (float) $payment->amount, $payment->id), $freshOrder);
+        $this->notifyOrderEvent($this->notificationMessages->coffeePaymentCompleted($freshOrder, (int) $payment->amount, $payment->id), $freshOrder);
 
         return response()->json(['message' => 'Thanh toán hoàn tất. Cảm ơn bạn!', 'payment' => $payment, 'order' => OrderPresenter::make($freshOrder)]);
     }
@@ -133,8 +144,17 @@ class PosController extends Controller
         $dayCloser->closeDueOrders();
         $expirationNotifier->sync();
 
-        $spots = FishingSpot::orderBy('id')->get()->map(function ($spot) {
-            $order = $spot->orders()->activeForPos()->latest('updated_at')->latest('id')->first();
+        $activeOrders = Order::with(['items', 'payments.lines.orderItem', 'coffeeTable', 'fishingSpot', 'fishingSession', 'opener:id,name'])
+            ->activeForPos()
+            ->where('service_type', 'fishing')
+            ->whereNotNull('fishing_spot_id')
+            ->latest('updated_at')
+            ->latest('id')
+            ->get()
+            ->keyBy('fishing_spot_id');
+
+        $spots = FishingSpot::orderBy('id')->get()->map(function ($spot) use ($activeOrders) {
+            $order = $activeOrders->get($spot->id);
             $session = $order?->fishingSession;
             $state = ! $spot->is_enabled ? 'disabled' : (! $order ? 'available' : (($session->ends_at->isPast() || $session->status === 'expired') ? 'expired' : 'occupied'));
 
@@ -150,15 +170,15 @@ class PosController extends Controller
                 'expired_spots' => $spots->where('state', 'expired')->count(),
                 'completed_today' => Order::query()->forCurrentPosOperationalDay()->where('service_type', 'fishing')->where('status', 'paid')->whereNotNull('completed_at')->count(),
             ],
-            'session_price' => number_format((float) config('fishing.session_price'), 2, '.', ''),
+            'session_price' => (string) ((int) config('fishing.session_price')),
             'discount_options' => array_values(array_map(
-                fn ($amount) => number_format((float) $amount, 2, '.', ''),
+                fn ($amount) => (string) ((int) $amount),
                 config('fishing.discount_options', [0, 50000, 100000, 150000, 200000]),
             )),
             'session_minutes' => config('fishing.session_minutes'),
-            'hourly_extension_price' => number_format((float) config('fishing.hourly_extension_price'), 2, '.', ''),
-            'menu' => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get(),
-            'payment_settings' => $this->paymentSettingsPayload(),
+            'hourly_extension_price' => (string) ((int) config('fishing.hourly_extension_price')),
+            'menu' => $this->cachedMenu(),
+            'payment_settings' => $this->cachedPaymentSettings(),
         ]);
     }
 
@@ -177,7 +197,7 @@ class PosController extends Controller
         $blocks = (int) ($data['blocks'] ?? 1);
         $hours = (int) ($data['hours'] ?? 1);
         $sessionMinutes = (int) config('fishing.session_minutes');
-        $hourlyPrice = (float) config('fishing.hourly_extension_price');
+        $hourlyPrice = (int) config('fishing.hourly_extension_price');
         $durationMinutes = $mode === 'hour' ? 60 * $hours : $sessionMinutes * $blocks;
         $durationText = $durationMinutes % 60 === 0 ? ($durationMinutes / 60).' giờ' : $durationMinutes.' phút';
         $extensionText = $mode === 'hour' ? $hours.' giờ' : $blocks.' phiên câu';
@@ -226,14 +246,14 @@ class PosController extends Controller
         $method = $data['payment_method'] ?? PaymentQrSetting::TYPE_CASH;
         $this->assertPaymentMethodAvailable($method);
 
-        $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (float) ($data['cash_received'] ?? 0), $method);
+        $payment = $service->checkout($order, $request->user(), $data['version'], $data['items'] ?? [], (int) ($data['cash_received'] ?? 0), $method);
 
         $freshOrder = $order->fresh();
         if (! empty($data['release']) && $freshOrder->status === 'paid' && $freshOrder->completed_at === null) {
             $service->release($freshOrder, $freshOrder->version);
         }
         $freshOrder = $order->fresh();
-        $this->notifyOrderEvent($this->notificationMessages->fishingPaymentCompleted($freshOrder, (float) $payment->amount, $payment->id), $freshOrder);
+        $this->notifyOrderEvent($this->notificationMessages->fishingPaymentCompleted($freshOrder, (int) $payment->amount, $payment->id), $freshOrder);
 
         return response()->json(['message' => 'Phiên câu đã thanh toán xong. Hẹn gặp lại!', 'payment' => $payment, 'order' => OrderPresenter::make($freshOrder)]);
     }
@@ -302,15 +322,26 @@ class PosController extends Controller
     private function notifyOrderEvent(array $event, Order $order): void
     {
         $order->loadMissing(['coffeeTable', 'fishingSpot']);
-        Notification::send(
-            User::where('is_active', true)->get(),
-            new PosEventNotification($event['title'], $event['message'], $event['url'], $event['type'], [
+        $notification = new PosEventNotification($event['title'], $event['message'], $event['url'], $event['type'], [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
                 'service_type' => $order->service_type,
                 ...($event['meta'] ?? []),
-            ])
-        );
+            ]);
+
+        User::activePosNotifiable()->chunkById(100, function ($users) use ($notification): void {
+            Notification::send($users, $notification);
+        });
+    }
+
+    private function cachedMenu()
+    {
+        return Cache::remember('pos:menu:available', 60, fn () => MenuItem::where('is_available', true)->orderBy('category')->orderBy('name')->get());
+    }
+
+    private function cachedPaymentSettings(): array
+    {
+        return Cache::remember('pos:payment_settings', 60, fn () => $this->paymentSettingsPayload());
     }
 
     private function paymentSettingsPayload(): array

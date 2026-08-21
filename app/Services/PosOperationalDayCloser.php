@@ -40,8 +40,8 @@ class PosOperationalDayCloser
                         : $closedAt;
 
                     if (in_array($order->status, ['open', 'partially_paid'], true)) {
-                        $remaining = (float) $order->items()
-                            ->selectRaw('COALESCE(SUM((quantity - paid_quantity) * unit_price), 0) as amount')
+                        $remaining = (int) $order->items()
+                            ->selectRaw('COALESCE(SUM((quantity - paid_quantity) * CAST(unit_price AS SIGNED)), 0) as amount')
                             ->value('amount');
                         $this->paymentService->checkout(
                             $order,

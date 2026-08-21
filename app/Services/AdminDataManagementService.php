@@ -30,12 +30,20 @@ class AdminDataManagementService
             Cache::put(self::RESET_FLAG, true, now()->addMinutes(10));
 
             try {
+                // Backup must succeed or we abort — never delete without a sent backup
                 $this->sendBackup($admin, true);
 
                 return DB::transaction(function (): array {
                     $deleted = [];
-                    foreach (config('data-management.operational_tables', []) as $table) {
-                        $deleted[$table] = DB::table($table)->delete();
+                    // Tạm tắt FK check để xóa an toàn theo thứ tự con -> cha đã định nghĩa trong config
+                    DB::statement('SET FOREIGN_KEY_CHECKS=0');
+                    try {
+                        foreach (config('data-management.operational_tables', []) as $table) {
+                            $deleted[$table] = DB::table($table)->count();
+                            DB::table($table)->delete();
+                        }
+                    } finally {
+                        DB::statement('SET FOREIGN_KEY_CHECKS=1');
                     }
 
                     return $deleted;

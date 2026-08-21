@@ -28,7 +28,10 @@ class FishingSessionExpirationNotifier
 
                     $locked->update(['status' => 'expired', 'expired_notified_at' => now()]);
                     $locked->load('fishingSpot');
-                    Notification::send(User::where('is_active', true)->get(), new FishingSessionExpired($locked));
+                    $notification = new FishingSessionExpired($locked);
+                    User::activePosNotifiable()->chunkById(100, function ($users) use ($notification): void {
+                        Notification::send($users, $notification);
+                    });
                     $notified++;
                 });
             });

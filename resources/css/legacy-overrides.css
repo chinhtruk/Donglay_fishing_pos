@@ -11923,3 +11923,23 @@ body[data-role="admin"] .owner-dashboard-page .owner-kpi .dash-trend {
         height: 21px !important;
     }
 }
+
+/* === Coffee POS desktop full-width patch (force single-column layout to stretch) === */
+.coffee-pos-layout.coffee-pos-layout-single {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+.pos-coffee-page .coffee-pos-layout.coffee-pos-layout-single .coffee-pos-main,
+.pos-coffee-page .coffee-pos-layout.coffee-pos-layout-single .pos-section {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+@media (min-width: 1180px) {
+    body[data-role].pos-coffee-page .coffee-pos-layout.coffee-pos-layout-single,
+    body[data-role].pos-coffee-page .coffee-pos-layout-single {
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

@@ -57,7 +57,7 @@ class AdminDataManagementTest extends TestCase
     public function test_backup_and_clear_requires_confirmation_then_only_deletes_operational_data(): void
     {
         Mail::fake();
-        $admin = User::factory()->create(['role' => 'admin', 'email' => 'owner@example.com']);
+        $admin = User::factory()->create(['role' => 'admin', 'email' => 'owner@example.com', 'password' => \Illuminate\Support\Facades\Hash::make('secret123')]);
         $employee = User::factory()->create(['role' => 'employee']);
         $table = CoffeeTable::create(['label' => 'Bàn giữ lại']);
         $item = MenuItem::create(['category' => 'Cà phê', 'name' => 'Cà phê giữ lại', 'price' => 30000, 'is_available' => true]);
@@ -81,6 +81,7 @@ class AdminDataManagementTest extends TestCase
         $backupPath = $this->fakeDatabaseDump();
         $this->postJson('/api/v1/admin/data/backup-and-clear', [
             'confirmation' => 'BACKUP_AND_CLEAR',
+            'password' => 'secret123',
         ])->assertOk()
             ->assertJsonPath('message', 'Đã gửi bản sao lưu đến owner@example.com và xóa dữ liệu vận hành.');
 

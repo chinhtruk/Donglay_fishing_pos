@@ -41,4 +41,9 @@ class User extends Authenticatable
             'is_active' => 'boolean',
         ];
     }
+
+    public function scopeActivePosNotifiable($query)
+    {
+        return $query->where('is_active', true)->whereIn('role', ['admin', 'employee']);
+    }
 }

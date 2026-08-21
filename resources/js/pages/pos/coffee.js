@@ -18,6 +18,7 @@ import {
 } from './order-modal.js';
 import {
     hasMissingVariablePrice,
+    normalizeCollection,
     orderCompletedPaymentTotal,
     orderedPosMenu,
     orderPaymentItemCountLabel,
@@ -56,6 +57,11 @@ export function coffeeTableCardView(table = {}) {
 export async function renderCoffee() {
     const data = await api('/api/v1/coffee/map');
     schedulePosOperationalReset(data, coffeeLifecycle);
+    // Defensive normalization: API may return object instead of array when empty or on permission-filtered response
+    data.tables = normalizeCollection(data.tables);
+    data.counter_orders = normalizeCollection(data.counter_orders);
+    data.menu = normalizeCollection(data.menu);
+    data.stats = data.stats || {};
     const orderedMenu = orderedPosMenu(data.menu);
     const categories = posMenuCategories(orderedMenu);
 
@@ -107,7 +113,7 @@ export async function renderCoffee() {
     const openOrderModal = (tableId, order) => {
         let currentOrder = order;
         let selectedTableId = order ? (order.resource?.id || null) : tableId;
-        const makeCoffeeCartFromOrder = order => new Cart(order.items.filter(item => item.menu_item_id).map(item => ({ menu_item_id:item.menu_item_id, name:item.name, price:Number(item.unit_price), quantity:item.quantity, note:item.note || '' })));
+        const makeCoffeeCartFromOrder = order => new Cart((Array.isArray(order?.items) ? order.items : []).filter(item => item.menu_item_id).map(item => ({ menu_item_id:item.menu_item_id, name:item.name, price:Number(item.unit_price), quantity:item.quantity, note:item.note || '' })));
         let cart = order ? makeCoffeeCartFromOrder(order) : new Cart();
         const refreshCurrentCoffeeOrder = async ({ syncCart = false } = {}) => {
             if (!currentOrder) return null;

@@ -14,6 +14,20 @@ export default defineConfig({
             ],
         }),
     ],
+    build: {
+        // Laravel's Vite integration reads this file from the build root.
+        manifest: 'manifest.json',
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) return 'vendor';
+                    if (id.includes('resources/js/pages/pos/')) return 'pos';
+                    if (id.includes('resources/js/pages/admin/')) return 'admin';
+                    if (id.includes('resources/js/pages/orders/')) return 'orders';
+                },
+            },
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

@@ -11,6 +11,7 @@ class BackupAndClearDataRequest extends ApiRequest
     {
         return [
             'confirmation' => ['required', Rule::in(['BACKUP_AND_CLEAR'])],
+            'password' => ['required', 'string'],
         ];
     }
 }

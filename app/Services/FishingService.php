@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\FishingSpot;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentLine;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -35,7 +36,7 @@ class FishingService
             if ($spot->orders()->activeForPos()->exists()) {
                 throw ValidationException::withMessages(['spot' => 'Vị trí vừa được nhận. Mình sẽ cập nhật sơ đồ ngay nhé.']);
             }
-            $price = (float) config('fishing.session_price');
+            $price = (int) config('fishing.session_price');
             $orderedAt = now();
             $order = Order::create(['order_number' => $this->numberGenerator->order('FS'), 'service_type' => 'fishing', 'fishing_spot_id' => $spot->id, 'opened_by' => $user->id, 'status' => 'open', 'subtotal' => $price, 'total' => $price]);
             $order->items()->create(['line_type' => 'fishing_session', 'name_snapshot' => 'Phiên câu 4 giờ', 'unit_price' => $price, 'quantity' => 1, 'ordered_at' => $orderedAt]);
@@ -45,12 +46,12 @@ class FishingService
         });
     }
 
-    public function extend(Order $order, int $version, int $blocks = 1, ?int $minutes = null, ?float $price = null, ?string $label = null): Order
+    public function extend(Order $order, int $version, int $blocks = 1, ?int $minutes = null, ?int $price = null, ?string $label = null): Order
     {
         $blocks = max(1, min(4, $blocks));
         $minutes ??= (int) config('fishing.session_minutes') * $blocks;
         $minutes = max(1, $minutes);
-        $price ??= (float) config('fishing.session_price') * $blocks;
+        $price ??= (int) config('fishing.session_price') * $blocks;
         $label ??= $blocks === 1 ? 'Phiên câu 4 giờ' : "Phiên câu 4 giờ x{$blocks}";
 
         return DB::transaction(function () use ($order, $version, $blocks, $minutes, $price, $label) {
@@ -58,7 +59,7 @@ class FishingService
             $this->assertMutable($order, $version);
             $session = $order->fishingSession()->lockForUpdate()->firstOrFail();
             $extensionBase = $session->ends_at->isFuture() ? $session->ends_at : now();
-            $isFullSessionExtension = $minutes === (int) config('fishing.session_minutes') * $blocks && $price === (float) config('fishing.session_price') * $blocks;
+            $isFullSessionExtension = $minutes === (int) config('fishing.session_minutes') * $blocks && $price === (int) config('fishing.session_price') * $blocks;
             $session->update([
                 'ends_at' => $extensionBase->copy()->addMinutes($minutes),
                 'blocks_count' => $session->blocks_count + ($isFullSessionExtension ? $blocks : 0),
@@ -120,7 +121,7 @@ class FishingService
                 throw ValidationException::withMessages(['discount_amount' => 'Mức giảm giá không hợp lệ.']);
             }
 
-            $standardPrice = (float) config('fishing.session_price', 200000);
+            $standardPrice = (int) config('fishing.session_price', 200000);
             $sessionPrice = max(0, $standardPrice - $discountAmount);
 
             $sessionItem = $order->items()
@@ -128,7 +129,7 @@ class FishingService
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ((int) $sessionItem->paid_quantity > 0 && (float) $sessionItem->unit_price !== $sessionPrice) {
+            if ((int) $sessionItem->paid_quantity > 0 && (int) $sessionItem->unit_price !== $sessionPrice) {
                 throw ValidationException::withMessages(['discount_amount' => 'Phiên câu đã thanh toán nên không thể đổi mức giảm giá.']);
             }
 
@@ -151,7 +152,7 @@ class FishingService
         });
     }
 
-    public function checkout(Order $order, User $cashier, int $version, array $selections, float $cashReceived, string $method = 'cash'): Payment
+    public function checkout(Order $order, User $cashier, int $version, array $selections, int $cashReceived, string $method = 'cash'): Payment
     {
         return DB::transaction(function () use ($order, $cashier, $version, $selections, $cashReceived, $method) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
@@ -167,14 +168,14 @@ class FishingService
             $order = Order::lockForUpdate()->findOrFail($order->id);
             $this->assertMutable($order, $version);
 
-            $targetOrder = $targetSpot->orders()->activeForPos()->latest('updated_at')->latest('id')->first();
+            $targetOrder = $targetSpot->orders()->activeForPos()->lockForUpdate()->latest('updated_at')->latest('id')->first();
             if (! $targetOrder) {
                 throw ValidationException::withMessages(['spot' => 'Chòi mục tiêu không có phiên câu đang hoạt động.']);
             }
 
             $sourceSpotLabel = $order->fishingSpot->label;
 
-            foreach ($order->items as $item) {
+            foreach ($order->items()->lockForUpdate()->get() as $item) {
                 if (in_array($item->line_type, ['fishing_session', 'hourly_extension'], true)) {
                     $item->update([
                         'order_id' => $targetOrder->id,
@@ -186,17 +187,22 @@ class FishingService
                         ->where('menu_item_id', $item->menu_item_id)
                         ->where('line_type', $item->line_type)
                         ->where('unit_price', $item->unit_price)
+                        ->lockForUpdate()
                         ->first();
 
                     if ($matchingItem) {
+                        $bothPaid = (int) $matchingItem->paid_quantity > 0 || (int) $item->paid_quantity > 0;
+                        $notesDiffer = trim((string) $matchingItem->note) !== trim((string) $item->note);
+                        if ($bothPaid && $notesDiffer) {
+                            $item->update(['order_id' => $targetOrder->id]);
+                            continue;
+                        }
                         $matchingItem->increment('quantity', $item->quantity);
                         $matchingItem->increment('paid_quantity', $item->paid_quantity);
                         if ($item->note) {
-                            $newNotes = array_filter(array_unique(array_map('trim', explode(',', ($matchingItem->note ?? '').','.$item->note))));
-                            $matchingItem->update(['note' => implode(', ', $newNotes)]);
+                            $matchingItem->update(['note' => $this->mergeNotes($matchingItem->note, $item->note)]);
                         }
-                        DB::table('payment_lines')
-                            ->where('order_item_id', $item->id)
+                        PaymentLine::where('order_item_id', $item->id)
                             ->update(['order_item_id' => $matchingItem->id]);
                         $item->delete();
                     } else {
@@ -219,7 +225,7 @@ class FishingService
                 'version' => $order->version + 1,
             ]);
 
-            $this->refreshSummary($targetOrder);
+            $this->refreshSummary($targetOrder->fresh());
 
             return $targetOrder->fresh();
         });
@@ -272,5 +278,21 @@ class FishingService
             'version' => $order->version + 1,
             ...$extra,
         ]);
+    }
+
+    private function mergeNotes(?string $existing, ?string $incoming): ?string
+    {
+        $parts = array_filter(array_map('trim', [$existing ?? '', $incoming ?? '']));
+        $unique = [];
+        foreach ($parts as $part) {
+            $segments = $part === '' ? [] : array_map('trim', explode(' | ', $part));
+            foreach ($segments as $seg) {
+                if ($seg !== '' && ! in_array($seg, $unique, true)) {
+                    $unique[] = $seg;
+                }
+            }
+        }
+
+        return $unique === [] ? null : implode(' | ', $unique);
     }
 }

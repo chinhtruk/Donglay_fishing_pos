@@ -25,7 +25,7 @@ class Order extends Model
     public static function currentPosOperationalWindow(?CarbonInterface $now = null): array
     {
         $moment = ($now ?? now())->copy();
-        $resetAt = $moment->copy()->setTime(self::POS_OPERATIONAL_RESET_HOUR, self::POS_OPERATIONAL_RESET_MINUTE);
+        $resetAt = $moment->copy()->setTime(self::POS_OPERATIONAL_RESET_HOUR, self::POS_OPERATIONAL_RESET_MINUTE, 0);
 
         if ($moment->greaterThanOrEqualTo($resetAt)) {
             $startAt = $resetAt->copy();
@@ -44,6 +44,7 @@ class Order extends Model
         return [
             'starts_at' => $startAt->toIso8601String(),
             'resets_at' => $resetAt->toIso8601String(),
+            'is_closing_minute' => self::isPosOperationalClosingMinute($now),
         ];
     }
 

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CoffeeTable;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentLine;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -72,7 +73,7 @@ class CoffeeOrderService
         });
     }
 
-    public function checkout(Order $order, User $cashier, int $version, array $selections, float $cashReceived, string $method = 'cash'): Payment
+    public function checkout(Order $order, User $cashier, int $version, array $selections, int $cashReceived, string $method = 'cash'): Payment
     {
         return DB::transaction(function () use ($order, $cashier, $version, $selections, $cashReceived, $method) {
             $order = Order::lockForUpdate()->findOrFail($order->id);
@@ -126,22 +127,31 @@ class CoffeeOrderService
                 throw ValidationException::withMessages(['table' => 'Đây đã là bàn nhận rồi. Bạn chọn thêm hóa đơn khác để gộp nhé.']);
             }
 
-            foreach ($order->items as $item) {
+            // An toàn khi gộp món đã thanh toán: nếu cùng món nhưng khác ghi chú và đã có paid_quantity,
+            // không tự gộp dòng để tránh lệch payment_lines
+            foreach ($order->items()->lockForUpdate()->get() as $item) {
                 $matchingItem = $targetOrder->items()
                     ->where('menu_item_id', $item->menu_item_id)
                     ->where('line_type', $item->line_type)
                     ->where('unit_price', $item->unit_price)
+                    ->lockForUpdate()
                     ->first();
 
                 if ($matchingItem) {
+                    // Nếu một trong hai dòng đã thanh toán và ghi chú khác nhau -> giữ tách dòng
+                    $bothPaid = (int) $matchingItem->paid_quantity > 0 || (int) $item->paid_quantity > 0;
+                    $notesDiffer = trim((string) $matchingItem->note) !== trim((string) $item->note);
+                    if ($bothPaid && $notesDiffer) {
+                        $item->update(['order_id' => $targetOrder->id]);
+                        continue;
+                    }
+
                     $matchingItem->increment('quantity', $item->quantity);
                     $matchingItem->increment('paid_quantity', $item->paid_quantity);
                     if ($item->note) {
-                        $newNotes = array_filter(array_unique(array_map('trim', explode(',', ($matchingItem->note ?? '').','.$item->note))));
-                        $matchingItem->update(['note' => implode(', ', $newNotes)]);
+                        $matchingItem->update(['note' => $this->mergeNotes($matchingItem->note, $item->note)]);
                     }
-                    DB::table('payment_lines')
-                        ->where('order_item_id', $item->id)
+                    PaymentLine::where('order_item_id', $item->id)
                         ->update(['order_item_id' => $matchingItem->id]);
                     $item->delete();
                 } else {
@@ -158,7 +168,7 @@ class CoffeeOrderService
                 'version' => $order->version + 1,
             ]);
 
-            $this->refreshSummary($targetOrder);
+            $this->refreshSummary($targetOrder->fresh());
 
             return $targetOrder->fresh();
         });
@@ -223,5 +233,25 @@ class CoffeeOrderService
             'version' => $order->version + 1,
             ...$extra,
         ]);
+    }
+
+    private function mergeNotes(?string $existing, ?string $incoming): ?string
+    {
+        $parts = array_filter(array_map('trim', [
+            $existing ?? '',
+            $incoming ?? '',
+        ]));
+
+        $unique = [];
+        foreach ($parts as $part) {
+            $segments = $part === '' ? [] : array_map('trim', explode(' | ', $part));
+            foreach ($segments as $seg) {
+                if ($seg !== '' && ! in_array($seg, $unique, true)) {
+                    $unique[] = $seg;
+                }
+            }
+        }
+
+        return $unique === [] ? null : implode(' | ', $unique);
     }
 }

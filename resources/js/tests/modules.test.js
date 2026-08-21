@@ -13,7 +13,7 @@ import { checkoutCanSubmit, copyCheckoutText } from '../pages/pos/checkout.js';
 import { coffeeTableCardView } from '../pages/pos/coffee.js';
 import { fishingOrderActionMode, fishingOrderModalCatalog, fishingSpotCardView } from '../pages/pos/fishing.js';
 import { adminOrderStatusOptions, employeeOrderDisplayTime, orderItemPaymentParts, orderTable, renderOrderPaymentRow, renderOrderReceipt } from '../pages/orders/list.js';
-import { fishingSessionLineTotalHtml, fishingSessionMetaHtml, formatDisplayPrice, orderPaymentItemCountLabel, orderedPosMenu, orderRemainingDue, paidQuantityForLine, posMenuCategories } from '../pages/pos/shared.js';
+import { fishingSessionLineTotalHtml, fishingSessionMetaHtml, formatDisplayPrice, normalizeCollection, orderPaymentItemCountLabel, orderedPosMenu, orderRemainingDue, paidQuantityForLine, posMenuCategories } from '../pages/pos/shared.js';
 import { createLifecycleScope } from '../shell/lifecycle.js';
 import { createPageRuntime, definePageModule } from '../shell/page-runtime.js';
 import { isMobileSidebarViewport } from '../shell/sidebar.js';
@@ -459,6 +459,10 @@ test('POS menu helpers keep drink categories before food categories', () => {
 
     assert.deepEqual(ordered.map(item => item.name), ['Bạc xỉu', 'Trà đào', 'Khoai chiên', 'Mì trứng']);
     assert.deepEqual(posMenuCategories(ordered), ['Tất cả', 'Cà phê', 'Trà', 'Đồ ăn', 'Ăn vặt']);
+    assert.deepEqual(orderedPosMenu({ 1: menu[0] }).map(item => item.name), ['Khoai chiên']);
+    assert.deepEqual(posMenuCategories({ 1: menu[0] }), ['Tất cả', 'Đồ ăn']);
+    assert.deepEqual(normalizeCollection({ data: [menu[0]] }), [menu[0]]);
+    assert.deepEqual(normalizeCollection([menu]), menu);
 });
 
 test('POS billing helpers format ranges and remaining due', () => {

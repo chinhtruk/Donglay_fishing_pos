@@ -4,9 +4,10 @@ namespace App\Notifications;
 
 use App\Models\FishingSession;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class FishingSessionExpired extends Notification
+class FishingSessionExpired extends Notification implements ShouldQueue
 {
     use Queueable;
 

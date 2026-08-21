@@ -90,15 +90,18 @@ export async function renderDataAdmin() {
         const confirmed = await confirmModal(
             'Sao lưu & xóa dữ liệu vận hành',
             `Hệ thống sẽ gửi toàn bộ database đến ${data.backup_email}, sau đó xóa vĩnh viễn đơn hàng, thanh toán, phiên câu, OTP, thông báo và nhật ký vận hành. Tài khoản, menu, sơ đồ và cấu hình thanh toán được giữ nguyên.`,
-            'Sao lưu & xóa',
+            'Tiếp tục',
         );
         if (!confirmed) return;
+
+        const password = window.prompt('Để xác nhận lần 2, vui lòng nhập mật khẩu của bạn:');
+        if (!password) return;
 
         const completed = await runDataAction(
             button,
             '/api/v1/admin/data/backup-and-clear',
             'Đang sao lưu & xóa…',
-            { confirmation: 'BACKUP_AND_CLEAR' },
+            { confirmation: 'BACKUP_AND_CLEAR', password },
         );
         if (completed) window.location.assign('/admin/dashboard');
     });

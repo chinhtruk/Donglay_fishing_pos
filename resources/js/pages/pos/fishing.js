@@ -27,6 +27,7 @@ import {
     fishingSessionMetricDateTime,
     fishingSessionNameHtml,
     hasMissingVariablePrice,
+    normalizeCollection,
     orderBadgeHtml,
     orderCompletedPaymentTotal,
     orderedPosMenu,
@@ -78,6 +79,7 @@ export function fishingSpotCardView(spot = {}) {
 export async function renderFishing() {
     const data = await api('/api/v1/fishing/map'); const clock = new ServerClock(data.server_time);
     schedulePosOperationalReset(data, fishingLifecycle);
+    data.menu = normalizeCollection(data.menu);
     const mid = Math.ceil(data.spots.length / 2);
     const leftSpots = data.spots.slice(0, mid);
     const rightSpots = data.spots.slice(mid);

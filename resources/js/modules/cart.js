@@ -1,7 +1,7 @@
 export class Cart {
     constructor(lines = []) {
         this.lines = new Map();
-        lines.forEach(line => {
+        (Array.isArray(lines) ? lines : []).forEach(line => {
             const key = `${Number(line.menu_item_id)}-${Number(line.price)}`;
             const current = this.lines.get(key);
             const quantity = Number(line.quantity);

@@ -14,7 +14,7 @@ class CheckoutOrderRequest extends ApiRequest
         return [
             'version' => ['required', 'integer'],
             'payment_method' => ['sometimes', 'string', 'max:20'],
-            'cash_received' => [$method === PaymentQrSetting::TYPE_CASH ? 'required' : 'nullable', 'numeric', 'min:0'],
+            'cash_received' => [$method === PaymentQrSetting::TYPE_CASH ? 'required' : 'nullable', 'integer', 'min:0', 'max:999999999'],
             'items' => ['sometimes', 'array'],
             'items.*.order_item_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],

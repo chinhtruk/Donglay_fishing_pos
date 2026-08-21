@@ -7,7 +7,7 @@
 .phpunit.result.cache
 /.codex
 /.cursor/
-/.idea
+.idea
 /.nova
 /.phpunit.cache
 /.vscode
@@ -19,6 +19,8 @@
 /public/hot
 /public/storage
 /database/exports/
+/database/database.sqlite
+/donglay_fishing.sql
 /storage/*.key
 /storage/pail
 /vendor

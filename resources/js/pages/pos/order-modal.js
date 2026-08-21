@@ -2,6 +2,7 @@ import { escapeHtml, money } from '../../modules/format.js';
 import { cloneTemplate } from '../../templates/dom.js';
 import {
     formatDisplayPrice,
+    normalizeCollection,
     orderBadgeHtml,
     orderLineTotalHtml,
     orderLineUnitPriceHtml,
@@ -89,17 +90,22 @@ export function centerOrderCategory(button) {
 }
 
 export function renderOrderModalBody({ categories, menu, activeCategory = 'Tất cả' }) {
+    const safeMenu = normalizeCollection(menu).filter(item => item && typeof item === 'object');
+    const safeCategories = normalizeCollection(categories).filter(Boolean);
     const body = cloneTemplate('tpl-pos-order-modal-body');
-    if (!body) return renderOrderModalBodyFallback({ categories, menu, activeCategory });
+    if (!body) return renderOrderModalBodyFallback({ categories: safeCategories, menu: safeMenu, activeCategory });
 
-    body.querySelector('[data-pos-modal-categories]').innerHTML = renderCategoryTabs(categories, activeCategory);
-    body.querySelector('[data-pos-modal-products]').innerHTML = renderMenuProducts(menu);
+    body.querySelector('[data-pos-modal-categories]').innerHTML = renderCategoryTabs(safeCategories, activeCategory);
+    body.querySelector('[data-pos-modal-products]').innerHTML = renderMenuProducts(safeMenu);
 
     return body.outerHTML;
 }
 
 export function renderMenuProducts(menu = []) {
-    return menu.map((item, index) => renderMenuProduct(item, index)).join('');
+    return normalizeCollection(menu)
+        .filter(item => item && typeof item === 'object')
+        .map((item, index) => renderMenuProduct(item, index))
+        .join('');
 }
 
 export function renderCoffeeOrderLines({ unpaidLines, paidLines, menuItems }) {

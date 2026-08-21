@@ -14,6 +14,8 @@ class DatabaseDumpWriter
             throw new RuntimeException('Chức năng sao lưu hiện chỉ hỗ trợ MySQL/MariaDB.');
         }
 
+        $binary = $this->resolveMysqldumpBinary();
+
         $basePath = tempnam(sys_get_temp_dir(), 'donglay-db-');
         if ($basePath === false) {
             throw new RuntimeException('Không thể tạo file sao lưu tạm thời.');
@@ -23,7 +25,7 @@ class DatabaseDumpWriter
         @unlink($basePath);
 
         try {
-            $this->dumpMysql($database, $sqlPath);
+            $this->dumpMysql($database, $sqlPath, $binary);
 
             return $sqlPath;
         } catch (\Throwable $error) {
@@ -33,10 +35,27 @@ class DatabaseDumpWriter
         }
     }
 
-    private function dumpMysql(array $database, string $sqlPath): void
+    private function resolveMysqldumpBinary(): string
+    {
+        $binary = (string) config('data-management.mysqldump_binary', 'mysqldump');
+        // Chỉ cho phép tên file hoặc đường dẫn tuyệt đối, chặn injection
+        if (str_contains($binary, ';') || str_contains($binary, '&') || str_contains($binary, '|')) {
+            throw new RuntimeException('Đường dẫn mysqldump không hợp lệ.');
+        }
+        // Nếu là đường dẫn tuyệt đối thì kiểm tra file tồn tại và executable
+        if (str_starts_with($binary, '/')) {
+            if (! is_file($binary) || ! is_executable($binary)) {
+                throw new RuntimeException('Không tìm thấy binary mysqldump tại đường dẫn đã cấu hình.');
+            }
+        }
+
+        return $binary;
+    }
+
+    private function dumpMysql(array $database, string $sqlPath, string $binary): void
     {
         $command = [
-            (string) config('data-management.mysqldump_binary', 'mysqldump'),
+            $binary,
             '--single-transaction',
             '--quick',
             '--routines',

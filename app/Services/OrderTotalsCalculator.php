@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 class OrderTotalsCalculator
 {
-    public function total(Order $order): float
+    public function total(Order $order): int
     {
-        return (float) $order->items()->sum(DB::raw('unit_price * quantity'));
+        // VND không có phần thập phân — tính bằng integer để tránh lệch float
+        return (int) $order->items()->sum(DB::raw('CAST(unit_price AS SIGNED) * quantity'));
     }
 
     public function totalsPayload(Order $order): array

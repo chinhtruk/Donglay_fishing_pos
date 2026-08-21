@@ -17,7 +17,7 @@ class OrderLineReconciler
         $orderedAt = now();
         $requested = collect($lines)->map(function (array $line) {
             $line['menu_item_id'] = (int) $line['menu_item_id'];
-            $line['unit_price'] = (float) ($line['unit_price'] ?? 0);
+            $line['unit_price'] = (int) ($line['unit_price'] ?? 0);
 
             return $line;
         });
@@ -37,7 +37,7 @@ class OrderLineReconciler
 
         $requested = $requested->map(function (array $line) use ($menu) {
             $product = $menu->get($line['menu_item_id']);
-            $line['unit_price'] = $product->price == 0 ? (float) $line['unit_price'] : (float) $product->price;
+            $line['unit_price'] = (int) $product->price === 0 ? (int) $line['unit_price'] : (int) $product->price;
 
             return $line;
         })->keyBy(fn (array $line) => $this->lineKey($line['menu_item_id'], $line['unit_price']));
@@ -70,7 +70,7 @@ class OrderLineReconciler
             if ($desired > $currentTotal) {
                 $items->each(fn ($item) => $item->update(['note' => $note]));
                 $product = $menu->get($lineData['menu_item_id']);
-                $unitPrice = $product->price == 0 ? (float) $lineData['unit_price'] : (float) $product->price;
+                $unitPrice = (int) $product->price === 0 ? (int) $lineData['unit_price'] : (int) $product->price;
                 $order->items()->create([
                     'menu_item_id' => $product->id,
                     'line_type' => 'menu',
@@ -104,7 +104,7 @@ class OrderLineReconciler
             }
 
             $product = $menu->get($lineData['menu_item_id']);
-            $unitPrice = $product->price == 0 ? (float) $lineData['unit_price'] : (float) $product->price;
+            $unitPrice = (int) $product->price === 0 ? (int) $lineData['unit_price'] : (int) $product->price;
             $order->items()->create([
                 'menu_item_id' => $product->id,
                 'line_type' => 'menu',
@@ -117,8 +117,8 @@ class OrderLineReconciler
         }
     }
 
-    private function lineKey(int|string|null $menuItemId, float|string $unitPrice): string
+    private function lineKey(int|string|null $menuItemId, int|string $unitPrice): string
     {
-        return ((int) $menuItemId).'-'.((float) $unitPrice);
+        return ((int) $menuItemId).'-'.((int) $unitPrice);
     }
 }
